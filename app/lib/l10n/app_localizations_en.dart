@@ -1,0 +1,426 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Oxi Poker';
+
+  @override
+  String get serverTitle => 'Connect to a server';
+
+  @override
+  String get serverHint => 'Server address or invitation link';
+
+  @override
+  String get serverHelp =>
+      'Paste the invitation link you got from your host, or the address of your poker server.';
+
+  @override
+  String get connect => 'Connect';
+
+  @override
+  String get changeServer => 'Change server';
+
+  @override
+  String serverVersion(String version) {
+    return 'Server $version';
+  }
+
+  @override
+  String get signInTitle => 'Sign in';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get displayName => 'Display name';
+
+  @override
+  String get displayNameOptional => 'Display name (optional)';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get repeatPassword => 'Repeat password';
+
+  @override
+  String get signIn => 'Sign in';
+
+  @override
+  String get signInPasskey => 'Sign in with a passkey';
+
+  @override
+  String get totpTitle => 'Two-factor code';
+
+  @override
+  String get totpHelp =>
+      'Enter the 6-digit code from your authenticator app, or one of your recovery codes.';
+
+  @override
+  String get code => 'Code';
+
+  @override
+  String get verify => 'Verify';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get inviteTitle => 'Join with an invitation';
+
+  @override
+  String inviteNote(String note) {
+    return 'Note from your host: $note';
+  }
+
+  @override
+  String inviteExpires(String date) {
+    return 'Link valid until $date';
+  }
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get createWithPasskey => 'Create account with a passkey';
+
+  @override
+  String get orPassword => 'or choose a password';
+
+  @override
+  String get passwordsDiffer => 'The passwords do not match.';
+
+  @override
+  String lobbyWelcome(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String get lobbySoon => 'Tables open in the next release.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get saved => 'Saved';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get copied => 'Copied';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get changePassword => 'Change password';
+
+  @override
+  String get currentPassword => 'Current password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get passwordChanged =>
+      'Password changed. Your other sessions were signed out.';
+
+  @override
+  String get mustChangeTitle => 'Choose a new password';
+
+  @override
+  String get mustChangeHelp =>
+      'Your admin gave you a temporary password. Choose your own to continue.';
+
+  @override
+  String get sessions => 'Sessions';
+
+  @override
+  String get thisDevice => 'this device';
+
+  @override
+  String get revoke => 'Sign out';
+
+  @override
+  String get revokeOthers => 'Sign out everywhere else';
+
+  @override
+  String lastSeen(String date) {
+    return 'last seen $date';
+  }
+
+  @override
+  String get twoFactor => 'Two-factor sign-in';
+
+  @override
+  String twoFactorOn(int count) {
+    return 'On, $count recovery codes left';
+  }
+
+  @override
+  String get twoFactorOff => 'Off';
+
+  @override
+  String get enable => 'Turn on';
+
+  @override
+  String get disable => 'Turn off';
+
+  @override
+  String get totpScan =>
+      'Scan this code with your authenticator app, then enter the 6-digit code it shows.';
+
+  @override
+  String totpSecret(String secret) {
+    return 'Secret: $secret';
+  }
+
+  @override
+  String get recoveryTitle => 'Recovery codes';
+
+  @override
+  String get recoveryHelp =>
+      'Each code signs you in once when your phone is not at hand. They are shown only now: keep them somewhere safe.';
+
+  @override
+  String get passkeys => 'Passkeys';
+
+  @override
+  String get addPasskey => 'Add a passkey';
+
+  @override
+  String get noPasskeys => 'No passkeys yet.';
+
+  @override
+  String get synced => 'synced';
+
+  @override
+  String get passkeyName => 'Passkey name';
+
+  @override
+  String get passkeyUnsupported => 'Passkeys are not available on this device.';
+
+  @override
+  String get avatar => 'Avatar';
+
+  @override
+  String get uploadAvatar => 'Upload picture';
+
+  @override
+  String get dangerZone => 'Delete account';
+
+  @override
+  String get deleteAccountHelp =>
+      'Your account and everything in it are deleted for good.';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Enter your password to delete your account.';
+
+  @override
+  String get users => 'Users';
+
+  @override
+  String get invitations => 'Invitations';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get auditLog => 'Audit log';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get newUser => 'New user';
+
+  @override
+  String get makeAdmin => 'Admin';
+
+  @override
+  String get disabled => 'Disabled';
+
+  @override
+  String get resetPassword => 'Reset password';
+
+  @override
+  String get reset2fa => 'Reset two-factor';
+
+  @override
+  String get temporaryPassword => 'Temporary password';
+
+  @override
+  String temporaryPasswordHelp(String name) {
+    return 'Give it to $name privately. It is shown only now and must be changed at the first sign-in.';
+  }
+
+  @override
+  String deleteUserConfirm(String name) {
+    return 'Delete $name and everything in the account?';
+  }
+
+  @override
+  String get newInvitation => 'New invitation';
+
+  @override
+  String get validHours => 'Valid for (hours)';
+
+  @override
+  String get uses => 'Uses';
+
+  @override
+  String get note => 'Note (optional)';
+
+  @override
+  String get invitationLink => 'Invitation link';
+
+  @override
+  String get invitationLinkHelp =>
+      'Send this link to the player. It is shown only now.';
+
+  @override
+  String invitationUses(int uses, int max) {
+    return '$uses of $max used';
+  }
+
+  @override
+  String get invitationRevoked => 'revoked';
+
+  @override
+  String get invitationExpired => 'expired';
+
+  @override
+  String joinedBy(String names) {
+    return 'Joined: $names';
+  }
+
+  @override
+  String get tableCreation => 'Who may create tables';
+
+  @override
+  String get everyone => 'Every player';
+
+  @override
+  String get adminsOnly => 'Admins only';
+
+  @override
+  String get maxUpload => 'Maximum upload size (KiB)';
+
+  @override
+  String get loadMore => 'Load more';
+
+  @override
+  String get filterAction => 'Action (exact, or prefix ending with a dot)';
+
+  @override
+  String get errNetwork => 'The server cannot be reached.';
+
+  @override
+  String get errNotServer => 'No Oxi Poker server answers at this address.';
+
+  @override
+  String get errBadAddress => 'Enter an address like poker.example.com.';
+
+  @override
+  String get errInvalidCredentials => 'Wrong username or password.';
+
+  @override
+  String get errRateLimited => 'Too many attempts. Try again in a while.';
+
+  @override
+  String get errInvalidCode => 'That code is not valid.';
+
+  @override
+  String get errChallengeExpired => 'The sign-in took too long. Start again.';
+
+  @override
+  String get errInvitationInvalid => 'This invitation link is not valid.';
+
+  @override
+  String get errInvitationExpired => 'This invitation link has expired.';
+
+  @override
+  String get errInvitationUsed => 'This invitation link has already been used.';
+
+  @override
+  String get errBadUsername =>
+      'Usernames have 3 to 32 letters, digits, dots, dashes or underscores.';
+
+  @override
+  String get errBadDisplayName => 'Display names have 1 to 64 characters.';
+
+  @override
+  String get errBadPassword => 'Passwords have 10 to 256 characters.';
+
+  @override
+  String get errUsernameTaken => 'That username is taken.';
+
+  @override
+  String get errWrongPassword => 'The password is wrong.';
+
+  @override
+  String get errLastAdmin => 'The server needs at least one admin.';
+
+  @override
+  String get errSelf => 'You cannot do that to your own account here.';
+
+  @override
+  String get errTooLarge => 'The file is too large.';
+
+  @override
+  String get errBadImage => 'Use a PNG, JPEG, GIF or WebP picture.';
+
+  @override
+  String get errPasskeyRejected => 'The passkey was not accepted.';
+
+  @override
+  String get errLastSignInMethod =>
+      'This is your last way to sign in. Add a password or another passkey first.';
+
+  @override
+  String get errBadInvitation =>
+      'Hours 1 to 720, uses 1 to 100, note up to 200 characters.';
+
+  @override
+  String get errBadSettings =>
+      'Upload size must be between 256 KiB and 20 MiB.';
+
+  @override
+  String errGeneric(String code) {
+    return 'Something went wrong ($code).';
+  }
+}

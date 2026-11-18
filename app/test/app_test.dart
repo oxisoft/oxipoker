@@ -1,0 +1,180 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:oxipoker/api/models.dart';
+import 'package:oxipoker/main.dart';
+import 'package:oxipoker/router.dart';
+import 'package:oxipoker/state/session.dart';
+
+import 'fake_server.dart';
+
+Future<(FakeServer, MemorySessionStore)> pumpApp(
+  WidgetTester tester, {
+  bool native = false,
+  Uri? server,
+  String? invite,
+  FakeServer? fake,
+}) async {
+  final f = fake ?? FakeServer();
+  final store = MemorySessionStore(server: native ? server : (server ?? Uri.parse('https://poker.example.com')));
+  await tester.binding.setSurfaceSize(const Size(1000, 1400));
+  await tester.pumpWidget(ProviderScope(
+    overrides: [
+      nativeProvider.overrideWithValue(native),
+      sessionStoreProvider.overrideWithValue(store),
+      httpClientProvider.overrideWithValue(f.client),
+      initialInviteProvider.overrideWithValue(invite),
+    ],
+    child: const OxiPokerApp(),
+  ));
+  await tester.pumpAndSettle();
+  return (f, store);
+}
+
+Future<void> signIn(WidgetTester tester, String user, String pass) async {
+  await tester.enterText(find.byKey(const Key('username-field')), user);
+  await tester.enterText(find.byKey(const Key('password-field')), pass);
+  await tester.tap(find.byKey(const Key('sign-in')));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  group('helpers', () {
+    test('invitation links split into server and token', () {
+      final r = parseInviteLink('https://poker.example.com/invite#abc');
+      expect(r!.$1.toString(), 'https://poker.example.com');
+      expect(r.$2, 'abc');
+      expect(parseInviteLink('https://poker.example.com/'), isNull);
+      expect(parseInviteLink('https://poker.example.com/invite'), isNull);
+    });
+
+    test('server addresses get https and lose paths', () {
+      expect(parseServerAddress('poker.example.com/x?y')!.toString(), 'https://poker.example.com');
+      expect(parseServerAddress('http://10.0.0.2:8080')!.toString(), 'http://10.0.0.2:8080');
+      expect(parseServerAddress('ftp://x'), isNull);
+      expect(parseServerAddress('  '), isNull);
+    });
+
+    test('redirects follow the session', () {
+      const u = User(id: '1', username: 'a', displayName: '');
+      const admin = User(id: '1', username: 'a', displayName: '', isAdmin: true);
+      const temp = User(id: '1', username: 'a', displayName: '', mustChangePassword: true);
+      final s = Uri.parse('https://x');
+      expect(redirectFor(const SessionState(), '/', native: true), '/splash');
+      expect(redirectFor(const SessionState(loading: false), '/', native: true), '/server');
+      expect(redirectFor(SessionState(loading: false, server: s), '/', native: true), '/signin');
+      expect(redirectFor(SessionState(loading: false, server: s, inviteToken: 't'), '/signin', native: false), '/invite');
+      expect(redirectFor(SessionState(loading: false, server: s, user: u), '/signin', native: false), '/');
+      expect(redirectFor(SessionState(loading: false, server: s, user: u), '/admin', native: false), '/');
+      expect(redirectFor(SessionState(loading: false, server: s, user: admin), '/admin', native: false), isNull);
+      expect(redirectFor(SessionState(loading: false, server: s, user: temp), '/', native: false), '/password');
+    });
+  });
+
+  group('sign-in', () {
+    testWidgets('password sign-in opens the lobby', (tester) async {
+      await pumpApp(tester);
+      expect(find.text('Sign in'), findsWidgets);
+      await signIn(tester, 'alice', 'correct horse');
+      expect(find.text('Welcome, Alice'), findsOneWidget);
+      expect(find.byKey(const Key('open-admin')), findsOneWidget);
+    });
+
+    testWidgets('a wrong password shows one message for both cases', (tester) async {
+      await pumpApp(tester);
+      await signIn(tester, 'alice', 'nope');
+      expect(find.text('Wrong username or password.'), findsOneWidget);
+      await signIn(tester, 'nobody', 'nope');
+      expect(find.text('Wrong username or password.'), findsOneWidget);
+    });
+
+    testWidgets('two-factor accounts get a code step', (tester) async {
+      final fake = FakeServer()..totpUsers.add('bob');
+      await pumpApp(tester, fake: fake);
+      await signIn(tester, 'bob', 'battery staple');
+      expect(find.text('Two-factor code'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('totp-field')), '000000');
+      await tester.tap(find.byKey(const Key('verify')));
+      await tester.pumpAndSettle();
+      expect(find.text('That code is not valid.'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('totp-field')), '123456');
+      await tester.tap(find.byKey(const Key('verify')));
+      await tester.pumpAndSettle();
+      expect(find.text('Welcome, bob'), findsOneWidget);
+      expect(find.byKey(const Key('open-admin')), findsNothing);
+    });
+
+    testWidgets('native app keeps the token after sign-in', (tester) async {
+      final (_, store) = await pumpApp(tester, native: true, server: Uri.parse('https://poker.example.com'));
+      await signIn(tester, 'alice', 'correct horse');
+      expect(store.token, 'tok-u1');
+    });
+  });
+
+  group('invitations', () {
+    testWidgets('native app: pasting an invitation link leads to sign-up', (tester) async {
+      final (fake, store) = await pumpApp(tester, native: true);
+      expect(find.text('Connect to a server'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('server-field')), 'https://poker.example.com/invite#tok123');
+      await tester.tap(find.byKey(const Key('connect')));
+      await tester.pumpAndSettle();
+      expect(store.server.toString(), 'https://poker.example.com');
+      expect(find.text('Note from your host: Friday game'), findsOneWidget);
+      await tester.enterText(find.byKey(const Key('username-field')), 'carol');
+      await tester.enterText(find.byKey(const Key('password-field')), 'long enough pw');
+      await tester.enterText(find.byKey(const Key('password2-field')), 'long enough pw');
+      await tester.tap(find.byKey(const Key('sign-up')));
+      await tester.pumpAndSettle();
+      expect(find.text('Welcome, carol'), findsOneWidget);
+      expect(fake.invites['tok123']!['uses'], 1);
+    });
+
+    testWidgets('web: a used link refuses', (tester) async {
+      final fake = FakeServer();
+      fake.invites['tok123']!['uses'] = 1;
+      await pumpApp(tester, invite: 'tok123', fake: fake);
+      expect(find.text('This invitation link has already been used.'), findsOneWidget);
+    });
+
+    testWidgets('different passwords are caught before the server', (tester) async {
+      final (fake, _) = await pumpApp(tester, invite: 'tok123');
+      await tester.enterText(find.byKey(const Key('username-field')), 'carol');
+      await tester.enterText(find.byKey(const Key('password-field')), 'long enough pw');
+      await tester.enterText(find.byKey(const Key('password2-field')), 'other pw 1234');
+      await tester.tap(find.byKey(const Key('sign-up')));
+      await tester.pumpAndSettle();
+      expect(find.text('The passwords do not match.'), findsOneWidget);
+      expect(fake.requests, isNot(contains('POST /auth/signup')));
+    });
+  });
+
+  group('admin console', () {
+    testWidgets('lists users and shows a temporary password once', (tester) async {
+      await pumpApp(tester);
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-admin')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('user-bob')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('new-user')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('new-username')), 'dave');
+      await tester.tap(find.byKey(const Key('create-user')));
+      await tester.pumpAndSettle();
+      expect(find.text('temp-pass-0001'), findsOneWidget);
+    });
+
+    testWidgets('creates an invitation link', (tester) async {
+      await pumpApp(tester);
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-admin')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tab-invitations')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('new-invitation')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('create-invitation')));
+      await tester.pumpAndSettle();
+      expect(find.text('https://poker.example.com/invite#newtok'), findsOneWidget);
+    });
+  });
+}
