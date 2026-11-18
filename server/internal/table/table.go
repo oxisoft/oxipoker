@@ -6,6 +6,7 @@ package table
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"sync"
 	"time"
@@ -72,16 +73,18 @@ type Player struct {
 // State is a snapshot of the whole table, hidden cards included. It never
 // leaves the server as is: the realtime layer builds per-viewer views from it.
 type State struct {
-	ID       string            `json:"id"`
-	Host     string            `json:"host"`
-	Settings Settings          `json:"settings"`
-	Seats    []*Player         `json:"seats"` // index = seat number, nil = empty
-	Hand     *engine.Hand      `json:"-"`
-	HandNo   int               `json:"hand_no"`
-	Pos      *engine.Positions `json:"positions,omitempty"`
-	Deadline time.Time         `json:"deadline,omitzero"` // turn timer of the player to act
-	Version  uint64            `json:"version"`
-	Closed   bool              `json:"closed,omitempty"`
+	ID       string       `json:"id"`
+	Host     string       `json:"host"`
+	Settings Settings     `json:"settings"`
+	Seats    []*Player    `json:"seats"` // index = seat number, nil = empty
+	Hand     *engine.Hand `json:"-"`
+	// HandUsers is the user dealt into each seat of Hand.
+	HandUsers map[int]string    `json:"-"`
+	HandNo    int               `json:"hand_no"`
+	Pos       *engine.Positions `json:"positions,omitempty"`
+	Deadline  time.Time         `json:"deadline,omitzero"` // turn timer of the player to act
+	Version   uint64            `json:"version"`
+	Closed    bool              `json:"closed,omitempty"`
 }
 
 // HandDone is passed to the OnHandDone hook when a hand is over.
@@ -201,6 +204,7 @@ func (a *actor) snapshot() State {
 	}
 	if a.st.Hand != nil {
 		s.Hand = a.st.Hand.Clone()
+		s.HandUsers = maps.Clone(a.users)
 	}
 	if a.st.Pos != nil {
 		p := *a.st.Pos
