@@ -33,6 +33,7 @@ const (
 
 type authAPI struct {
 	acc       *accounts.Service
+	pk        *accounts.Passkeys // nil when PUBLIC_URL is not set
 	st        *store.Store
 	secure    bool   // cookies get Secure (PUBLIC_URL is https)
 	origin    string // allowed Origin, "" = same host as the request
@@ -41,7 +42,7 @@ type authAPI struct {
 }
 
 func newAuthAPI(opt Options) *authAPI {
-	a := &authAPI{acc: opt.Accounts, st: opt.Store,
+	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store,
 		ipFails: newFailLimiter(ipFailLimit, failWindow), userFails: newFailLimiter(accountFailLimit, failWindow)}
 	if u, err := url.Parse(opt.PublicURL); err == nil && u.Host != "" {
 		a.origin = u.Scheme + "://" + u.Host
@@ -71,7 +72,7 @@ func (a *authAPI) checkOrigin(next http.Handler) http.Handler {
 		ok := false
 		switch {
 		case origin == "":
-			ok = bearer(r) != "" || r.URL.Path == "/api/v1/auth/signin" && !hasCookie(r, a.cookieName())
+			ok = bearer(r) != "" || signinPaths[r.URL.Path] && !hasCookie(r, a.cookieName())
 		case a.origin != "":
 			ok = origin == a.origin
 		default:
@@ -85,6 +86,13 @@ func (a *authAPI) checkOrigin(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// signinPaths may be called by native apps before they hold a token.
+var signinPaths = map[string]bool{
+	"/api/v1/auth/signin":         true,
+	"/api/v1/auth/passkey/begin":  true,
+	"/api/v1/auth/passkey/finish": true,
 }
 
 func hasCookie(r *http.Request, name string) bool {
@@ -145,6 +153,10 @@ func requireUser(next http.Handler) http.Handler {
 
 func (a *authAPI) routes(r chi.Router) {
 	r.Post("/auth/signin", a.signin)
+	if a.pk != nil {
+		r.Post("/auth/passkey/begin", a.passkeyLoginBegin)
+		r.Post("/auth/passkey/finish", a.passkeyLoginFinish)
+	}
 	r.Group(func(r chi.Router) {
 		r.Use(requireUser)
 		r.Post("/auth/signout", a.signout)
@@ -152,6 +164,13 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Get("/me/sessions", a.sessions)
 		r.Delete("/me/sessions/{id}", a.revokeSession)
 		r.Post("/me/sessions/revoke-others", a.revokeOthers)
+		if a.pk != nil {
+			r.Get("/me/passkeys", a.passkeyList)
+			r.Post("/me/passkeys/begin", a.passkeyAddBegin)
+			r.Post("/me/passkeys/finish", a.passkeyAddFinish)
+			r.Patch("/me/passkeys/{id}", a.passkeyRename)
+			r.Delete("/me/passkeys/{id}", a.passkeyRemove)
+		}
 	})
 }
 
@@ -172,10 +191,7 @@ func (a *authAPI) signin(w http.ResponseWriter, r *http.Request) {
 	if !readJSON(w, r, &req, 8<<10) {
 		return
 	}
-	kind := accounts.KindWeb
-	if req.Client == accounts.KindApp {
-		kind = accounts.KindApp
-	}
+	kind := sessionKind(req.Client)
 	ip := clientIP(r)
 	userKey := strings.ToLower(req.Username)
 	if wait := max(a.ipFails.blocked(ip), a.userFails.blocked(userKey)); wait > 0 {
@@ -196,13 +212,26 @@ func (a *authAPI) signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.userFails.clear(userKey)
-	token, ss, err := a.acc.CreateSession(r.Context(), u.ID, kind, ip, r.UserAgent())
+	a.issueSession(w, r, u, kind, "password")
+}
+
+func sessionKind(client string) string {
+	if client == accounts.KindApp {
+		return accounts.KindApp
+	}
+	return accounts.KindWeb
+}
+
+// issueSession signs u in: a cookie for the web app, a token in the body for
+// native apps.
+func (a *authAPI) issueSession(w http.ResponseWriter, r *http.Request, u *accounts.User, kind, method string) {
+	token, ss, err := a.acc.CreateSession(r.Context(), u.ID, kind, clientIP(r), r.UserAgent())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal")
 		return
 	}
 	ss.Current = true
-	a.audit(r, u, "auth.signin", ss.ID, map[string]any{"method": "password", "kind": kind})
+	a.audit(r, u, "auth.signin", ss.ID, map[string]any{"method": method, "kind": kind})
 	resp := signinResponse{User: u, Session: ss}
 	if kind == accounts.KindApp {
 		resp.Token = token

@@ -27,6 +27,8 @@ type Options struct {
 	Secret *secret.Secret
 	// Accounts enables the account and session endpoints.
 	Accounts *accounts.Service
+	// Passkeys enables WebAuthn; nil without a PUBLIC_URL.
+	Passkeys *accounts.Passkeys
 	// PublicURL is the server's public address (Origin check, Secure cookies).
 	PublicURL string
 }

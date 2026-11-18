@@ -75,13 +75,20 @@ func main() {
 
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {
-		log.Warn("PUBLIC_URL is not set: Origin is checked against the request host and cookies are not Secure")
+		log.Warn("PUBLIC_URL is not set: Origin is checked against the request host, cookies are not Secure, passkeys are off")
+	}
+	var passkeys *accounts.Passkeys
+	if publicURL != "" {
+		if passkeys, err = accounts.NewPasskeys(acc, publicURL); err != nil {
+			log.Error("passkeys", "err", err)
+			os.Exit(1)
+		}
 	}
 
 	srv := &http.Server{
 		Addr: net.JoinHostPort("", port),
 		Handler: httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec,
-			Accounts: acc, PublicURL: publicURL}),
+			Accounts: acc, Passkeys: passkeys, PublicURL: publicURL}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}

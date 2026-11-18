@@ -1,0 +1,42 @@
+# Oxi Poker HTTP API
+
+Base path `/api/v1`. JSON in and out. Errors are `{"error": "<code>"}` with a matching HTTP status.
+
+Authentication: the web app gets an HttpOnly session cookie; native apps send `"client": "app"` at sign-in,
+receive a `token` and pass it as `Authorization: Bearer <token>`. State-changing browser requests must
+carry an `Origin` equal to the server's `PUBLIC_URL`.
+
+This file grows with each milestone. Status: M1 in progress.
+
+## Health
+
+- `GET /health`: `{status, version, webapp, media, database}`; 503 when the database is not reachable.
+
+## Sign-in
+
+- `POST /auth/signin` `{username, password, client?}`: 200 `{user, session, token?}`; 401
+  `invalid_credentials` (same for unknown user and wrong password); 429 `rate_limited` with `Retry-After`.
+- `POST /auth/passkey/begin`: 200 `{ceremony, options}`; pass `options.publicKey` to
+  `navigator.credentials.get`. Discoverable credentials, no username needed. The ceremony lasts 5 minutes
+  and is single use.
+- `POST /auth/passkey/finish` `{ceremony, credential, client?}`: 200 as password sign-in; 401
+  `invalid_credentials` for an unknown, expired or reused ceremony, a removed passkey, a disabled account or
+  a sign counter that went backwards (possible cloned authenticator).
+- `POST /auth/signout`: 204, ends the current session.
+
+Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is its host).
+
+## Own account
+
+- `GET /me`: the signed-in user.
+- `GET /me/sessions`: `{sessions: [...]}` with `current` marking this one.
+- `DELETE /me/sessions/{id}`: 204; 404 for a session that is not yours.
+- `POST /me/sessions/revoke-others`: `{revoked: n}`.
+- `GET /me/passkeys`: `{passkeys: [{id, name, created_at, last_used_at?, synced}]}`.
+- `POST /me/passkeys/begin`: 200 `{ceremony, options}` for `navigator.credentials.create` (resident key
+  and user verification required, no attestation); 409 `too_many_passkeys` (20).
+- `POST /me/passkeys/finish` `{ceremony, credential, name?}`: 201 passkey; 400 `passkey_rejected` or
+  `bad_name` (1 to 64 characters, default "Passkey").
+- `PATCH /me/passkeys/{id}` `{name}`: 204.
+- `DELETE /me/passkeys/{id}`: 204; 409 `last_sign_in_method` when the account has no password and this is
+  its last passkey.
