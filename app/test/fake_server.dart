@@ -118,6 +118,25 @@ class FakeServer {
         });
       case 'GET /me':
         return me == null ? _err(401, 'unauthorized') : _json(200, me);
+      case 'PATCH /me':
+        if (me == null) return _err(401, 'unauthorized');
+        if (body['theme'] != null && body['theme'] != 'classic' && body['theme'] != 'cyberpunk') {
+          return _err(400, 'bad_theme');
+        }
+        for (final k in ['display_name', 'theme', 'card_back']) {
+          if (body.containsKey(k)) me[k] = body[k];
+        }
+        return _json(200, me);
+      case 'GET /card-backs':
+        return _json(200, {
+          'default': 'classic-blue',
+          'card_backs': [
+            {'id': 'classic-red', 'name': 'Classic red', 'theme': 'classic', 'built_in': true},
+            {'id': 'classic-blue', 'name': 'Classic blue', 'theme': 'classic', 'built_in': true},
+            {'id': 'cyber-grid', 'name': 'Neon grid', 'theme': 'cyberpunk', 'built_in': true},
+            {'id': 'cyber-circuit', 'name': 'Circuit', 'theme': 'cyberpunk', 'built_in': true},
+          ]
+        });
       case 'POST /me/password':
         if (me == null) return _err(401, 'unauthorized');
         me['must_change_password'] = false;

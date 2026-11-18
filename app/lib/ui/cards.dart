@@ -1,4 +1,7 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'appearance.dart';
 
 /// Classic two-colour deck: hearts and diamonds red, spades and clubs black.
 const _suitGlyph = {'s': '\u2660', 'h': '\u2665', 'd': '\u2666', 'c': '\u2663'};
@@ -8,7 +11,7 @@ String suitGlyph(String card) => card.length < 2 ? '' : _suitGlyph[card[1]] ?? '
 bool isRed(String card) => card.length > 1 && (card[1] == 'h' || card[1] == 'd');
 
 /// One playing card, face up ([card] like "As") or face down (null).
-class PlayingCard extends StatelessWidget {
+class PlayingCard extends ConsumerWidget {
   const PlayingCard(this.card, {super.key, this.width = 40, this.dim = false, this.highlight = false});
 
   final String? card;
@@ -17,24 +20,12 @@ class PlayingCard extends StatelessWidget {
   final bool highlight;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final h = width * 1.4;
     final c = card;
     final Widget face;
     if (c == null) {
-      face = Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF8E1B2B),
-          borderRadius: BorderRadius.circular(width * 0.12),
-          border: Border.all(color: Colors.white, width: 2),
-        ),
-        child: Center(
-          child: Text(
-            '\u2666',
-            style: TextStyle(fontFamily: 'NotoSansSuits', color: Colors.white54, fontSize: width * 0.5),
-          ),
-        ),
-      );
+      face = CardBackFace(ref.watch(cardBackProvider), width: width);
     } else {
       final color = isRed(c) ? const Color(0xFFC62828) : const Color(0xFF1B1B1B);
       face = Container(

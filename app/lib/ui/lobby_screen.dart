@@ -52,7 +52,7 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
     final rt = ref.watch(realtimeProvider);
     final tables = rt.tables;
     return Scaffold(
-      backgroundColor: felt,
+      backgroundColor: context.palette.background,
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [

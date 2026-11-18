@@ -164,6 +164,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               const SizedBox(height: 8),
               Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _saveName, child: Text(l.save))),
             ]),
+            section(l.appearance, [const AppearancePicker()]),
             section(l.changePassword, [
               TextField(controller: _current, obscureText: true, decoration: InputDecoration(labelText: l.currentPassword)),
               TextField(controller: _next, obscureText: true, decoration: InputDecoration(labelText: l.newPassword)),
@@ -297,5 +298,64 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         ),
       ),
     );
+  }
+}
+
+/// Theme switch and card back choice, both stored on the account.
+class AppearancePicker extends ConsumerWidget {
+  const AppearancePicker({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l;
+    final user = ref.watch(sessionProvider).user;
+    if (user == null) return const SizedBox.shrink();
+    final s = ref.read(sessionProvider.notifier);
+    Future<void> save({String? theme, String? cardBack}) async {
+      final u = await guard(context, ref, () => s.api().setAppearance(theme: theme, cardBack: cardBack));
+      if (u != null) s.updateUser(u);
+    }
+
+    final backs = ref.watch(cardBacksProvider).value;
+    Widget choice(String id, String label, {required bool selected, required String value}) => InkWell(
+          key: Key('pick-back-${value.isEmpty ? 'default' : value}'),
+          onTap: () => save(cardBack: value),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: selected ? Theme.of(context).colorScheme.primary : Colors.transparent, width: 2),
+            ),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              CardBackFace(id, width: 44),
+              const SizedBox(height: 4),
+              SizedBox(width: 72, child: Text(label, textAlign: TextAlign.center, maxLines: 2, style: Theme.of(context).textTheme.bodySmall)),
+            ]),
+          ),
+        );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(l.theme),
+      const SizedBox(height: 8),
+      SegmentedButton<String>(
+        key: const Key('theme-picker'),
+        segments: [
+          ButtonSegment(value: themeClassic, label: Text(l.themeClassic)),
+          ButtonSegment(value: themeCyberpunk, label: Text(l.themeCyberpunk)),
+        ],
+        selected: {user.theme == themeCyberpunk ? themeCyberpunk : themeClassic},
+        onSelectionChanged: (v) => save(theme: v.first),
+      ),
+      const SizedBox(height: 16),
+      Text(l.cardBack),
+      const SizedBox(height: 8),
+      if (backs == null)
+        const LinearProgressIndicator()
+      else
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          choice(backs.defaultId, l.serverDefault, selected: user.cardBack.isEmpty, value: ''),
+          for (final b in backs.backs) choice(b.id, b.name, selected: user.cardBack == b.id, value: b.id),
+        ]),
+    ]);
   }
 }

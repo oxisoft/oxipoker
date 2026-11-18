@@ -276,5 +276,17 @@
   "@youFinished": {"placeholders": {"place": {"type": "int"}}},
   "wsSngStarted": "The sit-and-go has already started.",
   "wsTooFewPlayers": "A sit-and-go needs at least two players.",
-  "wsHostOnly": "Only the host or an admin can do that."
+  "wsHostOnly": "Only the host or an admin can do that.",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "themeClassic": "Classic",
+  "themeCyberpunk": "Cyberpunk",
+  "cardBack": "Card back",
+  "serverDefault": "Server default",
+  "defaultCardBack": "Default card back",
+  "cardBacks": "Card backs",
+  "errBadTheme": "Unknown theme.",
+  "errBadCardBack": "That card back is not available.",
+  "errCardBackDefault": "The default card back cannot be deleted.",
+  "errTooManyCardBacks": "There are too many uploaded card backs. Delete one first."
 }

@@ -812,4 +812,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wsHostOnly => 'Only the host or an admin can do that.';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get themeClassic => 'Classic';
+
+  @override
+  String get themeCyberpunk => 'Cyberpunk';
+
+  @override
+  String get cardBack => 'Card back';
+
+  @override
+  String get serverDefault => 'Server default';
+
+  @override
+  String get defaultCardBack => 'Default card back';
+
+  @override
+  String get cardBacks => 'Card backs';
+
+  @override
+  String get errBadTheme => 'Unknown theme.';
+
+  @override
+  String get errBadCardBack => 'That card back is not available.';
+
+  @override
+  String get errCardBackDefault => 'The default card back cannot be deleted.';
+
+  @override
+  String get errTooManyCardBacks =>
+      'There are too many uploaded card backs. Delete one first.';
 }

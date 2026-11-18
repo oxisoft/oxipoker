@@ -150,7 +150,7 @@ class _ReplayScreenState extends ConsumerState<ReplayScreen> {
           return Column(
             children: [
               Container(
-                color: felt,
+                color: context.palette.felt,
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 child: Column(

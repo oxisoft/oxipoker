@@ -12,7 +12,7 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      const Scaffold(backgroundColor: felt, body: Center(child: CircularProgressIndicator()));
+      Scaffold(backgroundColor: context.palette.background, body: const Center(child: CircularProgressIndicator()));
 }
 
 /// Native apps only: pick the server, by address or by pasting an invitation link.

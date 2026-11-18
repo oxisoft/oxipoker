@@ -6,6 +6,7 @@ import 'package:oxipoker/main.dart';
 import 'package:oxipoker/passkey/passkey.dart';
 import 'package:oxipoker/router.dart';
 import 'package:oxipoker/state/session.dart';
+import 'package:oxipoker/ui/appearance.dart';
 
 import 'fake_server.dart';
 
@@ -155,15 +156,39 @@ void main() {
       expect(find.byKey(const Key('sign-in-passkey')), findsNothing);
     });
 
+    testWidgets('theme and card back are picked on the account screen', (tester) async {
+      final (fake, _) = await pumpApp(tester, passkeys: FakePasskeys());
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-account')));
+      await tester.pumpAndSettle();
+      // Server default (classic-blue here) until the user picks one.
+      expect(Theme.of(tester.element(find.byKey(const Key('theme-picker')))).extension<TablePalette>(), TablePalette.classic);
+      expect(find.byKey(const Key('back-classic-blue')), findsNWidgets(2));
+      await tester.tap(find.text('Cyberpunk'));
+      await tester.pumpAndSettle();
+      expect(fake.users['u1']!['theme'], 'cyberpunk');
+      expect(Theme.of(tester.element(find.byKey(const Key('theme-picker')))).extension<TablePalette>(), TablePalette.cyberpunk);
+      await tester.ensureVisible(find.byKey(const Key('pick-back-cyber-grid')));
+      await tester.tap(find.byKey(const Key('pick-back-cyber-grid')));
+      await tester.pumpAndSettle();
+      expect(fake.users['u1']!['card_back'], 'cyber-grid');
+      final container = ProviderScope.containerOf(tester.element(find.byKey(const Key('theme-picker'))));
+      expect(container.read(cardBackProvider), 'cyber-grid');
+      await tester.tap(find.byKey(const Key('pick-back-default')));
+      await tester.pumpAndSettle();
+      expect(container.read(cardBackProvider), 'classic-blue');
+    });
+
     testWidgets('account screen lists passkeys and sessions', (tester) async {
       await pumpApp(tester, passkeys: FakePasskeys());
       await signIn(tester, 'alice', 'correct horse');
       await tester.tap(find.byKey(const Key('open-account')));
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('totp-enable')), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Test browser'), 200, scrollable: find.byType(Scrollable).first);
       expect(find.text('Laptop'), findsOneWidget);
       expect(find.text('Test browser'), findsOneWidget);
       expect(find.byKey(const Key('add-passkey')), findsOneWidget);
-      expect(find.byKey(const Key('totp-enable')), findsOneWidget);
       await tester.tap(find.byKey(const Key('sign-out')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('sign-in')), findsOneWidget);

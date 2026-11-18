@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'l10n/app_localizations.dart';
 import 'router.dart';
 import 'state/session.dart';
-import 'ui/common.dart';
+import 'ui/appearance.dart';
 
 void main() {
   usePathUrlStrategy();
@@ -20,18 +20,6 @@ void main() {
   ));
 }
 
-ThemeData oxiTheme() => ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: felt, brightness: Brightness.dark),
-      useMaterial3: true,
-      fontFamily: appFont,
-      fontFamilyFallback: appFontFallback,
-    );
-
-/// Bundled fonts (see pubspec.yaml): text in Noto Sans, card suits from a subset of
-/// Noto Sans Symbols 2. Nothing is fetched from a font CDN.
-const appFont = 'NotoSans';
-const appFontFallback = ['NotoSansSuits'];
-
 class OxiPokerApp extends ConsumerWidget {
   const OxiPokerApp({super.key});
 
@@ -40,7 +28,7 @@ class OxiPokerApp extends ConsumerWidget {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
-      theme: oxiTheme(),
+      theme: themeFor(ref.watch(sessionProvider.select((s) => s.user?.theme))),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

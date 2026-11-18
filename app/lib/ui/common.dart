@@ -6,9 +6,9 @@ import 'package:material_ui/material_ui.dart';
 import '../api/api.dart';
 import '../l10n/app_localizations.dart';
 import '../state/session.dart';
+import 'appearance.dart';
 
-/// Felt green of the classic table theme.
-const felt = Color(0xFF0B5D3B);
+export 'appearance.dart';
 
 extension L10nX on BuildContext {
   AppLocalizations get l => AppLocalizations.of(this);
@@ -41,6 +41,10 @@ String errorText(AppLocalizations l, Object e) {
     'last_sign_in_method' => l.errLastSignInMethod,
     'bad_invitation' => l.errBadInvitation,
     'bad_settings' => l.errBadSettings,
+    'bad_theme' => l.errBadTheme,
+    'bad_card_back' => l.errBadCardBack,
+    'is_default' => l.errCardBackDefault,
+    'too_many_card_backs' => l.errTooManyCardBacks,
     _ => l.errGeneric(e.code),
   };
 }
@@ -76,7 +80,7 @@ class FormPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: felt,
+      backgroundColor: context.palette.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

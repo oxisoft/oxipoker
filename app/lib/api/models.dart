@@ -21,6 +21,8 @@ class User {
     required this.displayName,
     this.isAdmin = false,
     this.avatar,
+    this.theme = 'classic',
+    this.cardBack = '',
     this.mustChangePassword = false,
     this.disabledAt,
   });
@@ -30,6 +32,8 @@ class User {
   final String displayName;
   final bool isAdmin;
   final String? avatar;
+  final String theme;
+  final String cardBack; // '' = the server default
   final bool mustChangePassword;
   final DateTime? disabledAt;
 
@@ -44,6 +48,8 @@ class User {
       displayName: j['display_name'] as String? ?? '',
       isAdmin: j['is_admin'] as bool? ?? false,
       avatar: j['avatar'] as String?,
+      theme: j['theme'] as String? ?? 'classic',
+      cardBack: j['card_back'] as String? ?? '',
       mustChangePassword: j['must_change_password'] as bool? ?? false,
       disabledAt: _time(j['disabled_at']),
     );
@@ -193,13 +199,36 @@ class PasskeyInfo {
 }
 
 class ServerSettings {
-  const ServerSettings(this.tableCreation, this.maxUploadBytes);
+  const ServerSettings(this.tableCreation, this.maxUploadBytes, [this.cardBackDefault = 'classic-red']);
 
   final String tableCreation;
   final int maxUploadBytes;
+  final String cardBackDefault;
 
-  factory ServerSettings.fromJson(dynamic j) =>
-      ServerSettings(j['table_creation'] as String? ?? 'everyone', j['max_upload_bytes'] as int? ?? 0);
+  factory ServerSettings.fromJson(dynamic j) => ServerSettings(j['table_creation'] as String? ?? 'everyone',
+      j['max_upload_bytes'] as int? ?? 0, j['card_back_default'] as String? ?? 'classic-red');
+}
+
+class CardBackInfo {
+  const CardBackInfo(this.id, this.name, {this.theme = '', this.builtIn = false});
+
+  final String id;
+  final String name;
+  final String theme;
+  final bool builtIn;
+
+  factory CardBackInfo.fromJson(dynamic j) => CardBackInfo(j['id'] as String, j['name'] as String? ?? '',
+      theme: j['theme'] as String? ?? '', builtIn: j['built_in'] as bool? ?? false);
+}
+
+class CardBackList {
+  const CardBackList(this.defaultId, this.backs);
+
+  final String defaultId;
+  final List<CardBackInfo> backs;
+
+  factory CardBackList.fromJson(dynamic j) => CardBackList(j['default'] as String? ?? 'classic-red',
+      [for (final b in (j['card_backs'] as List? ?? const [])) CardBackInfo.fromJson(b)]);
 }
 
 class AuditEvent {

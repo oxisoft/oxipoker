@@ -296,6 +296,7 @@ class SettingsTab extends ConsumerStatefulWidget {
 
 class _SettingsTabState extends ConsumerState<SettingsTab> {
   String? _tables;
+  String? _back;
   final _upload = TextEditingController();
   bool _loaded = false;
 
@@ -310,6 +311,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       if (st != null && mounted) {
         setState(() {
           _tables = st.tableCreation;
+          _back = st.cardBackDefault;
           _upload.text = '${st.maxUploadBytes ~/ 1024}';
           _loaded = true;
         });
@@ -320,8 +322,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   Future<void> _save() async {
     final kib = int.tryParse(_upload.text.trim());
     final st = await guard(
-        context, ref, () => _s.api().updateSettings(tableCreation: _tables, maxUploadBytes: kib == null ? null : kib * 1024));
-    if (st != null && mounted) toast(context, context.l.saved);
+        context, ref, () => _s.api().updateSettings(tableCreation: _tables, maxUploadBytes: kib == null ? null : kib * 1024, cardBackDefault: _back));
+    if (st != null && mounted) {
+      ref.invalidate(cardBacksProvider);
+      toast(context, context.l.saved);
+    }
   }
 
   @override
@@ -340,6 +345,20 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       ),
       const SizedBox(height: 12),
       TextField(controller: _upload, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: l.maxUpload)),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+        key: const Key('default-back'),
+        initialValue: _back,
+        decoration: InputDecoration(labelText: l.defaultCardBack),
+        items: [
+          for (final b in ref.watch(cardBacksProvider).value?.backs ?? const <CardBackInfo>[])
+            DropdownMenuItem(
+              value: b.id,
+              child: Row(children: [CardBackFace(b.id, width: 18), const SizedBox(width: 8), Text(b.name)]),
+            ),
+        ],
+        onChanged: (v) => setState(() => _back = v),
+      ),
       const SizedBox(height: 16),
       Align(alignment: Alignment.centerRight, child: FilledButton(key: const Key('save-settings'), onPressed: _save, child: Text(l.save))),
     ]);

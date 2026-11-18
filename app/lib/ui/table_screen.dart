@@ -13,8 +13,6 @@ import 'cards.dart';
 import 'common.dart';
 import 'lobby_screen.dart' show LinkBanner;
 
-const _rail = Color(0xFF5B3A1E);
-const _railLight = Color(0xFF8A5A2B);
 const _gold = Color(0xFFFFC400);
 
 /// Sentence for an error code of the realtime protocol.
@@ -397,7 +395,7 @@ class TableFelt extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.elliptical(w, h)),
-                  gradient: const LinearGradient(colors: [_railLight, _rail], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                  gradient: LinearGradient(colors: [context.palette.railLight, context.palette.rail], begin: Alignment.topCenter, end: Alignment.bottomCenter),
                   boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 12, offset: Offset(0, 6))],
                 ),
                 padding: EdgeInsets.all(max(10, w / 40)),
@@ -405,7 +403,7 @@ class TableFelt extends StatelessWidget {
                   key: const Key('felt'),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.all(Radius.elliptical(w, h)),
-                    gradient: const RadialGradient(colors: [Color(0xFF15834F), felt], radius: 0.9),
+                    gradient: RadialGradient(colors: [context.palette.feltLight, context.palette.felt], radius: 0.9),
                   ),
                 ),
               ),

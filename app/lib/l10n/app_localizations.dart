@@ -1479,6 +1479,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only the host or an admin can do that.'**
   String get wsHostOnly;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @themeClassic.
+  ///
+  /// In en, this message translates to:
+  /// **'Classic'**
+  String get themeClassic;
+
+  /// No description provided for @themeCyberpunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Cyberpunk'**
+  String get themeCyberpunk;
+
+  /// No description provided for @cardBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Card back'**
+  String get cardBack;
+
+  /// No description provided for @serverDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Server default'**
+  String get serverDefault;
+
+  /// No description provided for @defaultCardBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Default card back'**
+  String get defaultCardBack;
+
+  /// No description provided for @cardBacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Card backs'**
+  String get cardBacks;
+
+  /// No description provided for @errBadTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown theme.'**
+  String get errBadTheme;
+
+  /// No description provided for @errBadCardBack.
+  ///
+  /// In en, this message translates to:
+  /// **'That card back is not available.'**
+  String get errBadCardBack;
+
+  /// No description provided for @errCardBackDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'The default card back cannot be deleted.'**
+  String get errCardBackDefault;
+
+  /// No description provided for @errTooManyCardBacks.
+  ///
+  /// In en, this message translates to:
+  /// **'There are too many uploaded card backs. Delete one first.'**
+  String get errTooManyCardBacks;
 }
 
 class _AppLocalizationsDelegate

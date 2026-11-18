@@ -181,6 +181,22 @@ class Api {
 
   Uri avatarUrl(User u) => _u('/users/${u.id}/avatar', {'v': u.avatar ?? ''});
 
+  Future<User> setAppearance({String? theme, String? cardBack}) async =>
+      User.fromJson(await _send('PATCH', '/me', body: {'theme': ?theme, 'card_back': ?cardBack}));
+
+  Future<CardBackList> cardBacks() async => CardBackList.fromJson(await _send('GET', '/card-backs'));
+
+  Uri cardBackImageUrl(String id) => _u('/card-backs/$id/image');
+
+  Future<CardBackInfo> adminAddCardBack(String name, Uint8List bytes) async {
+    final req = http.Request('POST', _u('/admin/card-backs', {'name': name}))
+      ..headers.addAll({..._headers, 'Content-Type': 'application/octet-stream'})
+      ..bodyBytes = bytes;
+    return CardBackInfo.fromJson(_decode(await http.Response.fromStream(await _http.send(req))));
+  }
+
+  Future<void> adminDeleteCardBack(String id) => _send('DELETE', '/admin/card-backs/$id');
+
   // Admin console.
 
   Future<UserPage> adminUsers({String q = '', int offset = 0}) async => UserPage.fromJson(
@@ -216,10 +232,11 @@ class Api {
 
   Future<ServerSettings> settings() async => ServerSettings.fromJson(await _send('GET', '/admin/settings'));
 
-  Future<ServerSettings> updateSettings({String? tableCreation, int? maxUploadBytes}) async =>
+  Future<ServerSettings> updateSettings({String? tableCreation, int? maxUploadBytes, String? cardBackDefault}) async =>
       ServerSettings.fromJson(await _send('PATCH', '/admin/settings', body: {
         'table_creation': ?tableCreation,
         'max_upload_bytes': ?maxUploadBytes,
+        'card_back_default': ?cardBackDefault,
       }));
 
   Future<List<AuditEvent>> audit({String action = '', int? before}) async =>
