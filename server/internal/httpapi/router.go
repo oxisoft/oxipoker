@@ -10,6 +10,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/oxisoft/oxipoker/server/internal/secret"
+	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/version"
 	"github.com/oxisoft/oxipoker/server/internal/webapp"
 )
@@ -18,14 +20,19 @@ import (
 type Options struct {
 	// Media reports whether the full deployment (LiveKit) is configured.
 	Media bool
+	// Store is the database; nil only in tests of the static routes.
+	Store *store.Store
+	// Secret is the server's root secret.
+	Secret *secret.Secret
 }
 
 // Health is the body of GET /api/v1/health.
 type Health struct {
-	Status  string `json:"status"`
-	Version string `json:"version"`
-	WebApp  bool   `json:"webapp"`
-	Media   bool   `json:"media"`
+	Status   string `json:"status"`
+	Version  string `json:"version"`
+	WebApp   bool   `json:"webapp"`
+	Media    bool   `json:"media"`
+	Database string `json:"database"`
 }
 
 // NewRouter returns the server's root handler.
@@ -37,8 +44,16 @@ func NewRouter(opt Options) http.Handler {
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Use(middleware.Timeout(30 * time.Second))
-		api.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
-			writeJSON(w, http.StatusOK, Health{Status: "ok", Version: version.Version, WebApp: webapp.Bundled(), Media: opt.Media})
+		api.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			h := Health{Status: "ok", Version: version.Version, WebApp: webapp.Bundled(), Media: opt.Media, Database: "none"}
+			code := http.StatusOK
+			if opt.Store != nil {
+				h.Database = "ok"
+				if err := opt.Store.Ping(r.Context()); err != nil {
+					h.Status, h.Database, code = "degraded", "error", http.StatusServiceUnavailable
+				}
+			}
+			writeJSON(w, code, h)
 		})
 		api.NotFound(func(w http.ResponseWriter, _ *http.Request) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not_found"})

@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/oxisoft/oxipoker/server/internal/httpapi"
+	"github.com/oxisoft/oxipoker/server/internal/secret"
+	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/version"
 )
 
@@ -40,16 +42,35 @@ func main() {
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	media := os.Getenv("LIVEKIT_URL") != ""
-
-	srv := &http.Server{
-		Addr:              net.JoinHostPort("", port),
-		Handler:           httpapi.NewRouter(httpapi.Options{Media: media}),
-		ReadHeaderTimeout: 10 * time.Second,
-		IdleTimeout:       120 * time.Second,
-	}
+	dataDir := env("DATA_DIR", "data")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// The secret is loaded before the database so a broken SERVER_SECRET
+	// fails the start without touching the data volume.
+	sec, src, err := secret.Load(dataDir, os.Getenv("SERVER_SECRET"))
+	if err != nil {
+		log.Error("server secret", "err", err)
+		os.Exit(1)
+	}
+	log.Info("server secret loaded", "source", string(src))
+
+	st, err := store.Open(ctx, dataDir)
+	if err != nil {
+		log.Error("database", "err", err)
+		os.Exit(1)
+	}
+	defer st.Close()
+	schema, _ := st.SchemaVersion(ctx)
+	log.Info("database ready", "dir", dataDir, "schema", schema)
+
+	srv := &http.Server{
+		Addr:              net.JoinHostPort("", port),
+		Handler:           httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec}),
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
 
 	go func() {
 		log.Info("oxipoker listening", "version", version.Version, "port", port, "media", media)

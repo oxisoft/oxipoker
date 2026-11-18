@@ -1,11 +1,14 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/oxisoft/oxipoker/server/internal/store"
 )
 
 func TestHealth(t *testing.T) {
@@ -26,6 +29,36 @@ func TestHealth(t *testing.T) {
 	}
 	if h.Status != "ok" || h.Version == "" {
 		t.Fatalf("unexpected health %+v", h)
+	}
+}
+
+func getHealth(t *testing.T, opt Options) (int, Health) {
+	t.Helper()
+	srv := httptest.NewServer(NewRouter(opt))
+	defer srv.Close()
+	res, err := http.Get(srv.URL + "/api/v1/health")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	var h Health
+	if err := json.NewDecoder(res.Body).Decode(&h); err != nil {
+		t.Fatal(err)
+	}
+	return res.StatusCode, h
+}
+
+func TestHealthChecksDatabase(t *testing.T) {
+	st, err := store.Open(context.Background(), t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code, h := getHealth(t, Options{Store: st}); code != http.StatusOK || h.Database != "ok" {
+		t.Fatalf("open db: %d %+v", code, h)
+	}
+	st.Close()
+	if code, h := getHealth(t, Options{Store: st}); code != http.StatusServiceUnavailable || h.Database != "error" {
+		t.Fatalf("closed db: %d %+v", code, h)
 	}
 }
 
