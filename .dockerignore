@@ -1,0 +1,3 @@
+*
+!server/
+server/**/*_test.go

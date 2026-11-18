@@ -1,0 +1,63 @@
+# Oxi Poker: one file, two deployment options.
+#
+#   Minimal (game + text chat), one container:
+#     docker compose up -d
+#
+#   Full (game + chat + voice + video), adds the LiveKit media server:
+#     docker compose --profile full up -d
+#
+# Put an HTTPS reverse proxy in front (see README): browsers allow passkeys,
+# camera and microphone only over HTTPS.
+#
+# Copy .env.example to .env next to this file and fill it in first.
+
+services:
+  oxipoker:
+    image: oxisoft/oxipoker:${OXIPOKER_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${OXIPOKER_PORT:-8080}:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      # Public address of this server, e.g. https://poker.example.com
+      PUBLIC_URL: ${PUBLIC_URL:?set PUBLIC_URL in .env}
+      # First admin, created on the first start and ignored once an admin
+      # exists. Change the password in the admin console afterwards.
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Full option only: leave empty for minimal.
+      LIVEKIT_URL: ${LIVEKIT_URL:-}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+    healthcheck:
+      test: ["CMD", "/app/oxipoker", "-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  livekit:
+    profiles: ["full"]
+    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.13}
+    restart: unless-stopped
+    environment:
+      # livekit-server reads its keys and its config from these two variables.
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-}: ${LIVEKIT_API_SECRET:-}"
+      LIVEKIT_CONFIG: |
+        port: 7880
+        rtc:
+          tcp_port: 7881
+          udp_port: 7882
+          use_external_ip: true
+        turn:
+          enabled: ${LIVEKIT_TURN_ENABLED:-false}
+          domain: ${LIVEKIT_TURN_DOMAIN:-}
+          udp_port: 3478
+    ports:
+      # Signalling goes through your HTTPS proxy to this port.
+      - "127.0.0.1:7880:7880"
+      # Media must be reachable directly from the internet.
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+      - "3478:3478/udp"

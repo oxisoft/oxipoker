@@ -1,0 +1,34 @@
+name: Bug report
+description: Something does not work as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Server version
+      description: Shown at /api/v1/health on your server.
+  - type: input
+    id: client
+    attributes:
+      label: Client
+      description: Browser and version, or the app and the operating system.
+  - type: dropdown
+    id: option
+    attributes:
+      label: Deployment option
+      options:
+        - minimal
+        - full (voice and video)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from `docker compose logs`. Remove anything private.
+      render: text
