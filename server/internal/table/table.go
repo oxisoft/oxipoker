@@ -4,6 +4,7 @@
 package table
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -23,6 +24,15 @@ type Settings struct {
 	StartingStack int64         `json:"starting_stack"`
 	TurnTime      time.Duration `json:"turn_time"`
 	Spectators    bool          `json:"spectators"`
+}
+
+// MarshalJSON sends the turn time in whole seconds.
+func (s Settings) MarshalJSON() ([]byte, error) {
+	type plain Settings
+	return json.Marshal(struct {
+		plain
+		TurnTime int64 `json:"turn_time"`
+	}{plain(s), int64(s.TurnTime / time.Second)})
 }
 
 // Limits of the table settings.

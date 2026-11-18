@@ -120,3 +120,35 @@ All under `/admin`, admins only (403 `admin_only`). Every change lands in the au
 
 A user holding a temporary password gets 403 `password_change_required` on everything except `GET /me`,
 `POST /me/password` and `POST /auth/signout`.
+
+## Tables (lobby)
+
+Signed in. Settings in JSON use whole seconds for `turn_time`.
+
+- `GET /api/v1/tables` lists the open tables, oldest first: `{"tables":[{"id","host","settings":{name, seats, small_blind, big_blind, starting_stack, turn_time, spectators},"taken","players":[names],"hand_no"}]}`.
+- `POST /api/v1/tables` `{name, seats, small_blind, big_blind, starting_stack, turn_time, spectators}` creates a table hosted by the caller (201, lobby entry). Limits: name 1 to 40 characters, 2 to 9 seats, big blind at least 1 and small blind not above it, starting stack at least two big blinds, turn time 5 to 300 s. Errors: `bad_settings` (with `detail`), `admins_only` when the admin setting `table_creation` is `admins`, `too_many_tables` (100 open tables).
+- `DELETE /api/v1/tables/{id}` closes a table (204); only its host or an admin (`host_or_admin_only`). A running hand is cancelled and every stack goes back to where it was before it.
+
+Empty tables close by themselves after 30 minutes.
+
+## Realtime (WebSocket)
+
+`GET /api/v1/ws` upgrades to a WebSocket. One connection per tab or app carries the lobby, the watched table and its chat.
+
+- Auth: browsers use the session cookie and must send `Origin` equal to the server's `PUBLIC_URL`; native apps send `Authorization: Bearer <token>` and no Origin. Anything else gets 401 or 403 before the upgrade.
+- At most 10 connections per account (the 11th is closed with status 1008). Messages are JSON text frames of at most 4 KiB. The server pings every 25 s and re-checks the session: a signed-out session, a disabled account or a reset password closes the connection. A client that does not read its messages is disconnected.
+
+Client messages (`id` is optional; when set, the server answers `{"type":"ok","id":n}` or `{"type":"error","id":n,"error":"<code>"}`):
+
+- `{"type":"lobby","on":true}` / `false`: receive `lobby` messages whenever a table opens, closes or changes.
+- `{"type":"watch","table":"<id>"}`: watch one table (replaces the previous one); the current view is sent at once, so a client that reconnects (a phone that slept) sends `watch` again and is back where it was. `{"type":"unwatch"}`.
+- On the watched table: `{"type":"sit","seat":n}` (buy in with the starting stack), `{"type":"sitout"}`, `{"type":"comeback"}` (a player with no chips buys in again), `{"type":"leave"}` (folds if in a hand), `{"type":"act","action":"fold|check|call|bet|raise","to":n}` (`to` = the player's total for the street, for bet and raise), `{"type":"chat","text":"..."}`, `{"type":"ping"}`.
+
+Server messages:
+
+- `{"type":"hello","user","name"}` first.
+- `{"type":"view","view":{...}}` after every change of the watched table. The view is built for this viewer: own hole cards, cards shown at showdown, and `hand.legal` only for the player to act (`fold`, `check`, `call` = chips to call, `bet_kind` = `bet` or `raise`, `min_to`, `max_to`). Spectators see no hole cards. On a table without spectators, someone who is not seated sees the seats but no hand. A closed table sends a last view with `"closed":true`.
+- `{"type":"lobby","tables":[...]}`, same entries as `GET /api/v1/tables`.
+- `{"type":"chat","table","user","name","text","at"}`. Chat is for players and spectators of the table, 1 to 300 characters, 5 messages per 10 s per connection, and is never stored.
+
+Error codes: `bad_intent`, `not_watching`, `no_table`, `seat_taken`, `bad_seat`, `already_seated`, `not_seated`, `not_in_hand`, `not_your_turn`, `illegal_action`, `bad_amount`, `bad_chat`, `rate_limited`, `spectators_off`. An error never changes the table.

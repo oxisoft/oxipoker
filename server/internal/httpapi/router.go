@@ -12,8 +12,10 @@ import (
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/applinks"
+	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
+	"github.com/oxisoft/oxipoker/server/internal/table"
 	"github.com/oxisoft/oxipoker/server/internal/version"
 	"github.com/oxisoft/oxipoker/server/internal/webapp"
 )
@@ -34,6 +36,11 @@ type Options struct {
 	PublicURL string
 	// AndroidApps are published in /.well-known/assetlinks.json; nil = the official app.
 	AndroidApps []applinks.App
+	// Tables and Hub enable the game: lobby API and WebSocket. Both or neither.
+	Tables *table.Manager
+	Hub    *realtime.Hub
+	// PingEvery is the WebSocket keepalive interval (0 = default).
+	PingEvery time.Duration
 }
 
 // Health is the body of GET /api/v1/health.
@@ -53,8 +60,8 @@ func NewRouter(opt Options) http.Handler {
 	r.Use(securityHeaders)
 
 	r.Route("/api/v1", func(api chi.Router) {
-		api.Use(middleware.Timeout(30 * time.Second))
-		api.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		// No timeout on the whole tree: the WebSocket outlives any request.
+		api.With(middleware.Timeout(30*time.Second)).Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			h := Health{Status: "ok", Version: version.Version, WebApp: webapp.Bundled(), Media: opt.Media, Database: "none"}
 			code := http.StatusOK
 			if opt.Store != nil {
@@ -70,10 +77,23 @@ func NewRouter(opt Options) http.Handler {
 		})
 		if opt.Accounts != nil {
 			a := newAuthAPI(opt)
+			var game *gameAPI
+			if opt.Tables != nil && opt.Hub != nil {
+				game = newGameAPI(a, opt)
+			}
 			api.Group(func(g chi.Router) {
-				g.Use(a.checkOrigin, a.authenticate)
+				g.Use(middleware.Timeout(30*time.Second), a.checkOrigin, a.authenticate)
 				a.routes(g)
+				if game != nil {
+					g.Group(func(g chi.Router) {
+						g.Use(requireUser)
+						game.routes(g)
+					})
+				}
 			})
+			if game != nil {
+				api.With(a.authenticate, requireUser).Get("/ws", game.ws)
+			}
 		}
 	})
 

@@ -46,6 +46,20 @@ func (k ActionKind) String() string {
 	return "unknown"
 }
 
+// MarshalText makes action kinds appear by name ("raise") in JSON.
+func (k ActionKind) MarshalText() ([]byte, error) { return []byte(k.String()), nil }
+
+// UnmarshalText parses an action name.
+func (k *ActionKind) UnmarshalText(b []byte) error {
+	for i, n := range actionNames {
+		if i > 0 && n == string(b) {
+			*k = ActionKind(i)
+			return nil
+		}
+	}
+	return fmt.Errorf("engine: unknown action %q", b)
+}
+
 // Action is one player intent. To is used by Bet and Raise only and is the
 // player's total for this street (raise "to", not "by").
 type Action struct {
