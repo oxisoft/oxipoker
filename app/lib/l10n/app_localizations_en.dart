@@ -19,7 +19,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serverHint => 'Server address or invitation link';
 
   @override
-  String get serverHelp => 'Paste the invitation link you got from your host, or the address of your poker server.';
+  String get serverHelp =>
+      'Paste the invitation link you got from your host, or the address of your poker server.';
 
   @override
   String get connect => 'Connect';
@@ -60,7 +61,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totpTitle => 'Two-factor code';
 
   @override
-  String get totpHelp => 'Enter the 6-digit code from your authenticator app, or one of your recovery codes.';
+  String get totpHelp =>
+      'Enter the 6-digit code from your authenticator app, or one of your recovery codes.';
 
   @override
   String get code => 'Code';
@@ -153,13 +155,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPassword => 'New password';
 
   @override
-  String get passwordChanged => 'Password changed. Your other sessions were signed out.';
+  String get passwordChanged =>
+      'Password changed. Your other sessions were signed out.';
 
   @override
   String get mustChangeTitle => 'Choose a new password';
 
   @override
-  String get mustChangeHelp => 'Your admin gave you a temporary password. Choose your own to continue.';
+  String get mustChangeHelp =>
+      'Your admin gave you a temporary password. Choose your own to continue.';
 
   @override
   String get sessions => 'Sessions';
@@ -196,7 +200,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get disable => 'Turn off';
 
   @override
-  String get totpScan => 'Scan this code with your authenticator app, then enter the 6-digit code it shows.';
+  String get totpScan =>
+      'Scan this code with your authenticator app, then enter the 6-digit code it shows.';
 
   @override
   String totpSecret(String secret) {
@@ -238,10 +243,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dangerZone => 'Delete account';
 
   @override
-  String get deleteAccountHelp => 'Your account and everything in it are deleted for good.';
+  String get deleteAccountHelp =>
+      'Your account and everything in it are deleted for good.';
 
   @override
-  String get deleteAccountConfirm => 'Enter your password to delete your account.';
+  String get deleteAccountConfirm =>
+      'Enter your password to delete your account.';
 
   @override
   String get users => 'Users';
@@ -302,7 +309,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invitationLink => 'Invitation link';
 
   @override
-  String get invitationLinkHelp => 'Send this link to the player. It is shown only now.';
+  String get invitationLinkHelp =>
+      'Send this link to the player. It is shown only now.';
 
   @override
   String invitationUses(int uses, int max) {
@@ -369,7 +377,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errInvitationUsed => 'This invitation link has already been used.';
 
   @override
-  String get errBadUsername => 'Usernames have 3 to 32 letters, digits, dots, dashes or underscores.';
+  String get errBadUsername =>
+      'Usernames have 3 to 32 letters, digits, dots, dashes or underscores.';
 
   @override
   String get errBadDisplayName => 'Display names have 1 to 64 characters.';
@@ -399,13 +408,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errPasskeyRejected => 'The passkey was not accepted.';
 
   @override
-  String get errLastSignInMethod => 'This is your last way to sign in. Add a password or another passkey first.';
+  String get errLastSignInMethod =>
+      'This is your last way to sign in. Add a password or another passkey first.';
 
   @override
-  String get errBadInvitation => 'Hours 1 to 720, uses 1 to 100, note up to 200 characters.';
+  String get errBadInvitation =>
+      'Hours 1 to 720, uses 1 to 100, note up to 200 characters.';
 
   @override
-  String get errBadSettings => 'Upload size must be between 256 KiB and 20 MiB.';
+  String get errBadSettings =>
+      'Upload size must be between 256 KiB and 20 MiB.';
 
   @override
   String errGeneric(String code) {
@@ -422,7 +434,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get create => 'Create';
 
   @override
-  String get noTables => 'No open tables yet. Create one and invite your friends.';
+  String get noTables =>
+      'No open tables yet. Create one and invite your friends.';
 
   @override
   String get closeTable => 'Close table';
@@ -449,6 +462,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reconnecting => 'Connection lost, reconnecting…';
 
   @override
+  String get serverRestarting =>
+      'The server is restarting. A hand in play is cancelled and its chips go back; the table returns in a moment.';
+
+  @override
   String get tableName => 'Table name';
 
   @override
@@ -473,7 +490,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errTableName => 'The name needs 1 to 40 characters.';
 
   @override
-  String get errBlinds => 'Blinds must be at least 1, and the small blind not above the big blind.';
+  String get errBlinds =>
+      'Blinds must be at least 1, and the small blind not above the big blind.';
 
   @override
   String get errStack => 'The starting stack must be at least two big blinds.';
@@ -494,7 +512,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wsIllegal => 'That action is not possible right now.';
 
   @override
-  String get wsSpectatorsOff => 'This table has no spectators. Take a seat to join.';
+  String get wsSpectatorsOff =>
+      'This table has no spectators. Take a seat to join.';
 
   @override
   String get table => 'Table';
@@ -521,10 +540,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchingHint => 'You are watching. Pick an empty seat to play.';
 
   @override
-  String get bustedHint => 'Out of chips. Use Come back in the seat menu to buy in again.';
+  String get bustedHint =>
+      'Out of chips. Use Come back in the seat menu to buy in again.';
 
   @override
-  String get sittingOutHint => 'You are sitting out. Use Come back in the seat menu to play the next hand.';
+  String get sittingOutHint =>
+      'You are sitting out. Use Come back in the seat menu to play the next hand.';
 
   @override
   String get waitingForPlayers => 'Waiting for players';

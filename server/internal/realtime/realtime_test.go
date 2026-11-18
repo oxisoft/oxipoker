@@ -497,3 +497,27 @@ func TestSitAndGoStartIntent(t *testing.T) {
 		t.Fatalf("second start: %q", e)
 	}
 }
+
+func TestRestartingTellsClientsAndCloses(t *testing.T) {
+	r := newRig(t)
+	id := r.table(t, true)
+	c := r.dial(t, "a")
+	c.send(map[string]any{"type": "watch", "table": id})
+	c.waitView(func(v *table.View) bool { return v.ID == id })
+	r.tables.Shutdown()
+	r.hub.Restarting(time.Second)
+	c.wait(func(m msg) bool { return m.Type == "restarting" })
+	select {
+	case _, ok := <-c.in:
+		for ok {
+			_, ok = <-c.in
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("connection stayed open")
+	}
+	for _, m := range c.pending {
+		if m.View != nil && m.View.Closed {
+			t.Fatal("a restart showed the table as closed")
+		}
+	}
+}

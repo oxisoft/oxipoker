@@ -94,6 +94,13 @@ func (c *conn) send(msg any) {
 	}
 }
 
+// queued reports whether messages still wait to be written.
+func (c *conn) queued() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.out) > 0 && !c.gone
+}
+
 // closedView is called by the hub (under its lock) when the watched table
 // closed: the client gets the final view and watches nothing.
 func (c *conn) closedView(s table.State) {

@@ -138,6 +138,10 @@ type Options struct {
 	OnGameDone func(GameDone)
 	// LevelTime overrides the blind level length of a sit-and-go (tests).
 	LevelTime time.Duration
+	// OnSave gets the stored form of the table after every change between
+	// hands, when the table closes (Saved.Closed) and on Stop. It is called
+	// from the table goroutine and must not block.
+	OnSave func(Saved)
 }
 
 // Table is the handle to a running table actor.
@@ -157,6 +161,9 @@ type actor struct {
 	cfg       engine.Config
 	users     map[int]string
 	t         *Table
+	created   time.Time
+	prevPos   *engine.Positions // positions before the running hand
+	halt      bool              // stopped for a shutdown
 }
 
 // New starts a table. host is the user who created it.
@@ -164,6 +171,16 @@ func New(id, host string, s Settings, opt Options) (*Table, error) {
 	if err := s.Validate(); err != nil {
 		return nil, err
 	}
+	t, a := newActor(id, host, s, opt)
+	if s.Kind == KindSng {
+		a.st.Sng = &Sng{Phase: PhaseRegistering, Places: []Place{}}
+		a.st.Sng.SmallBlind, a.st.Sng.BigBlind = s.SmallBlind, s.BigBlind
+	}
+	go a.run()
+	return t, nil
+}
+
+func newActor(id, host string, s Settings, opt Options) (*Table, *actor) {
 	if opt.Pause == 0 {
 		opt.Pause = 4 * time.Second
 	}
@@ -174,13 +191,9 @@ func New(id, host string, s Settings, opt Options) (*Table, error) {
 		s.Kind = KindCash
 	}
 	t := &Table{id: id, cmds: make(chan func(*actor), 64), done: make(chan struct{})}
-	a := &actor{st: State{ID: id, Host: host, Settings: s, Seats: make([]*Player, s.Seats)}, opt: opt, t: t}
-	if s.Kind == KindSng {
-		a.st.Sng = &Sng{Phase: PhaseRegistering, Places: []Place{}}
-		a.st.Sng.SmallBlind, a.st.Sng.BigBlind = s.SmallBlind, s.BigBlind
-	}
-	go a.run()
-	return t, nil
+	a := &actor{st: State{ID: id, Host: host, Settings: s, Seats: make([]*Player, s.Seats)}, opt: opt, t: t,
+		created: time.Now()}
+	return t, a
 }
 
 // ID of the table.
@@ -190,7 +203,7 @@ func (a *actor) run() {
 	defer close(a.t.done)
 	for f := range a.t.cmds {
 		f(a)
-		if a.st.Closed {
+		if a.st.Closed || a.halt {
 			a.stopTimers()
 			return
 		}
@@ -254,6 +267,7 @@ func (a *actor) changed() {
 	if a.opt.OnChange != nil {
 		a.opt.OnChange(a.snapshot())
 	}
+	a.save()
 }
 
 func (a *actor) seatOf(user string) int {
@@ -476,6 +490,7 @@ func (a *actor) startHand() {
 		return
 	}
 	a.cfg = cfg
+	a.prevPos = a.st.Pos
 	a.st.Hand, a.st.Pos = h, &pos
 	a.st.HandNo++
 	a.afterAction()

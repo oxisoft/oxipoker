@@ -38,6 +38,9 @@ func New(ctx context.Context, db *sql.DB, log *slog.Logger) *Store {
 				return
 			case v := <-s.q:
 				switch d := v.(type) {
+				case chan struct{}: // Close: everything before it is written
+					close(d)
+					return
 				case table.HandDone:
 					if err := s.Write(context.Background(), d); err != nil && s.log != nil {
 						s.log.Error("hand history", "table", d.TableID, "hand", d.HandNo, "err", err)
@@ -51,6 +54,14 @@ func New(ctx context.Context, db *sql.DB, log *slog.Logger) *Store {
 		}
 	}()
 	return s
+}
+
+// Close writes the queued hands and games and stops the writer. Call it
+// after the tables are stopped: nothing may be recorded afterwards.
+func (s *Store) Close() {
+	done := make(chan struct{})
+	s.q <- done
+	<-done
 }
 
 // Record queues a finished hand; use it as table.Options.OnHandDone.

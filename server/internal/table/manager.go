@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"errors"
+	"fmt"
 	"slices"
 	"sync"
 	"time"
@@ -119,16 +120,46 @@ func (m *Manager) Close(id, user string, admin bool) error {
 	return nil
 }
 
-// Shutdown closes every table and stops the sweeper.
+// Shutdown stops every table for a server restart: each one hands its
+// state to its OnSave hook (a running hand voided) without closing for its
+// watchers. It also stops the sweeper.
 func (m *Manager) Shutdown() {
 	m.stopped.Do(func() { close(m.stop) })
 	m.mu.Lock()
 	es := m.tables
 	m.tables = map[string]*entry{}
 	m.mu.Unlock()
+	var wg sync.WaitGroup
 	for _, e := range es {
-		e.t.Close()
+		wg.Go(e.t.Stop)
 	}
+	wg.Wait()
+}
+
+// Restore starts the stored tables again (on server start). Tables that
+// cannot be restored are reported in errs and closed through their OnSave
+// hook so they are not tried again.
+func (m *Manager) Restore(saved []Saved) (n int, errs []error) {
+	for _, s := range saved {
+		opt := m.opt(s.ID)
+		t, err := Restore(s, opt)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("table %s: %w", s.ID, err))
+			if opt.OnSave != nil && s.ID != "" {
+				opt.OnSave(Saved{ID: s.ID, Closed: true})
+			}
+			continue
+		}
+		m.mu.Lock()
+		e := &entry{t: t, host: s.Host, created: t.Created()}
+		if !slices.ContainsFunc(s.Seats, func(p *Player) bool { return p != nil }) {
+			e.emptySince = time.Now()
+		}
+		m.tables[s.ID] = e
+		m.mu.Unlock()
+		n++
+	}
+	return n, errs
 }
 
 func (m *Manager) sweep() {

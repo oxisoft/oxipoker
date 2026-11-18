@@ -151,6 +151,7 @@
   "@stackLabel": {"placeholders": {"n": {"type": "int"}}},
   "connecting": "Connecting…",
   "reconnecting": "Connection lost, reconnecting…",
+  "serverRestarting": "The server is restarting. A hand in play is cancelled and its chips go back; the table returns in a moment.",
   "tableName": "Table name",
   "seats": "Seats",
   "smallBlind": "Small blind",

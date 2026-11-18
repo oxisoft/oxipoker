@@ -24,6 +24,7 @@ import (
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/table"
+	"github.com/oxisoft/oxipoker/server/internal/tablestore"
 	"github.com/oxisoft/oxipoker/server/internal/version"
 )
 
@@ -100,14 +101,27 @@ func main() {
 	}
 
 	hub := realtime.NewHub()
-	hist := history.New(ctx, st.DB(), log)
+	// The history and table writers outlive the signal context: on shutdown
+	// they are closed in order after the tables have stopped.
+	hist := history.New(context.Background(), st.DB(), log)
+	saves := tablestore.New(st.DB(), log)
 	tables := table.NewManager(30*time.Minute, func(id string) table.Options {
 		o := hub.TableOptions(id)
 		o.OnHandDone = hist.Record
 		o.OnGameDone = hist.RecordGame
+		o.OnSave = saves.Save
 		return o
 	})
-	defer tables.Shutdown()
+	saved, err := saves.Load(ctx)
+	if err != nil {
+		log.Error("load open tables", "err", err)
+		os.Exit(1)
+	}
+	n, errs := tables.Restore(saved)
+	for _, e := range errs {
+		log.Warn("table not restored", "err", e)
+	}
+	log.Info("open tables restored", "count", n)
 
 	srv := &http.Server{
 		Addr: net.JoinHostPort("", port),
@@ -127,11 +141,20 @@ func main() {
 	}()
 
 	<-ctx.Done()
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// Graceful restart: no new hand starts, a running hand is voided (its
+	// stacks go back to the hand start), the tables are stored and the
+	// clients are told; apps reconnect and watch again on their own.
+	log.Info("shutting down")
+	tables.Shutdown()
+	hub.Restarting(2 * time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("shutdown", "err", err)
 	}
+	saves.Close()
+	hist.Close()
+	log.Info("tables stored, bye")
 }
 
 func purgeSessions(ctx context.Context, acc *accounts.Service, log *slog.Logger) {

@@ -29,6 +29,7 @@ String intentError(AppLocalizations l, String code) => switch (code) {
   'too_few_players' => l.wsTooFewPlayers,
   'host_or_admin_only' => l.wsHostOnly,
   'offline' || 'timeout' => l.reconnecting,
+  'server_restarting' => l.serverRestarting,
   _ => l.errGeneric(code),
 };
 

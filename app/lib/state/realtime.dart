@@ -174,6 +174,11 @@ class RealtimeController extends Notifier<RealtimeState> {
           final c = [...state.chat, ChatMessage.fromJson(m)];
           state = state.copyWith(chat: c.length > maxChat ? c.sublist(c.length - maxChat) : c);
         }
+      case 'restarting':
+        // The server stores its tables and restarts: reconnect quickly, the
+        // table is watched again on its own once the server is back.
+        _attempt = 0;
+        state = state.copyWith(lastError: 'server_restarting');
       case 'ok':
         _pending.remove(m['id'])?.complete(null);
       case 'error':

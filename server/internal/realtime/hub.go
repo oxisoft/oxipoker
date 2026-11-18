@@ -7,6 +7,7 @@ package realtime
 import (
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/oxisoft/oxipoker/server/internal/table"
 )
@@ -24,12 +25,14 @@ type Hub struct {
 	subs   map[string]map[*conn]struct{}
 	lobby  map[*conn]struct{}
 	users  map[string]int // open connections per user
+	conns  map[*conn]struct{}
 }
 
 // NewHub returns an empty hub.
 func NewHub() *Hub {
 	return &Hub{states: map[string]table.State{}, subs: map[string]map[*conn]struct{}{},
-		lobby: map[*conn]struct{}{}, users: map[string]int{}}
+		lobby: map[*conn]struct{}{}, users: map[string]int{},
+		conns: map[*conn]struct{}{}}
 }
 
 // TableOptions are the table options that feed the hub; pass it to
@@ -119,6 +122,7 @@ func (h *Hub) register(c *conn) bool {
 		return false
 	}
 	h.users[c.user.ID]++
+	h.conns[c] = struct{}{}
 	return true
 }
 
@@ -129,6 +133,7 @@ func (h *Hub) unregister(c *conn) {
 		delete(h.users, c.user.ID)
 	}
 	delete(h.lobby, c)
+	delete(h.conns, c)
 	for id, m := range h.subs {
 		delete(m, c)
 		if len(m) == 0 {
@@ -166,6 +171,33 @@ func (h *Hub) setLobby(c *conn, on bool) {
 	} else {
 		delete(h.lobby, c)
 	}
+}
+
+// Restarting tells every client that the server restarts, waits up to
+// grace for the message to go out and closes the connections. Apps
+// reconnect and watch their table again once the server is back.
+func (h *Hub) Restarting(grace time.Duration) {
+	h.mu.Lock()
+	cs := make([]*conn, 0, len(h.conns))
+	for c := range h.conns {
+		cs = append(cs, c)
+		c.send(restartMsg{Type: "restarting"})
+	}
+	h.mu.Unlock()
+	if len(cs) == 0 {
+		return
+	}
+	end := time.Now().Add(grace)
+	for time.Now().Before(end) && slices.ContainsFunc(cs, (*conn).queued) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	for _, c := range cs {
+		c.kill()
+	}
+}
+
+type restartMsg struct {
+	Type string `json:"type"`
 }
 
 // broadcast sends a message to every watcher of a table.
