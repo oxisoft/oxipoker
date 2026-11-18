@@ -90,9 +90,10 @@ class FormPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Card suits need a bundled font (the web build must not fetch fallback
-                      // fonts from a CDN), which arrives with the table in M2.
-                      Icon(Icons.style, size: 36, color: Theme.of(context).colorScheme.primary),
+                      Text('\u2660 \u2665 \u2666 \u2663',
+                          key: const Key('suits'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 28, color: Theme.of(context).colorScheme.primary)),
                       const SizedBox(height: 8),
                       Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
                       const SizedBox(height: 24),

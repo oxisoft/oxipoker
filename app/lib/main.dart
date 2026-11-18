@@ -23,7 +23,14 @@ void main() {
 ThemeData oxiTheme() => ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: felt, brightness: Brightness.dark),
       useMaterial3: true,
+      fontFamily: appFont,
+      fontFamilyFallback: appFontFallback,
     );
+
+/// Bundled fonts (see pubspec.yaml): text in Noto Sans, card suits from a subset of
+/// Noto Sans Symbols 2. Nothing is fetched from a font CDN.
+const appFont = 'NotoSans';
+const appFontFallback = ['NotoSansSuits'];
 
 class OxiPokerApp extends ConsumerWidget {
   const OxiPokerApp({super.key});
