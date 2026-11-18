@@ -67,7 +67,7 @@ func (a *authAPI) getSettings(w http.ResponseWriter, r *http.Request) {
 
 func (a *authAPI) patchSettings(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		TableCreation  *string `json:"table_creation"`
+		TableCreation   *string `json:"table_creation"`
 		MaxUploadBytes  *int64  `json:"max_upload_bytes"`
 		CardBackDefault *string `json:"card_back_default"`
 	}
