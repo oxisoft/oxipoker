@@ -16,6 +16,9 @@ This file grows with each milestone. Status: M1 in progress.
 
 - `POST /auth/signin` `{username, password, client?}`: 200 `{user, session, token?}`; 401
   `invalid_credentials` (same for unknown user and wrong password); 429 `rate_limited` with `Retry-After`.
+  With two-factor sign-in on, the answer is 200 `{totp_required: true, challenge}` and no session.
+- `POST /auth/totp` `{challenge, code}`: a 6-digit code (each one works once) or a recovery code; 200 as
+  password sign-in; 401 `invalid_code` or `challenge_expired` (5 minutes, 5 tries).
 - `POST /auth/passkey/begin`: 200 `{ceremony, options}`; pass `options.publicKey` to
   `navigator.credentials.get`. Discoverable credentials, no username needed. The ceremony lasts 5 minutes
   and is single use.
@@ -24,7 +27,8 @@ This file grows with each milestone. Status: M1 in progress.
   a sign counter that went backwards (possible cloned authenticator).
 - `POST /auth/signout`: 204, ends the current session.
 
-Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is its host).
+Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is its host). A passkey sign-in
+needs no TOTP step: the passkey with user verification already is two factors.
 
 ## Own account
 
@@ -32,6 +36,11 @@ Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is i
 - `GET /me/sessions`: `{sessions: [...]}` with `current` marking this one.
 - `DELETE /me/sessions/{id}`: 204; 404 for a session that is not yours.
 - `POST /me/sessions/revoke-others`: `{revoked: n}`.
+- `GET /me/totp`: `{enabled, recovery_codes_left}`.
+- `POST /me/totp/begin`: `{secret, otpauth_url, qr_png}` (PNG as base64); 409 `totp_enabled`. A new begin
+  replaces a pending one.
+- `POST /me/totp/confirm` `{code}`: `{recovery_codes: [10]}`, shown once; 400 `invalid_code`.
+- `POST /me/totp/disable` `{code}`: 204 with a current code or a recovery code; 400 `invalid_code`.
 - `GET /me/passkeys`: `{passkeys: [{id, name, created_at, last_used_at?, synced}]}`.
 - `POST /me/passkeys/begin`: 200 `{ceremony, options}` for `navigator.credentials.create` (resident key
   and user verification required, no attestation); 409 `too_many_passkeys` (20).

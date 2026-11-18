@@ -32,17 +32,18 @@ const (
 )
 
 type authAPI struct {
-	acc       *accounts.Service
-	pk        *accounts.Passkeys // nil when PUBLIC_URL is not set
-	st        *store.Store
-	secure    bool   // cookies get Secure (PUBLIC_URL is https)
-	origin    string // allowed Origin, "" = same host as the request
-	ipFails   *failLimiter
-	userFails *failLimiter
+	acc        *accounts.Service
+	pk         *accounts.Passkeys // nil when PUBLIC_URL is not set
+	st         *store.Store
+	secure     bool   // cookies get Secure (PUBLIC_URL is https)
+	origin     string // allowed Origin, "" = same host as the request
+	ipFails    *failLimiter
+	userFails  *failLimiter
+	challenges *challengeStore // password accepted, second factor pending
 }
 
 func newAuthAPI(opt Options) *authAPI {
-	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store,
+	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(),
 		ipFails: newFailLimiter(ipFailLimit, failWindow), userFails: newFailLimiter(accountFailLimit, failWindow)}
 	if u, err := url.Parse(opt.PublicURL); err == nil && u.Host != "" {
 		a.origin = u.Scheme + "://" + u.Host
@@ -91,6 +92,7 @@ func (a *authAPI) checkOrigin(next http.Handler) http.Handler {
 // signinPaths may be called by native apps before they hold a token.
 var signinPaths = map[string]bool{
 	"/api/v1/auth/signin":         true,
+	"/api/v1/auth/totp":           true,
 	"/api/v1/auth/passkey/begin":  true,
 	"/api/v1/auth/passkey/finish": true,
 }
@@ -153,6 +155,7 @@ func requireUser(next http.Handler) http.Handler {
 
 func (a *authAPI) routes(r chi.Router) {
 	r.Post("/auth/signin", a.signin)
+	r.Post("/auth/totp", a.totpSignin)
 	if a.pk != nil {
 		r.Post("/auth/passkey/begin", a.passkeyLoginBegin)
 		r.Post("/auth/passkey/finish", a.passkeyLoginFinish)
@@ -164,6 +167,10 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Get("/me/sessions", a.sessions)
 		r.Delete("/me/sessions/{id}", a.revokeSession)
 		r.Post("/me/sessions/revoke-others", a.revokeOthers)
+		r.Get("/me/totp", a.totpStatus)
+		r.Post("/me/totp/begin", a.totpBegin)
+		r.Post("/me/totp/confirm", a.totpConfirm)
+		r.Post("/me/totp/disable", a.totpDisable)
 		if a.pk != nil {
 			r.Get("/me/passkeys", a.passkeyList)
 			r.Post("/me/passkeys/begin", a.passkeyAddBegin)
@@ -212,6 +219,20 @@ func (a *authAPI) signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.userFails.clear(userKey)
+	st, err := a.acc.TOTPStatus(r.Context(), u.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal")
+		return
+	}
+	if st.Enabled {
+		id, ok := a.challenges.put(u.ID, kind)
+		if !ok {
+			writeError(w, http.StatusServiceUnavailable, "busy")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"totp_required": true, "challenge": id})
+		return
+	}
 	a.issueSession(w, r, u, kind, "password")
 }
 

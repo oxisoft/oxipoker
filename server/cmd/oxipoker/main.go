@@ -67,6 +67,7 @@ func main() {
 	log.Info("database ready", "dir", dataDir, "schema", schema)
 
 	acc := accounts.New(st)
+	acc.SetTOTPKey(sec.Key("totp"))
 	if err := acc.Bootstrap(ctx, os.Getenv("ADMIN_USERNAME"), os.Getenv("ADMIN_PASSWORD"), log); err != nil {
 		log.Error("bootstrap admin", "err", err)
 		os.Exit(1)

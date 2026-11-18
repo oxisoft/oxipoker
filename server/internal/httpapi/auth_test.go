@@ -28,6 +28,7 @@ func newTestServer(t *testing.T, publicURL string) *testServer {
 		t.Fatal(err)
 	}
 	acc := accounts.New(st)
+	acc.SetTOTPKey(bytes.Repeat([]byte{7}, 32))
 	if _, err := acc.CreateUser(context.Background(), accounts.NewUser{Username: "alex", Password: "long enough pw", IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}

@@ -45,9 +45,10 @@ func (u *User) Disabled() bool { return u.DisabledAt != nil }
 
 // Service is the accounts module.
 type Service struct {
-	st  *store.Store
-	db  *sql.DB
-	now func() time.Time
+	st      *store.Store
+	db      *sql.DB
+	now     func() time.Time
+	totpKey []byte
 }
 
 // New returns the accounts service on top of the store.
