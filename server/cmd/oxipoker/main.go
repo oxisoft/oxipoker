@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -85,7 +86,10 @@ func main() {
 		os.Exit(1)
 	}
 	var passkeys *accounts.Passkeys
-	if publicURL != "" {
+	if u, perr := url.Parse(publicURL); perr == nil && net.ParseIP(u.Hostname()) != nil {
+		// WebAuthn needs a domain name: a LAN server reached by IP signs in with passwords.
+		log.Warn("PUBLIC_URL is an IP address: passkeys are off (they need a domain name)")
+	} else if publicURL != "" {
 		if passkeys, err = accounts.NewPasskeys(acc, publicURL, applinks.Origins(apps)...); err != nil {
 			log.Error("passkeys", "err", err)
 			os.Exit(1)

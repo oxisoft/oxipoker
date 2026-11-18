@@ -27,7 +27,8 @@ This file grows with each milestone. Status: M1 in progress.
   a sign counter that went backwards (possible cloned authenticator).
 - `POST /auth/signout`: 204, ends the current session.
 
-Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is its host). A passkey sign-in
+Passkey endpoints exist only when `PUBLIC_URL` is set to a domain name (the relying party id is its host; a server
+reached by IP address, such as a LAN box, signs in with passwords). A passkey sign-in
 needs no TOTP step: the passkey with user verification already is two factors.
 
 The Android app signs in with passkeys too: every server publishes `GET /.well-known/assetlinks.json` for the
