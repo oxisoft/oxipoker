@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/version"
@@ -24,6 +25,10 @@ type Options struct {
 	Store *store.Store
 	// Secret is the server's root secret.
 	Secret *secret.Secret
+	// Accounts enables the account and session endpoints.
+	Accounts *accounts.Service
+	// PublicURL is the server's public address (Origin check, Secure cookies).
+	PublicURL string
 }
 
 // Health is the body of GET /api/v1/health.
@@ -58,6 +63,13 @@ func NewRouter(opt Options) http.Handler {
 		api.NotFound(func(w http.ResponseWriter, _ *http.Request) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not_found"})
 		})
+		if opt.Accounts != nil {
+			a := newAuthAPI(opt)
+			api.Group(func(g chi.Router) {
+				g.Use(a.checkOrigin, a.authenticate)
+				a.routes(g)
+			})
+		}
 	})
 
 	// Never r.NotFound for the web app: chi would propagate it into /api/v1.

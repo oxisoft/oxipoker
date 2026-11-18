@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/httpapi"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
@@ -65,9 +66,22 @@ func main() {
 	schema, _ := st.SchemaVersion(ctx)
 	log.Info("database ready", "dir", dataDir, "schema", schema)
 
+	acc := accounts.New(st)
+	if err := acc.Bootstrap(ctx, os.Getenv("ADMIN_USERNAME"), os.Getenv("ADMIN_PASSWORD"), log); err != nil {
+		log.Error("bootstrap admin", "err", err)
+		os.Exit(1)
+	}
+	go purgeSessions(ctx, acc, log)
+
+	publicURL := os.Getenv("PUBLIC_URL")
+	if publicURL == "" {
+		log.Warn("PUBLIC_URL is not set: Origin is checked against the request host and cookies are not Secure")
+	}
+
 	srv := &http.Server{
-		Addr:              net.JoinHostPort("", port),
-		Handler:           httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec}),
+		Addr: net.JoinHostPort("", port),
+		Handler: httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec,
+			Accounts: acc, PublicURL: publicURL}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
@@ -85,6 +99,23 @@ func main() {
 	defer cancel()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("shutdown", "err", err)
+	}
+}
+
+func purgeSessions(ctx context.Context, acc *accounts.Service, log *slog.Logger) {
+	t := time.NewTicker(6 * time.Hour)
+	defer t.Stop()
+	for {
+		if n, err := acc.PurgeExpiredSessions(ctx); err != nil && ctx.Err() == nil {
+			log.Warn("purge sessions", "err", err)
+		} else if n > 0 {
+			log.Info("expired sessions purged", "count", n)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+		}
 	}
 }
 
