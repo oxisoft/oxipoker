@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'poker.dart';
 
 /// An error answer of the server: HTTP status plus the `error` code.
 class ApiException implements Exception {
@@ -228,4 +229,30 @@ class Api {
       }))['events'] as List)
           .map((e) => AuditEvent.fromJson(e as Map<String, dynamic>))
           .toList();
+
+  // Tables, history and stats.
+
+  Future<List<TableEntry>> tables() async => ((await _send('GET', '/tables'))['tables'] as List? ?? const [])
+      .map((e) => TableEntry.fromJson(e as Map<String, dynamic>))
+      .toList();
+
+  Future<TableEntry> createTable(TableSettings s) async =>
+      TableEntry.fromJson(await _send('POST', '/tables', body: s.toJson()) as Map<String, dynamic>);
+
+  Future<void> closeTable(String id) => _send('DELETE', '/tables/$id');
+
+  Future<List<HandSummary>> myHands({int? before, int limit = 50}) async =>
+      ((await _send('GET', '/me/hands', query: {if (before != null) 'before': '$before', 'limit': '$limit'}))['hands']
+                  as List? ??
+              const [])
+          .map((e) => HandSummary.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  Future<HandReplay> hand(int id) async => HandReplay.fromJson(await _send('GET', '/me/hands/$id') as Map<String, dynamic>);
+
+  Future<PlayerStats> stats() async => PlayerStats.fromJson(await _send('GET', '/me/stats') as Map<String, dynamic>);
+
+  /// The realtime endpoint: wss for https servers.
+  Uri get wsUri => Uri(
+      scheme: server.scheme == 'https' ? 'wss' : 'ws', host: server.host, port: server.hasPort ? server.port : null, path: '/api/v1/ws');
 }

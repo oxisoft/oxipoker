@@ -849,6 +849,492 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong ({code}).'**
   String errGeneric(String code);
+
+  /// No description provided for @handHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Hand history'**
+  String get handHistory;
+
+  /// No description provided for @createTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Create table'**
+  String get createTable;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get create;
+
+  /// No description provided for @noTables.
+  ///
+  /// In en, this message translates to:
+  /// **'No open tables yet. Create one and invite your friends.'**
+  String get noTables;
+
+  /// No description provided for @closeTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Close table'**
+  String get closeTable;
+
+  /// No description provided for @closeTableConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the table {name}? A running hand is cancelled and every stack goes back to where it was.'**
+  String closeTableConfirm(String name);
+
+  /// No description provided for @blinds.
+  ///
+  /// In en, this message translates to:
+  /// **'Blinds {sb}/{bb}'**
+  String blinds(int sb, int bb);
+
+  /// No description provided for @stackLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack {n}'**
+  String stackLabel(int n);
+
+  /// No description provided for @connecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting…'**
+  String get connecting;
+
+  /// No description provided for @reconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost, reconnecting…'**
+  String get reconnecting;
+
+  /// No description provided for @tableName.
+  ///
+  /// In en, this message translates to:
+  /// **'Table name'**
+  String get tableName;
+
+  /// No description provided for @seats.
+  ///
+  /// In en, this message translates to:
+  /// **'Seats'**
+  String get seats;
+
+  /// No description provided for @smallBlind.
+  ///
+  /// In en, this message translates to:
+  /// **'Small blind'**
+  String get smallBlind;
+
+  /// No description provided for @bigBlind.
+  ///
+  /// In en, this message translates to:
+  /// **'Big blind'**
+  String get bigBlind;
+
+  /// No description provided for @startingStack.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting stack'**
+  String get startingStack;
+
+  /// No description provided for @turnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn time (seconds)'**
+  String get turnTime;
+
+  /// No description provided for @allowSpectators.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow spectators'**
+  String get allowSpectators;
+
+  /// No description provided for @errTableName.
+  ///
+  /// In en, this message translates to:
+  /// **'The name needs 1 to 40 characters.'**
+  String get errTableName;
+
+  /// No description provided for @errBlinds.
+  ///
+  /// In en, this message translates to:
+  /// **'Blinds must be at least 1, and the small blind not above the big blind.'**
+  String get errBlinds;
+
+  /// No description provided for @errStack.
+  ///
+  /// In en, this message translates to:
+  /// **'The starting stack must be at least two big blinds.'**
+  String get errStack;
+
+  /// No description provided for @errTurnTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn time must be 5 to 300 seconds.'**
+  String get errTurnTime;
+
+  /// No description provided for @wsNotYourTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'It is not your turn.'**
+  String get wsNotYourTurn;
+
+  /// No description provided for @wsSeatTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That seat was just taken.'**
+  String get wsSeatTaken;
+
+  /// No description provided for @wsAlreadySeated.
+  ///
+  /// In en, this message translates to:
+  /// **'You already have a seat at this table.'**
+  String get wsAlreadySeated;
+
+  /// No description provided for @wsIllegal.
+  ///
+  /// In en, this message translates to:
+  /// **'That action is not possible right now.'**
+  String get wsIllegal;
+
+  /// No description provided for @wsSpectatorsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'This table has no spectators. Take a seat to join.'**
+  String get wsSpectatorsOff;
+
+  /// No description provided for @table.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get table;
+
+  /// No description provided for @sitOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sit out'**
+  String get sitOut;
+
+  /// No description provided for @comeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back'**
+  String get comeBack;
+
+  /// No description provided for @leaveSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the seat'**
+  String get leaveSeat;
+
+  /// No description provided for @chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get chat;
+
+  /// No description provided for @tableClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This table is closed.'**
+  String get tableClosed;
+
+  /// No description provided for @backToLobby.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the lobby'**
+  String get backToLobby;
+
+  /// No description provided for @watchingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are watching. Pick an empty seat to play.'**
+  String get watchingHint;
+
+  /// No description provided for @bustedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of chips. Use Come back in the seat menu to buy in again.'**
+  String get bustedHint;
+
+  /// No description provided for @sittingOutHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are sitting out. Use Come back in the seat menu to play the next hand.'**
+  String get sittingOutHint;
+
+  /// No description provided for @waitingForPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for players'**
+  String get waitingForPlayers;
+
+  /// No description provided for @nextHandSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Next hand starts in a moment'**
+  String get nextHandSoon;
+
+  /// No description provided for @waitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name}'**
+  String waitingFor(String name);
+
+  /// No description provided for @potMain.
+  ///
+  /// In en, this message translates to:
+  /// **'Pot {amount}'**
+  String potMain(String amount);
+
+  /// No description provided for @potSide.
+  ///
+  /// In en, this message translates to:
+  /// **'Side pot {n}: {amount}'**
+  String potSide(int n, String amount);
+
+  /// No description provided for @wins.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} wins {amount}'**
+  String wins(String name, String amount);
+
+  /// No description provided for @sit.
+  ///
+  /// In en, this message translates to:
+  /// **'Sit here'**
+  String get sit;
+
+  /// No description provided for @emptySeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get emptySeat;
+
+  /// No description provided for @sittingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sitting out'**
+  String get sittingOut;
+
+  /// No description provided for @folded.
+  ///
+  /// In en, this message translates to:
+  /// **'Folded'**
+  String get folded;
+
+  /// No description provided for @allIn.
+  ///
+  /// In en, this message translates to:
+  /// **'All-in'**
+  String get allIn;
+
+  /// No description provided for @allInTo.
+  ///
+  /// In en, this message translates to:
+  /// **'All-in {amount}'**
+  String allInTo(String amount);
+
+  /// No description provided for @raiseTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Raise to {amount}'**
+  String raiseTo(String amount);
+
+  /// No description provided for @betAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Bet {amount}'**
+  String betAmount(String amount);
+
+  /// No description provided for @callAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Call {amount}'**
+  String callAmount(String amount);
+
+  /// No description provided for @presetMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get presetMin;
+
+  /// No description provided for @presetHalfPot.
+  ///
+  /// In en, this message translates to:
+  /// **'½ pot'**
+  String get presetHalfPot;
+
+  /// No description provided for @presetPot.
+  ///
+  /// In en, this message translates to:
+  /// **'Pot'**
+  String get presetPot;
+
+  /// No description provided for @presetAllIn.
+  ///
+  /// In en, this message translates to:
+  /// **'All-in'**
+  String get presetAllIn;
+
+  /// No description provided for @fold.
+  ///
+  /// In en, this message translates to:
+  /// **'Fold'**
+  String get fold;
+
+  /// No description provided for @check.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get check;
+
+  /// No description provided for @bet.
+  ///
+  /// In en, this message translates to:
+  /// **'Bet'**
+  String get bet;
+
+  /// No description provided for @chatNotStored.
+  ///
+  /// In en, this message translates to:
+  /// **'Seen by players and spectators, never stored.'**
+  String get chatNotStored;
+
+  /// No description provided for @chatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get chatHint;
+
+  /// No description provided for @noHands.
+  ///
+  /// In en, this message translates to:
+  /// **'No hands played yet.'**
+  String get noHands;
+
+  /// No description provided for @potLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'pot {amount}'**
+  String potLabel(String amount);
+
+  /// No description provided for @evPostSb.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} posts the small blind {amount}'**
+  String evPostSb(String who, String amount);
+
+  /// No description provided for @evPostBb.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} posts the big blind {amount}'**
+  String evPostBb(String who, String amount);
+
+  /// No description provided for @evHole.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} is dealt {cards}'**
+  String evHole(String who, String cards);
+
+  /// No description provided for @evFold.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} folds'**
+  String evFold(String who);
+
+  /// No description provided for @evCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} checks'**
+  String evCheck(String who);
+
+  /// No description provided for @evCall.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} calls {amount}'**
+  String evCall(String who, String amount);
+
+  /// No description provided for @evBet.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} bets {amount}'**
+  String evBet(String who, String amount);
+
+  /// No description provided for @evRaise.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} raises to {amount}'**
+  String evRaise(String who, String amount);
+
+  /// No description provided for @evReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} returned to {who}'**
+  String evReturn(String who, String amount);
+
+  /// No description provided for @evBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'{street}: {cards}'**
+  String evBoard(String street, String cards);
+
+  /// No description provided for @evShow.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} shows {cards}'**
+  String evShow(String who, String cards);
+
+  /// No description provided for @evWin.
+  ///
+  /// In en, this message translates to:
+  /// **'{who} wins {amount}'**
+  String evWin(String who, String amount);
+
+  /// No description provided for @replay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get replay;
+
+  /// No description provided for @yourCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Your cards'**
+  String get yourCards;
+
+  /// No description provided for @stepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{step} of {total}'**
+  String stepOf(int step, int total);
+
+  /// No description provided for @stats.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stats'**
+  String get stats;
+
+  /// No description provided for @handsPlayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands played'**
+  String get handsPlayed;
+
+  /// No description provided for @handsWon.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands won'**
+  String get handsWon;
+
+  /// No description provided for @biggestPot.
+  ///
+  /// In en, this message translates to:
+  /// **'Biggest pot won'**
+  String get biggestPot;
 }
 
 class _AppLocalizationsDelegate

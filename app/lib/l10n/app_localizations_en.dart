@@ -423,4 +423,302 @@ class AppLocalizationsEn extends AppLocalizations {
   String errGeneric(String code) {
     return 'Something went wrong ($code).';
   }
+
+  @override
+  String get handHistory => 'Hand history';
+
+  @override
+  String get createTable => 'Create table';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get noTables =>
+      'No open tables yet. Create one and invite your friends.';
+
+  @override
+  String get closeTable => 'Close table';
+
+  @override
+  String closeTableConfirm(String name) {
+    return 'Close the table $name? A running hand is cancelled and every stack goes back to where it was.';
+  }
+
+  @override
+  String blinds(int sb, int bb) {
+    return 'Blinds $sb/$bb';
+  }
+
+  @override
+  String stackLabel(int n) {
+    return 'Stack $n';
+  }
+
+  @override
+  String get connecting => 'Connecting…';
+
+  @override
+  String get reconnecting => 'Connection lost, reconnecting…';
+
+  @override
+  String get tableName => 'Table name';
+
+  @override
+  String get seats => 'Seats';
+
+  @override
+  String get smallBlind => 'Small blind';
+
+  @override
+  String get bigBlind => 'Big blind';
+
+  @override
+  String get startingStack => 'Starting stack';
+
+  @override
+  String get turnTime => 'Turn time (seconds)';
+
+  @override
+  String get allowSpectators => 'Allow spectators';
+
+  @override
+  String get errTableName => 'The name needs 1 to 40 characters.';
+
+  @override
+  String get errBlinds =>
+      'Blinds must be at least 1, and the small blind not above the big blind.';
+
+  @override
+  String get errStack => 'The starting stack must be at least two big blinds.';
+
+  @override
+  String get errTurnTime => 'Turn time must be 5 to 300 seconds.';
+
+  @override
+  String get wsNotYourTurn => 'It is not your turn.';
+
+  @override
+  String get wsSeatTaken => 'That seat was just taken.';
+
+  @override
+  String get wsAlreadySeated => 'You already have a seat at this table.';
+
+  @override
+  String get wsIllegal => 'That action is not possible right now.';
+
+  @override
+  String get wsSpectatorsOff =>
+      'This table has no spectators. Take a seat to join.';
+
+  @override
+  String get table => 'Table';
+
+  @override
+  String get sitOut => 'Sit out';
+
+  @override
+  String get comeBack => 'Come back';
+
+  @override
+  String get leaveSeat => 'Leave the seat';
+
+  @override
+  String get chat => 'Chat';
+
+  @override
+  String get tableClosed => 'This table is closed.';
+
+  @override
+  String get backToLobby => 'Back to the lobby';
+
+  @override
+  String get watchingHint => 'You are watching. Pick an empty seat to play.';
+
+  @override
+  String get bustedHint =>
+      'Out of chips. Use Come back in the seat menu to buy in again.';
+
+  @override
+  String get sittingOutHint =>
+      'You are sitting out. Use Come back in the seat menu to play the next hand.';
+
+  @override
+  String get waitingForPlayers => 'Waiting for players';
+
+  @override
+  String get nextHandSoon => 'Next hand starts in a moment';
+
+  @override
+  String waitingFor(String name) {
+    return 'Waiting for $name';
+  }
+
+  @override
+  String potMain(String amount) {
+    return 'Pot $amount';
+  }
+
+  @override
+  String potSide(int n, String amount) {
+    return 'Side pot $n: $amount';
+  }
+
+  @override
+  String wins(String name, String amount) {
+    return '$name wins $amount';
+  }
+
+  @override
+  String get sit => 'Sit here';
+
+  @override
+  String get emptySeat => 'Empty';
+
+  @override
+  String get sittingOut => 'Sitting out';
+
+  @override
+  String get folded => 'Folded';
+
+  @override
+  String get allIn => 'All-in';
+
+  @override
+  String allInTo(String amount) {
+    return 'All-in $amount';
+  }
+
+  @override
+  String raiseTo(String amount) {
+    return 'Raise to $amount';
+  }
+
+  @override
+  String betAmount(String amount) {
+    return 'Bet $amount';
+  }
+
+  @override
+  String callAmount(String amount) {
+    return 'Call $amount';
+  }
+
+  @override
+  String get presetMin => 'Min';
+
+  @override
+  String get presetHalfPot => '½ pot';
+
+  @override
+  String get presetPot => 'Pot';
+
+  @override
+  String get presetAllIn => 'All-in';
+
+  @override
+  String get fold => 'Fold';
+
+  @override
+  String get check => 'Check';
+
+  @override
+  String get bet => 'Bet';
+
+  @override
+  String get chatNotStored => 'Seen by players and spectators, never stored.';
+
+  @override
+  String get chatHint => 'Message';
+
+  @override
+  String get noHands => 'No hands played yet.';
+
+  @override
+  String potLabel(String amount) {
+    return 'pot $amount';
+  }
+
+  @override
+  String evPostSb(String who, String amount) {
+    return '$who posts the small blind $amount';
+  }
+
+  @override
+  String evPostBb(String who, String amount) {
+    return '$who posts the big blind $amount';
+  }
+
+  @override
+  String evHole(String who, String cards) {
+    return '$who is dealt $cards';
+  }
+
+  @override
+  String evFold(String who) {
+    return '$who folds';
+  }
+
+  @override
+  String evCheck(String who) {
+    return '$who checks';
+  }
+
+  @override
+  String evCall(String who, String amount) {
+    return '$who calls $amount';
+  }
+
+  @override
+  String evBet(String who, String amount) {
+    return '$who bets $amount';
+  }
+
+  @override
+  String evRaise(String who, String amount) {
+    return '$who raises to $amount';
+  }
+
+  @override
+  String evReturn(String who, String amount) {
+    return '$amount returned to $who';
+  }
+
+  @override
+  String evBoard(String street, String cards) {
+    return '$street: $cards';
+  }
+
+  @override
+  String evShow(String who, String cards) {
+    return '$who shows $cards';
+  }
+
+  @override
+  String evWin(String who, String amount) {
+    return '$who wins $amount';
+  }
+
+  @override
+  String get replay => 'Replay';
+
+  @override
+  String get yourCards => 'Your cards';
+
+  @override
+  String stepOf(int step, int total) {
+    return '$step of $total';
+  }
+
+  @override
+  String get stats => 'Your stats';
+
+  @override
+  String get handsPlayed => 'Hands played';
+
+  @override
+  String get handsWon => 'Hands won';
+
+  @override
+  String get biggestPot => 'Biggest pot won';
 }

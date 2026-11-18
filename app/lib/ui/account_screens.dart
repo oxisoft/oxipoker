@@ -6,43 +6,7 @@ import '../api/models.dart';
 import '../passkey/passkey.dart';
 import '../state/session.dart';
 import 'common.dart';
-
-class LobbyScreen extends ConsumerWidget {
-  const LobbyScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l = context.l;
-    final user = ref.watch(sessionProvider).user!;
-    return Scaffold(
-      backgroundColor: felt,
-      appBar: AppBar(
-        title: Text(l.appTitle),
-        actions: [
-          if (user.isAdmin)
-            IconButton(
-                key: const Key('open-admin'),
-                tooltip: l.admin,
-                icon: const Icon(Icons.admin_panel_settings),
-                onPressed: () => context.go('/admin')),
-          IconButton(
-              key: const Key('open-account'),
-              tooltip: l.account,
-              icon: const Icon(Icons.account_circle),
-              onPressed: () => context.go('/account')),
-        ],
-      ),
-      body: Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(l.lobbyWelcome(user.shownName),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: Colors.white)),
-          const SizedBox(height: 8),
-          Text(l.lobbySoon, style: const TextStyle(color: Colors.white70)),
-        ]),
-      ),
-    );
-  }
-}
+import 'history_screens.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
@@ -192,6 +156,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(padding: const EdgeInsets.all(16), children: [
+            const StatsCard(),
             section(l.profile, [
               Text('@${user.username}'),
               const SizedBox(height: 8),

@@ -13,6 +13,36 @@ class FakeServer {
   final totpUsers = <String>{};
   final invites = <String, Map<String, dynamic>>{'tok123': {'uses': 0, 'max': 1, 'note': 'Friday game'}};
   final requests = <String>[];
+  final tables = <Map<String, dynamic>>[];
+  final hands = <Map<String, dynamic>>[
+    {
+      'id': 1, 'table_name': 'Friday', 'hand_no': 3, 'big_blind': 10, 'pot': 60, 'board': ['Ah', 'Kd', '7c'],
+      'seat': 0, 'cards': ['As', 'Ks'], 'won': 60, 'net': 30, 'ended_at': '2026-11-18T14:00:00Z',
+    },
+  ];
+  final replay = <String, dynamic>{
+    'id': 1, 'table_name': 'Friday', 'hand_no': 3, 'small_blind': 5, 'big_blind': 10, 'button': 1, 'pot': 60,
+    'board': ['Ah', 'Kd', '7c'],
+    'events': [
+      {'kind': 'post_sb', 'seat': 1, 'street': 0, 'amount': 5},
+      {'kind': 'post_bb', 'seat': 0, 'street': 0, 'amount': 10},
+      {'kind': 'hole', 'seat': 0, 'street': 0, 'cards': ['As', 'Ks']},
+      {'kind': 'call', 'seat': 1, 'street': 0, 'amount': 10},
+      {'kind': 'check', 'seat': 0, 'street': 0},
+      {'kind': 'board', 'seat': -1, 'street': 1, 'cards': ['Ah', 'Kd', '7c']},
+      {'kind': 'bet', 'seat': 0, 'street': 1, 'amount': 20},
+      {'kind': 'fold', 'seat': 1, 'street': 1},
+      {'kind': 'win', 'seat': 0, 'street': 1, 'amount': 40},
+    ],
+    'results': [
+      {'winners': [0], 'shares': [40]},
+    ],
+    'seats': [
+      {'seat': 0, 'name': 'Alice', 'start_stack': 1000, 'end_stack': 1030, 'won': 40},
+      {'seat': 1, 'name': 'bob', 'start_stack': 1000, 'end_stack': 970, 'won': 0},
+    ],
+    'your_seat': 0, 'your_cards': ['As', 'Ks'], 'ended_at': '2026-11-18T14:00:00Z',
+  };
   String? signedIn;
 
   http.Response _json(int status, Object? body) =>
@@ -102,6 +132,19 @@ class FakeServer {
         return _json(201, {'user': users[id], 'temporary_password': 'temp-pass-0001'});
       case 'GET /admin/invitations':
         return _json(200, {'invitations': []});
+      case 'GET /tables':
+        return _json(200, {'tables': tables});
+      case 'POST /tables':
+        if (me == null) return _err(401, 'unauthorized');
+        final t = {'id': 't${tables.length + 9}', 'host': me['id'], 'settings': body, 'taken': 0, 'players': [], 'hand_no': 0};
+        tables.add(t);
+        return _json(201, t);
+      case 'GET /me/hands':
+        return _json(200, {'hands': hands});
+      case 'GET /me/hands/1':
+        return _json(200, replay);
+      case 'GET /me/stats':
+        return _json(200, {'hands_played': 12, 'hands_won': 5, 'biggest_pot': 1450});
       case 'POST /admin/invitations':
         return _json(201, {
           'invitation': {'id': 'i9'},
