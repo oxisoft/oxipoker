@@ -22,8 +22,9 @@ const (
 
 // Settings is the body of GET/PATCH /admin/settings.
 type Settings struct {
-	TableCreation  string `json:"table_creation"`
-	MaxUploadBytes int64  `json:"max_upload_bytes"`
+	TableCreation   string `json:"table_creation"`
+	MaxUploadBytes  int64  `json:"max_upload_bytes"`
+	CardBackDefault string `json:"card_back_default"`
 }
 
 func (a *authAPI) settings(ctx context.Context) (Settings, error) {
@@ -39,6 +40,9 @@ func (a *authAPI) settings(ctx context.Context) (Settings, error) {
 	}
 	if n, err := strconv.ParseInt(v, 10, 64); err == nil && n >= minUpload && n <= maxUploadCap {
 		s.MaxUploadBytes = n
+	}
+	if s.CardBackDefault, err = a.acc.DefaultCardBackID(ctx); err != nil {
+		return s, err
 	}
 	return s, nil
 }
@@ -64,7 +68,8 @@ func (a *authAPI) getSettings(w http.ResponseWriter, r *http.Request) {
 func (a *authAPI) patchSettings(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		TableCreation  *string `json:"table_creation"`
-		MaxUploadBytes *int64  `json:"max_upload_bytes"`
+		MaxUploadBytes  *int64  `json:"max_upload_bytes"`
+		CardBackDefault *string `json:"card_back_default"`
 	}
 	if !readJSON(w, r, &req, 4<<10) {
 		return
@@ -79,6 +84,18 @@ func (a *authAPI) patchSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	detail := map[string]any{}
+	if req.CardBackDefault != nil {
+		err := a.acc.SetDefaultCardBack(ctx, *req.CardBackDefault)
+		switch {
+		case errors.Is(err, accounts.ErrBadCardBack):
+			writeError(w, http.StatusBadRequest, "bad_settings")
+			return
+		case err != nil:
+			writeError(w, http.StatusInternalServerError, "internal")
+			return
+		}
+		detail[accounts.SettingCardBackDefault] = *req.CardBackDefault
+	}
 	if req.TableCreation != nil {
 		if err := a.st.SetSetting(ctx, settingTableCreation, *req.TableCreation); err != nil {
 			writeError(w, http.StatusInternalServerError, "internal")

@@ -34,6 +34,8 @@ type User struct {
 	DisplayName        string     `json:"display_name"`
 	IsAdmin            bool       `json:"is_admin"`
 	Avatar             string     `json:"avatar,omitempty"`
+	Theme              string     `json:"theme"`
+	CardBack           string     `json:"card_back"` // "" = the server default
 	MustChangePassword bool       `json:"must_change_password"`
 	CreatedAt          time.Time  `json:"created_at"`
 	DisabledAt         *time.Time `json:"disabled_at,omitempty"`
@@ -126,7 +128,7 @@ func (s *Service) prepareUser(n NewUser) (*User, error) {
 		}
 	}
 	return &User{ID: NewID(), Username: n.Username, DisplayName: display, IsAdmin: n.IsAdmin,
-		MustChangePassword: n.MustChange, CreatedAt: s.now().UTC().Truncate(time.Millisecond), PasswordHash: hash}, nil
+		MustChangePassword: n.MustChange, Theme: ThemeClassic, CreatedAt: s.now().UTC().Truncate(time.Millisecond), PasswordHash: hash}, nil
 }
 
 func (s *Service) insertUser(ctx context.Context, db execer, u *User) error {
@@ -144,13 +146,13 @@ func (s *Service) insertUser(ctx context.Context, db execer, u *User) error {
 	return nil
 }
 
-const userCols = `id, username, display_name, password_hash, must_change_password, is_admin, avatar, created_at, disabled_at`
+const userCols = `id, username, display_name, password_hash, must_change_password, is_admin, avatar, theme, card_back, created_at, disabled_at`
 
 func scanUser(row interface{ Scan(...any) error }) (*User, error) {
 	var u User
 	var created int64
 	var disabled sql.NullInt64
-	if err := row.Scan(&u.ID, &u.Username, &u.DisplayName, &u.PasswordHash, &u.MustChangePassword, &u.IsAdmin, &u.Avatar, &created, &disabled); err != nil {
+	if err := row.Scan(&u.ID, &u.Username, &u.DisplayName, &u.PasswordHash, &u.MustChangePassword, &u.IsAdmin, &u.Avatar, &u.Theme, &u.CardBack, &created, &disabled); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}

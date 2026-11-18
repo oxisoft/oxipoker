@@ -39,7 +39,11 @@ certificate as keytool prints it, comma-separated for several).
 ## Own account
 
 - `GET /me`: the signed-in user.
-- `PATCH /me` `{display_name}`: the updated user; 400 `bad_display_name` (1 to 64 characters).
+- `PATCH /me` `{display_name?, theme?, card_back?}`: the updated user; 400 `bad_display_name` (1 to 64
+  characters), `bad_theme` (`classic` or `cyberpunk`) or `bad_card_back` (an id from `GET /card-backs`, `""` =
+  the server default). A bad theme or card back changes nothing.
+- `GET /card-backs`: `{default, card_backs: [{id, name, theme?, built_in}]}`. Built-in backs are drawn by the
+  apps from their id; uploaded ones (`u-` ids) come from `GET /card-backs/{id}/image` (500 x 700 PNG, immutable).
 - `POST /me/password` `{current_password, new_password}`: 204, every other session is signed out; 403
   `wrong_password`; 400 `bad_password` (10 to 256 characters). Passkey-only accounts send no current password.
 - `DELETE /me` `{password}`: 204, the account and all its data are gone; 403 `wrong_password`; 409
@@ -112,8 +116,14 @@ All under `/admin`, admins only (403 `admin_only`). Every change lands in the au
 - `DELETE /admin/users/{id}`: 204; 409 `self` (use `DELETE /me`) or `last_admin`.
 - `POST /admin/users/{id}/reset-password`: `{temporary_password}`, shown once; signs the user out everywhere.
 - `POST /admin/users/{id}/reset-2fa`: 204, TOTP and recovery codes removed.
-- `GET /admin/settings`, `PATCH /admin/settings` `{table_creation?, max_upload_bytes?}`: `table_creation` is
-  `everyone` (default) or `admins`; `max_upload_bytes` 256 KiB to 20 MiB (default 5 MiB). 400 `bad_settings`.
+- `GET /admin/settings`, `PATCH /admin/settings` `{table_creation?, max_upload_bytes?, card_back_default?}`:
+  `table_creation` is `everyone` (default) or `admins`; `max_upload_bytes` 256 KiB to 20 MiB (default 5 MiB);
+  `card_back_default` any card back id (default `classic-red`). 400 `bad_settings`.
+- `POST /admin/card-backs?name=` (raw PNG, JPEG or WebP as the body): 201 with the new back; the centre 5:7 area
+  is re-encoded to a 500 x 700 PNG. 400 `bad_name` (1 to 40 characters), 409 `too_many_card_backs` (50 at
+  most), 413 and 415 as for avatars.
+- `DELETE /admin/card-backs/{id}`: 204, users who had picked it follow the default again; 409 `built_in` or
+  `is_default`; 404.
 - `GET /admin/audit?action=&actor=&before=&limit=`: `{events: [{id, at, actor_id, actor_name, action, target,
   ip, detail}]}`, newest first. `action` is exact or a prefix ending in a dot (`user.`); page with
   `before=<last id>`; 100 per page by default (500 at most).

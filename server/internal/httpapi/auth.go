@@ -195,6 +195,8 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Get("/admin/settings", a.getSettings)
 		r.Patch("/admin/settings", a.patchSettings)
 		r.Get("/admin/audit", a.listAudit)
+		r.Post("/admin/card-backs", a.addCardBack)
+		r.Delete("/admin/card-backs/{id}", a.deleteCardBack)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(requireUser)
@@ -206,6 +208,8 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Put("/me/avatar", a.setAvatar)
 		r.Delete("/me/avatar", a.removeAvatar)
 		r.Get("/users/{id}/avatar", a.avatar)
+		r.Get("/card-backs", a.listCardBacks)
+		r.Get("/card-backs/{id}/image", a.cardBackImage)
 		r.Get("/me/sessions", a.sessions)
 		r.Delete("/me/sessions/{id}", a.revokeSession)
 		r.Post("/me/sessions/revoke-others", a.revokeOthers)

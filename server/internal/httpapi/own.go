@@ -9,23 +9,45 @@ import (
 
 func (a *authAPI) updateMe(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		DisplayName string `json:"display_name"`
+		DisplayName *string `json:"display_name"`
+		Theme       *string `json:"theme"`
+		CardBack    *string `json:"card_back"`
 	}
 	if !readJSON(w, r, &req, 4<<10) {
 		return
 	}
 	u := currentUser(r)
-	name, err := a.acc.SetDisplayName(r.Context(), u.ID, req.DisplayName)
+	ctx := r.Context()
+	// Appearance is checked first, so a bad value changes nothing.
+	err := a.acc.SetAppearance(ctx, u.ID, accounts.Appearance{Theme: req.Theme, CardBack: req.CardBack})
 	switch {
-	case errors.Is(err, accounts.ErrBadDisplayName):
-		writeError(w, http.StatusBadRequest, "bad_display_name")
+	case errors.Is(err, accounts.ErrBadTheme):
+		writeError(w, http.StatusBadRequest, "bad_theme")
+		return
+	case errors.Is(err, accounts.ErrBadCardBack):
+		writeError(w, http.StatusBadRequest, "bad_card_back")
 		return
 	case err != nil:
 		writeError(w, http.StatusInternalServerError, "internal")
 		return
 	}
-	u.DisplayName = name
-	writeJSON(w, http.StatusOK, u)
+	if req.DisplayName != nil {
+		_, err := a.acc.SetDisplayName(ctx, u.ID, *req.DisplayName)
+		switch {
+		case errors.Is(err, accounts.ErrBadDisplayName):
+			writeError(w, http.StatusBadRequest, "bad_display_name")
+			return
+		case err != nil:
+			writeError(w, http.StatusInternalServerError, "internal")
+			return
+		}
+	}
+	fresh, err := a.acc.UserByID(ctx, u.ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal")
+		return
+	}
+	writeJSON(w, http.StatusOK, fresh)
 }
 
 func (a *authAPI) changePassword(w http.ResponseWriter, r *http.Request) {

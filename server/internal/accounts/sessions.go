@@ -80,14 +80,14 @@ func (s *Service) SessionUser(ctx context.Context, token string) (*Session, *Use
 	}
 	now := s.now()
 	row := s.db.QueryRowContext(ctx, `SELECT s.id, s.kind, s.created_at, s.last_seen_at, s.expires_at, s.ip, s.user_agent,
-		u.id, u.username, u.display_name, u.password_hash, u.must_change_password, u.is_admin, u.avatar, u.created_at, u.disabled_at
+		u.id, u.username, u.display_name, u.password_hash, u.must_change_password, u.is_admin, u.avatar, u.theme, u.card_back, u.created_at, u.disabled_at
 		FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ?`, hashToken(token))
 	var ss Session
 	var u User
 	var created, seen, expires, ucreated int64
 	var disabled sql.NullInt64
 	err := row.Scan(&ss.ID, &ss.Kind, &created, &seen, &expires, &ss.IP, &ss.UserAgent,
-		&u.ID, &u.Username, &u.DisplayName, &u.PasswordHash, &u.MustChangePassword, &u.IsAdmin, &u.Avatar, &ucreated, &disabled)
+		&u.ID, &u.Username, &u.DisplayName, &u.PasswordHash, &u.MustChangePassword, &u.IsAdmin, &u.Avatar, &u.Theme, &u.CardBack, &ucreated, &disabled)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil, ErrNotFound
 	}
