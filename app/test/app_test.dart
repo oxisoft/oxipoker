@@ -90,6 +90,15 @@ void main() {
       expect(redirectFor(SessionState(loading: false, server: s, user: u), '/admin', native: false), '/');
       expect(redirectFor(SessionState(loading: false, server: s, user: admin), '/admin', native: false), isNull);
       expect(redirectFor(SessionState(loading: false, server: s, user: temp), '/', native: false), '/password');
+      // Deep links survive the splash and sign-in screens.
+      expect(redirectFor(const SessionState(), '/table/T1', native: false), '/splash?from=%2Ftable%2FT1');
+      expect(redirectFor(SessionState(loading: false, server: s), '/splash', native: false, from: '/table/T1'),
+          '/signin?from=%2Ftable%2FT1');
+      expect(redirectFor(SessionState(loading: false, server: s, user: u), '/signin', native: false, from: '/table/T1'),
+          '/table/T1');
+      expect(redirectFor(SessionState(loading: false, server: s, user: u), '/splash', native: false, from: '//evil.example'),
+          '/');
+      expect(redirectFor(SessionState(loading: false, server: s, user: u), '/signin', native: false, from: '/signin'), '/');
     });
   });
 
