@@ -38,6 +38,13 @@ needs no TOTP step: the passkey with user verification already is two factors.
   `wrong_password`; 400 `bad_password` (10 to 256 characters). Passkey-only accounts send no current password.
 - `DELETE /me` `{password}`: 204, the account and all its data are gone; 403 `wrong_password`; 409
   `last_admin`.
+- `PUT /me/avatar` (raw PNG, JPEG, GIF or WebP as the body): the updated user, `avatar` = new version. The
+  server crops the centre square and re-encodes a 256 px PNG, so no metadata survives. 413 `too_large` (body
+  over the upload cap, 5 MiB by default) or `image_too_large` (over 8192 px a side or 40 megapixels); 415
+  `bad_image` (anything else, SVG included).
+- `DELETE /me/avatar`: 204.
+- `GET /users/{id}/avatar?v={avatar}`: the PNG for signed-in users, `ETag` = version, private cache for a
+  day, 304 on `If-None-Match`; 404 when the user has none or is disabled.
 - `GET /me/sessions`: `{sessions: [...]}` with `current` marking this one.
 - `DELETE /me/sessions/{id}`: 204; 404 for a session that is not yours.
 - `POST /me/sessions/revoke-others`: `{revoked: n}`.

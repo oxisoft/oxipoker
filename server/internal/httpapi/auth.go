@@ -40,10 +40,11 @@ type authAPI struct {
 	ipFails    *failLimiter
 	userFails  *failLimiter
 	challenges *challengeStore // password accepted, second factor pending
+	maxUpload  int64           // byte cap for uploaded images
 }
 
 func newAuthAPI(opt Options) *authAPI {
-	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(),
+	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(), maxUpload: accounts.DefaultMaxUpload,
 		ipFails: newFailLimiter(ipFailLimit, failWindow), userFails: newFailLimiter(accountFailLimit, failWindow)}
 	if u, err := url.Parse(opt.PublicURL); err == nil && u.Host != "" {
 		a.origin = u.Scheme + "://" + u.Host
@@ -167,6 +168,9 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Patch("/me", a.updateMe)
 		r.Delete("/me", a.deleteMe)
 		r.Post("/me/password", a.changePassword)
+		r.Put("/me/avatar", a.setAvatar)
+		r.Delete("/me/avatar", a.removeAvatar)
+		r.Get("/users/{id}/avatar", a.avatar)
 		r.Get("/me/sessions", a.sessions)
 		r.Delete("/me/sessions/{id}", a.revokeSession)
 		r.Post("/me/sessions/revoke-others", a.revokeOthers)
