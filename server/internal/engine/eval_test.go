@@ -146,7 +146,7 @@ func TestEvaluateCases(t *testing.T) {
 		cards string
 		cat   Category
 	}{
-		{"As 2d 3c 4h 5s 9d Kc", Straight},     // wheel
+		{"As 2d 3c 4h 5s 9d Kc", Straight},      // wheel
 		{"As 2s 3s 4s 5s 9d Kc", StraightFlush}, // steel wheel
 		{"Ah Kh Qh Jh Th 9h 8h", StraightFlush},
 		{"Ks Kd Kh 7c 7d 7h 2s", FullHouse}, // two trips

@@ -21,7 +21,11 @@ jobs:
           go-version-file: server/go.mod
           cache-dependency-path: server/go.sum
       - run: go vet ./...
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
       - run: go test -race ./...
+      - name: Fuzz smoke test (engine)
+        run: go test -run '^$' -fuzz FuzzHand -fuzztime 30s ./internal/engine
 
   app:
     runs-on: ubuntu-latest
