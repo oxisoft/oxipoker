@@ -51,6 +51,7 @@ func (g *gameAPI) routes(r chi.Router) {
 		r.Get("/me/hands", g.listHands)
 		r.Get("/me/hands/{id}", g.getHand)
 		r.Get("/me/stats", g.stats)
+		r.Get("/me/games", g.listGames)
 	}
 }
 
@@ -80,6 +81,16 @@ func (g *gameAPI) getHand(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeJSON(w, http.StatusOK, h)
 	}
+}
+
+func (g *gameAPI) listGames(w http.ResponseWriter, r *http.Request) {
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	gs, err := g.hist.Games(r.Context(), currentUser(r).ID, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"games": gs})
 }
 
 func (g *gameAPI) stats(w http.ResponseWriter, r *http.Request) {

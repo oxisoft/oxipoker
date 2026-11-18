@@ -161,4 +161,5 @@ Every finished hand is stored with what was seen at the table: public actions, t
 
 - `GET /api/v1/me/hands?before=<id>&limit=<1..100>` lists your hands, newest first: `{"hands":[{"id","table_name","hand_no","big_blind","pot","board","seat","cards","won","net","ended_at"}]}` (`net` = end stack minus start stack).
 - `GET /api/v1/me/hands/{id}` replays one of your hands: settings, `button`, `board`, `events` (in order), `results`, `seats` (name, start and end stack, chips won), `your_seat`, `your_cards`. 404 for hands you did not play.
-- `GET /api/v1/me/stats`: `{"hands_played","hands_won","biggest_pot"}` (`biggest_pot` = most chips won in one hand).
+- `GET /api/v1/me/stats`: `{"hands_played","hands_won","biggest_pot","sng_games","sng_wins","sng_best_place"}` (`biggest_pot` = most chips won in one hand; `sng_best_place` is 0 until you finish a sit-and-go).
+- `GET /api/v1/me/games?limit=<1..100>` lists the sit-and-go games you played, newest first: `{"games":[{"id","table_name","players","your_place","places":[{"place","name"}],"started_at","finished_at"}]}`. A game is stored when its last player standing wins, right after its last hand.

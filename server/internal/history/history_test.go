@@ -154,6 +154,85 @@ func TestStoreListGetStats(t *testing.T) {
 	}
 }
 
+func TestGamesAndSngStats(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	st, err := store.Open(ctx, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	acc := accounts.New(st)
+	ids := map[string]string{}
+	for _, n := range []string{"ann", "bob", "cat"} {
+		u, err := acc.CreateUser(ctx, accounts.NewUser{Username: n, Password: "long enough pw"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids[n] = u.ID
+	}
+	hs := history.New(ctx, st.DB(), nil)
+	started := time.Now().Add(-20 * time.Minute)
+	g1 := table.GameDone{TableID: "T1", TableName: "Friday SNG", Started: started, Places: []table.Place{
+		{Place: 1, User: ids["ann"], Name: "Ann"}, {Place: 2, User: ids["bob"], Name: "Bob"},
+		{Place: 3, User: ids["cat"], Name: "Cat"}, {Place: 4, User: "gone", Name: "Deleted"}}}
+	g2 := table.GameDone{TableID: "T2", TableName: "Rematch", Started: started, Places: []table.Place{
+		{Place: 1, User: ids["bob"], Name: "Bob"}, {Place: 2, User: ids["ann"], Name: "Ann"}}}
+	for _, g := range []table.GameDone{g1, g2} {
+		if err := hs.WriteGame(ctx, g); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := hs.WriteGame(ctx, table.GameDone{TableID: "T3"}); err == nil {
+		t.Fatal("game without places was stored")
+	}
+
+	want := map[string]history.Stats{
+		"ann": {SngGames: 2, SngWins: 1, SngBest: 1},
+		"bob": {SngGames: 2, SngWins: 1, SngBest: 1},
+		"cat": {SngGames: 1, SngWins: 0, SngBest: 3},
+	}
+	for n, w := range want {
+		got, err := hs.StatsOf(ctx, ids[n])
+		if err != nil || got != w {
+			t.Fatalf("%s stats %+v (%v), want %+v", n, got, err, w)
+		}
+	}
+
+	gs, err := hs.Games(ctx, ids["ann"], 0)
+	if err != nil || len(gs) != 2 {
+		t.Fatalf("ann games %+v (%v)", gs, err)
+	}
+	if gs[0].TableName != "Rematch" || gs[0].YourPlace != 2 || gs[1].YourPlace != 1 {
+		t.Fatalf("order or places: %+v", gs)
+	}
+	// The deleted account is skipped; the list shows names only, never account ids.
+	if gs[1].Players != 4 || len(gs[1].Places) != 3 || gs[1].Places[2].Name != "Cat" {
+		t.Fatalf("places of game 1: %+v", gs[1])
+	}
+	raw, _ := json.Marshal(gs)
+	for _, id := range ids {
+		if strings.Contains(string(raw), id) {
+			t.Fatalf("games JSON leaks an account id: %s", raw)
+		}
+	}
+	if gs, _ := hs.Games(ctx, "nobody", 0); len(gs) != 0 {
+		t.Fatalf("stranger sees games: %+v", gs)
+	}
+
+	// RecordGame goes through the same background queue as hands.
+	hs.RecordGame(table.GameDone{TableID: "T4", TableName: "Queued", Places: []table.Place{
+		{Place: 1, User: ids["cat"], Name: "Cat"}, {Place: 2, User: ids["ann"], Name: "Ann"}}})
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		if s, _ := hs.StatsOf(ctx, ids["cat"]); s.SngWins == 1 && s.SngBest == 1 {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("recorded game was not written")
+}
+
 func TestRecordWritesInTheBackground(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

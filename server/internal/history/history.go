@@ -23,22 +23,29 @@ var ErrNotFound = errors.New("history: hand not found")
 type Store struct {
 	db  *sql.DB
 	log *slog.Logger
-	q   chan table.HandDone
+	q   chan any // table.HandDone or table.GameDone, in table order
 	now func() time.Time
 }
 
 // New starts the writer. Hands are queued by Record (from table goroutines)
 // and written in the background until ctx ends.
 func New(ctx context.Context, db *sql.DB, log *slog.Logger) *Store {
-	s := &Store{db: db, log: log, q: make(chan table.HandDone, 1024), now: time.Now}
+	s := &Store{db: db, log: log, q: make(chan any, 1024), now: time.Now}
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case d := <-s.q:
-				if err := s.Write(context.Background(), d); err != nil && s.log != nil {
-					s.log.Error("hand history", "table", d.TableID, "hand", d.HandNo, "err", err)
+			case v := <-s.q:
+				switch d := v.(type) {
+				case table.HandDone:
+					if err := s.Write(context.Background(), d); err != nil && s.log != nil {
+						s.log.Error("hand history", "table", d.TableID, "hand", d.HandNo, "err", err)
+					}
+				case table.GameDone:
+					if err := s.WriteGame(context.Background(), d); err != nil && s.log != nil {
+						s.log.Error("sit-and-go result", "table", d.TableID, "err", err)
+					}
 				}
 			}
 		}
@@ -48,6 +55,106 @@ func New(ctx context.Context, db *sql.DB, log *slog.Logger) *Store {
 
 // Record queues a finished hand; use it as table.Options.OnHandDone.
 func (s *Store) Record(d table.HandDone) { s.q <- d }
+
+// RecordGame queues a finished sit-and-go; use it as table.Options.OnGameDone.
+// It shares the queue with Record, so a game is written after its last hand.
+func (s *Store) RecordGame(d table.GameDone) { s.q <- d }
+
+// WriteGame stores the places of a finished sit-and-go.
+func (s *Store) WriteGame(ctx context.Context, d table.GameDone) error {
+	if len(d.Places) == 0 {
+		return errors.New("history: game without places")
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	started := d.Started
+	if started.IsZero() {
+		started = s.now()
+	}
+	res, err := tx.ExecContext(ctx, `INSERT INTO sng_games (table_id, table_name, players, started_at, finished_at)
+		VALUES (?, ?, ?, ?, ?)`, d.TableID, d.TableName, len(d.Places), started.UnixMilli(), s.now().UnixMilli())
+	if err != nil {
+		return err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	for _, p := range d.Places {
+		// A player deleted meanwhile has no users row: skip, keep the game.
+		if _, err := tx.ExecContext(ctx, `INSERT INTO sng_places (game_id, user_id, place, name)
+			SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?)`,
+			id, p.User, p.Place, p.Name, p.User); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// Game is one finished sit-and-go as one of its players sees it.
+type Game struct {
+	ID         int64         `json:"id"`
+	TableName  string        `json:"table_name"`
+	Players    int           `json:"players"`
+	YourPlace  int           `json:"your_place"`
+	Places     []table.Place `json:"places"` // best place first; names only, no user ids
+	StartedAt  time.Time     `json:"started_at"`
+	FinishedAt time.Time     `json:"finished_at"`
+}
+
+// Games returns the sit-and-go games the user played, newest first.
+func (s *Store) Games(ctx context.Context, user string, limit int) ([]Game, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT g.id, g.table_name, g.players, p.place, g.started_at, g.finished_at
+		FROM sng_places p JOIN sng_games g ON g.id = p.game_id
+		WHERE p.user_id = ? ORDER BY g.id DESC LIMIT ?`, user, limit)
+	if err != nil {
+		return nil, err
+	}
+	out := []Game{}
+	for rows.Next() {
+		var g Game
+		var st, fin int64
+		if err := rows.Scan(&g.ID, &g.TableName, &g.Players, &g.YourPlace, &st, &fin); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		g.StartedAt, g.FinishedAt = time.UnixMilli(st).UTC(), time.UnixMilli(fin).UTC()
+		out = append(out, g)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for i := range out {
+		if out[i].Places, err = s.places(ctx, out[i].ID); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+func (s *Store) places(ctx context.Context, game int64) ([]table.Place, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT place, name FROM sng_places WHERE game_id = ? ORDER BY place`, game)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []table.Place{}
+	for rows.Next() {
+		var pl table.Place
+		if err := rows.Scan(&pl.Place, &pl.Name); err != nil {
+			return nil, err
+		}
+		out = append(out, pl)
+	}
+	return out, rows.Err()
+}
 
 // PublicEvents drops every event only one player may see (hole cards).
 func PublicEvents(evs []engine.Event) []engine.Event {
@@ -227,6 +334,9 @@ type Stats struct {
 	HandsPlayed int   `json:"hands_played"`
 	HandsWon    int   `json:"hands_won"`
 	BiggestPot  int64 `json:"biggest_pot"` // most chips won in one hand
+	SngGames    int   `json:"sng_games"`
+	SngWins     int   `json:"sng_wins"`
+	SngBest     int   `json:"sng_best_place"` // 0 = no sit-and-go finished yet
 }
 
 // StatsOf returns a player's stats.
@@ -234,5 +344,10 @@ func (s *Store) StatsOf(ctx context.Context, user string) (Stats, error) {
 	var st Stats
 	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*), COALESCE(SUM(won > 0), 0), COALESCE(MAX(won), 0)
 		FROM hand_players WHERE user_id = ?`, user).Scan(&st.HandsPlayed, &st.HandsWon, &st.BiggestPot)
+	if err != nil {
+		return st, err
+	}
+	err = s.db.QueryRowContext(ctx, `SELECT COUNT(*), COALESCE(SUM(place = 1), 0), COALESCE(MIN(place), 0)
+		FROM sng_places WHERE user_id = ?`, user).Scan(&st.SngGames, &st.SngWins, &st.SngBest)
 	return st, err
 }

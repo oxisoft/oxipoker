@@ -104,6 +104,7 @@ func main() {
 	tables := table.NewManager(30*time.Minute, func(id string) table.Options {
 		o := hub.TableOptions(id)
 		o.OnHandDone = hist.Record
+		o.OnGameDone = hist.RecordGame
 		return o
 	})
 	defer tables.Shutdown()

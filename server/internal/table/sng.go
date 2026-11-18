@@ -65,7 +65,7 @@ func LevelBlinds(level int, sb, bb int64) (int64, int64) {
 // Place is one finishing position of a sit-and-go.
 type Place struct {
 	Place int    `json:"place"`
-	User  string `json:"user"`
+	User  string `json:"user,omitempty"`
 	Name  string `json:"name"`
 }
 
