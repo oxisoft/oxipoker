@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
@@ -361,7 +362,51 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       ),
       const SizedBox(height: 16),
       Align(alignment: Alignment.centerRight, child: FilledButton(key: const Key('save-settings'), onPressed: _save, child: Text(l.save))),
+      const SizedBox(height: 24),
+      Text(l.cardBacks, style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 8),
+      Wrap(spacing: 12, runSpacing: 12, children: [
+        for (final b in ref.watch(cardBacksProvider).value?.backs ?? const <CardBackInfo>[])
+          Column(mainAxisSize: MainAxisSize.min, children: [
+            CardBackFace(b.id, width: 50),
+            SizedBox(width: 80, child: Text(b.name, textAlign: TextAlign.center, maxLines: 2, style: Theme.of(context).textTheme.bodySmall)),
+            if (!b.builtIn)
+              IconButton(
+                key: Key('delete-back-${b.id}'),
+                tooltip: l.delete,
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () async {
+                  final ok = await guard(context, ref, () async {
+                    await _s.api().adminDeleteCardBack(b.id);
+                    return true;
+                  });
+                  if (ok == true) ref.invalidate(cardBacksProvider);
+                },
+              ),
+          ]),
+      ]),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton.icon(key: const Key('upload-back'), onPressed: _uploadBack, icon: const Icon(Icons.upload), label: Text(l.uploadCardBack)),
+      ),
     ]);
+  }
+
+  Future<void> _uploadBack() async {
+    final l = context.l;
+    final file = await openFile(acceptedTypeGroups: const [
+      XTypeGroup(label: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'], mimeTypes: ['image/png', 'image/jpeg', 'image/webp']),
+    ]);
+    if (file == null || !mounted) return;
+    final bytes = await file.readAsBytes();
+    if (!mounted) return;
+    var base = file.name.contains('.') ? file.name.substring(0, file.name.lastIndexOf('.')) : file.name;
+    if (base.length > 40) base = base.substring(0, 40);
+    final name = await prompt(context, l.cardBackName, initial: base);
+    if (name == null || !mounted) return;
+    final b = await guard(context, ref, () => _s.api().adminAddCardBack(name.trim(), bytes));
+    if (b != null) ref.invalidate(cardBacksProvider);
   }
 }
 

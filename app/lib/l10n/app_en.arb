@@ -288,5 +288,7 @@
   "errBadTheme": "Unknown theme.",
   "errBadCardBack": "That card back is not available.",
   "errCardBackDefault": "The default card back cannot be deleted.",
+  "uploadCardBack": "Upload a card back",
+  "cardBackName": "Card back name",
   "errTooManyCardBacks": "There are too many uploaded card backs. Delete one first."
 }

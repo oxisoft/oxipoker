@@ -239,6 +239,20 @@ void main() {
   });
 
   group('admin console', () {
+    testWidgets('settings pick the default card back and delete uploads', (tester) async {
+      final (fake, _) = await pumpApp(tester);
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-admin')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tab-settings')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('default-back')), findsOneWidget);
+      await tester.scrollUntilVisible(find.byKey(const Key('upload-back')), 200, scrollable: find.byType(Scrollable).last);
+      expect(find.byKey(const Key('delete-back-classic-red')), findsNothing); // built-ins stay
+      await tester.tap(find.byKey(const Key('delete-back-u-mine')));
+      await tester.pumpAndSettle();
+      expect(fake.deletedBacks, ['u-mine']);
+    });
     testWidgets('lists users and shows a temporary password once', (tester) async {
       await pumpApp(tester);
       await signIn(tester, 'alice', 'correct horse');

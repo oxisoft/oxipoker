@@ -1546,6 +1546,18 @@ abstract class AppLocalizations {
   /// **'The default card back cannot be deleted.'**
   String get errCardBackDefault;
 
+  /// No description provided for @uploadCardBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a card back'**
+  String get uploadCardBack;
+
+  /// No description provided for @cardBackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Card back name'**
+  String get cardBackName;
+
   /// No description provided for @errTooManyCardBacks.
   ///
   /// In en, this message translates to:

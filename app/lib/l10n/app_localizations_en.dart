@@ -847,6 +847,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errCardBackDefault => 'The default card back cannot be deleted.';
 
   @override
+  String get uploadCardBack => 'Upload a card back';
+
+  @override
+  String get cardBackName => 'Card back name';
+
+  @override
   String get errTooManyCardBacks =>
       'There are too many uploaded card backs. Delete one first.';
 }

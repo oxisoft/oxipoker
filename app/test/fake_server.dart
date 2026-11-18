@@ -44,6 +44,7 @@ class FakeServer {
     'your_seat': 0, 'your_cards': ['As', 'Ks'], 'ended_at': '2026-11-18T14:00:00Z',
   };
   String? signedIn;
+  final deletedBacks = <String>[];
 
   http.Response _json(int status, Object? body) =>
       http.Response(body == null ? '' : jsonEncode(body), status, headers: {'content-type': 'application/json'});
@@ -135,8 +136,14 @@ class FakeServer {
             {'id': 'classic-blue', 'name': 'Classic blue', 'theme': 'classic', 'built_in': true},
             {'id': 'cyber-grid', 'name': 'Neon grid', 'theme': 'cyberpunk', 'built_in': true},
             {'id': 'cyber-circuit', 'name': 'Circuit', 'theme': 'cyberpunk', 'built_in': true},
+            if (!deletedBacks.contains('u-mine')) {'id': 'u-mine', 'name': 'Club logo', 'built_in': false},
           ]
         });
+      case 'DELETE /admin/card-backs/u-mine':
+        deletedBacks.add('u-mine');
+        return _json(204, null);
+      case 'GET /admin/settings':
+        return _json(200, {'table_creation': 'everyone', 'max_upload_bytes': 5242880, 'card_back_default': 'classic-blue'});
       case 'POST /me/password':
         if (me == null) return _err(401, 'unauthorized');
         me['must_change_password'] = false;
