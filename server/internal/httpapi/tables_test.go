@@ -71,6 +71,15 @@ func TestTablesAPI(t *testing.T) {
 	}
 	bobTable := out["id"].(string)
 
+	sng := tableBody("SNG")
+	sng["kind"], sng["structure"] = "sng", "regular"
+	if res, out := ts.do(t, nil, req{method: "POST", path: "/api/v1/tables", token: bob, body: sng}); res.StatusCode != 201 ||
+		out["settings"].(map[string]any)["kind"] != "sng" || out["settings"].(map[string]any)["structure"] != "regular" {
+		t.Fatalf("create sng: %d %v", res.StatusCode, out)
+	} else if res, _ := ts.do(t, nil, req{method: "DELETE", path: "/api/v1/tables/" + out["id"].(string), token: bob}); res.StatusCode != 204 {
+		t.Fatalf("close sng: %d", res.StatusCode)
+	}
+
 	for _, bad := range []func(map[string]any){
 		func(b map[string]any) { b["seats"] = 10 },
 		func(b map[string]any) { b["seats"] = 1 },
@@ -81,6 +90,10 @@ func TestTablesAPI(t *testing.T) {
 		func(b map[string]any) { b["big_blind"] = 0 },
 		func(b map[string]any) { b["starting_stack"] = 15 },
 		func(b map[string]any) { b["extra"] = true },
+		func(b map[string]any) { b["kind"] = "sng" },
+		func(b map[string]any) { b["kind"], b["structure"] = "sng", "hyper" },
+		func(b map[string]any) { b["structure"] = "turbo" },
+		func(b map[string]any) { b["kind"] = "mtt" },
 	} {
 		b := tableBody("x")
 		bad(b)

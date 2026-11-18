@@ -155,6 +155,7 @@ var (
 	errNoSpectator = errors.New("spectators_off")
 	errBadChat     = errors.New("bad_chat")
 	errRateLimited = errors.New("rate_limited")
+	errHostOnly    = errors.New("host_or_admin_only")
 )
 
 func errorCode(err error) string {
@@ -177,8 +178,14 @@ func errorCode(err error) string {
 		return "illegal_action"
 	case errors.Is(err, engine.ErrAmount):
 		return "bad_amount"
+	case errors.Is(err, table.ErrNotSng):
+		return "not_sng"
+	case errors.Is(err, table.ErrStarted):
+		return "sng_started"
+	case errors.Is(err, table.ErrFewPlayers):
+		return "too_few_players"
 	case errors.Is(err, errBadIntent), errors.Is(err, errNotWatching), errors.Is(err, errNoSpectator),
-		errors.Is(err, errBadChat), errors.Is(err, errRateLimited):
+		errors.Is(err, errBadChat), errors.Is(err, errRateLimited), errors.Is(err, errHostOnly):
 		return err.Error()
 	}
 	return "internal"
@@ -391,6 +398,15 @@ func (c *conn) handle(in Intent) error {
 		return t.Act(c.user.ID, engine.Action{Kind: k, To: in.To})
 	case "chat":
 		return c.chatTo(t, in.Text)
+	case "start":
+		st, err := t.Snapshot()
+		if err != nil {
+			return err
+		}
+		if st.Host != c.user.ID && !c.user.Admin {
+			return errHostOnly
+		}
+		return t.Start()
 	}
 	return errBadIntent
 }

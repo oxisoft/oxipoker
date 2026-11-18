@@ -461,3 +461,39 @@ func TestConnectionCapPerUser(t *testing.T) {
 		t.Fatalf("11th connection: %v", err)
 	}
 }
+
+func TestSitAndGoStartIntent(t *testing.T) {
+	r := newRig(t)
+	tb, err := r.tables.Create("a", table.Settings{Name: "SNG", Seats: 6, SmallBlind: 5, BigBlind: 10,
+		StartingStack: 1000, TurnTime: time.Minute, Spectators: true, Kind: table.KindSng, Structure: "turbo"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, b := r.dial(t, "a"), r.dial(t, "b")
+	for _, c := range []*client{a, b} {
+		if e := c.do(map[string]any{"type": "watch", "table": tb.ID()}); e != "" {
+			t.Fatal(e)
+		}
+	}
+	if e := a.do(map[string]any{"type": "start"}); e != "too_few_players" {
+		t.Fatalf("start alone: %q", e)
+	}
+	for i, c := range []*client{a, b} {
+		if e := c.do(map[string]any{"type": "sit", "seat": i}); e != "" {
+			t.Fatal(e)
+		}
+	}
+	if e := b.do(map[string]any{"type": "start"}); e != "host_or_admin_only" {
+		t.Fatalf("start by a guest: %q", e)
+	}
+	if e := a.do(map[string]any{"type": "start"}); e != "" {
+		t.Fatal(e)
+	}
+	v := b.waitView(func(v *table.View) bool { return v.Sng != nil && v.Sng.Phase == table.PhaseRunning && v.Hand != nil })
+	if v.Sng.BigBlind != 10 || v.Settings.Kind != table.KindSng {
+		t.Fatalf("sng view %+v", v.Sng)
+	}
+	if e := a.do(map[string]any{"type": "start"}); e != "sng_started" {
+		t.Fatalf("second start: %q", e)
+	}
+}

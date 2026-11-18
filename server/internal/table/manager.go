@@ -160,7 +160,8 @@ func (m *Manager) sweepOnce(now time.Time) {
 			m.mu.Unlock()
 			continue
 		}
-		empty := !slices.ContainsFunc(s.Seats, func(p *Player) bool { return p != nil })
+		empty := !slices.ContainsFunc(s.Seats, func(p *Player) bool { return p != nil }) ||
+			(s.Sng != nil && s.Sng.Phase == PhaseFinished) // a finished sit-and-go closes like an empty table
 		m.mu.Lock()
 		switch {
 		case !empty:

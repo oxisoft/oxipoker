@@ -103,6 +103,8 @@ type createTableRequest struct {
 	StartingStack int64  `json:"starting_stack"`
 	TurnTime      int    `json:"turn_time"` // seconds
 	Spectators    bool   `json:"spectators"`
+	Kind          string `json:"kind"`      // cash (default) or sng
+	Structure     string `json:"structure"` // sng: turbo, regular or slow
 }
 
 func (g *gameAPI) createTable(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +133,7 @@ func (g *gameAPI) createTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s := table.Settings{Name: name, Seats: req.Seats, SmallBlind: req.SmallBlind, BigBlind: req.BigBlind,
-		StartingStack: req.StartingStack, TurnTime: tt, Spectators: req.Spectators}
+		StartingStack: req.StartingStack, TurnTime: tt, Spectators: req.Spectators, Kind: req.Kind, Structure: req.Structure}
 	if err := s.Validate(); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad_settings", "detail": err.Error()})
 		return
@@ -151,7 +153,7 @@ func (g *gameAPI) createTable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g.hub.Publish(st)
-	g.audit(r, u, "table.create", t.ID(), map[string]any{"name": name, "seats": s.Seats, "big_blind": s.BigBlind})
+	g.audit(r, u, "table.create", t.ID(), map[string]any{"name": name, "seats": s.Seats, "big_blind": s.BigBlind, "kind": s.Kind})
 	writeJSON(w, http.StatusCreated, realtime.Summary(st))
 }
 

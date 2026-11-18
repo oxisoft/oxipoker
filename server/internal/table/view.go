@@ -19,6 +19,7 @@ type View struct {
 	HandNo   int         `json:"hand_no"`
 	Hand     *HandView   `json:"hand,omitempty"`
 	Closed   bool        `json:"closed,omitempty"`
+	Sng      *Sng        `json:"sng,omitempty"` // level, clock and places of a sit-and-go
 }
 
 // SeatView is one occupied seat.
@@ -55,7 +56,7 @@ type HandView struct {
 // ViewFor builds the view of user (a spectator when not seated).
 func (s State) ViewFor(user string) View {
 	v := View{ID: s.ID, Version: s.Version, Settings: s.Settings, Host: s.Host, YourSeat: -1,
-		Seats: make([]*SeatView, len(s.Seats)), HandNo: s.HandNo, Closed: s.Closed}
+		Seats: make([]*SeatView, len(s.Seats)), HandNo: s.HandNo, Closed: s.Closed, Sng: s.Sng.clone()}
 	for i, p := range s.Seats {
 		if p == nil {
 			continue

@@ -24,6 +24,10 @@ type Settings struct {
 	StartingStack int64         `json:"starting_stack"`
 	TurnTime      time.Duration `json:"turn_time"`
 	Spectators    bool          `json:"spectators"`
+	// Kind is KindCash (default) or KindSng; Structure names the blind
+	// structure of a sit-and-go (see Structures).
+	Kind      string `json:"kind"`
+	Structure string `json:"structure,omitempty"`
 }
 
 // MarshalJSON sends the turn time in whole seconds.
@@ -56,6 +60,12 @@ func (s Settings) Validate() error {
 		return errors.New("starting stack must be at least two big blinds")
 	case s.TurnTime <= 0:
 		return errors.New("turn time must be positive")
+	case s.Kind != "" && s.Kind != KindCash && s.Kind != KindSng:
+		return errors.New("kind must be cash or sng")
+	case s.Kind == KindSng && Structures[s.Structure].LevelTime == 0:
+		return ErrNoStructure
+	case s.Kind != KindSng && s.Structure != "":
+		return errors.New("a blind structure is only for a sit-and-go")
 	}
 	return nil
 }
@@ -95,6 +105,7 @@ type State struct {
 	Deadline  time.Time         `json:"deadline,omitzero"` // turn timer of the player to act
 	Version   uint64            `json:"version"`
 	Closed    bool              `json:"closed,omitempty"`
+	Sng       *Sng              `json:"sng,omitempty"` // only on sit-and-go tables
 }
 
 // HandDone is passed to the OnHandDone hook when a hand is over.
@@ -122,6 +133,11 @@ type Options struct {
 	OnChange func(State)
 	// OnHandDone is called when a hand is finished, from the table goroutine.
 	OnHandDone func(HandDone)
+	// OnGameDone is called when a sit-and-go has its winner, from the table
+	// goroutine.
+	OnGameDone func(GameDone)
+	// LevelTime overrides the blind level length of a sit-and-go (tests).
+	LevelTime time.Duration
 }
 
 // Table is the handle to a running table actor.
@@ -154,8 +170,15 @@ func New(id, host string, s Settings, opt Options) (*Table, error) {
 	if opt.StartDelay == 0 {
 		opt.StartDelay = 3 * time.Second
 	}
+	if s.Kind == "" {
+		s.Kind = KindCash
+	}
 	t := &Table{id: id, cmds: make(chan func(*actor), 64), done: make(chan struct{})}
 	a := &actor{st: State{ID: id, Host: host, Settings: s, Seats: make([]*Player, s.Seats)}, opt: opt, t: t}
+	if s.Kind == KindSng {
+		a.st.Sng = &Sng{Phase: PhaseRegistering, Places: []Place{}}
+		a.st.Sng.SmallBlind, a.st.Sng.BigBlind = s.SmallBlind, s.BigBlind
+	}
 	go a.run()
 	return t, nil
 }
@@ -222,6 +245,7 @@ func (a *actor) snapshot() State {
 		p := *a.st.Pos
 		s.Pos = &p
 	}
+	s.Sng = a.st.Sng.clone()
 	return s
 }
 
@@ -248,7 +272,14 @@ func (t *Table) Sit(user, name string, seat int) error {
 		if a.st.Seats[seat] != nil {
 			return ErrSeatTaken
 		}
+		if a.isSng() && a.st.Sng.Phase != PhaseRegistering {
+			return ErrStarted
+		}
 		a.st.Seats[seat] = &Player{User: user, Name: name, Stack: a.st.Settings.StartingStack}
+		if a.isSng() && a.seated() == len(a.st.Seats) {
+			a.startSng() // every seat taken
+			return nil
+		}
 		a.changed()
 		a.maybeStart()
 		return nil
@@ -280,7 +311,7 @@ func (t *Table) ComeBack(user string) error {
 		}
 		p := a.st.Seats[i]
 		p.SittingOut, p.Missed = false, 0
-		if p.Stack == 0 && !a.inHand(i) {
+		if p.Stack == 0 && !a.inHand(i) && !a.isSng() {
 			p.Stack = a.st.Settings.StartingStack
 		}
 		a.changed()
@@ -296,6 +327,14 @@ func (t *Table) Leave(user string) error {
 		i := a.seatOf(user)
 		if i < 0 {
 			return ErrNotSeated
+		}
+		if a.isSng() && a.st.Sng.Phase == PhaseRunning {
+			// A running sit-and-go keeps the seat: the player is blinded
+			// out (posts blinds, folds) so the game always ends.
+			a.st.Seats[i].SittingOut = true
+			a.changed()
+			a.autoActIfTurn(i)
+			return nil
 		}
 		if a.inHand(i) {
 			a.st.Seats[i].Leaving = true
@@ -379,8 +418,12 @@ func (a *actor) stopTimers() {
 // ready lists the seats that will be dealt into the next hand.
 func (a *actor) ready() []int {
 	var s []int
+	sng := a.isSng()
+	if sng && a.st.Sng.Phase != PhaseRunning {
+		return nil
+	}
 	for i, p := range a.st.Seats {
-		if p != nil && !p.SittingOut && !p.Leaving && p.Stack > 0 {
+		if p != nil && (sng || !p.SittingOut) && !p.Leaving && p.Stack > 0 {
 			s = append(s, i)
 		}
 	}
@@ -415,6 +458,10 @@ func (a *actor) startHand() {
 		return
 	}
 	cfg := engine.Config{SmallBlind: a.st.Settings.SmallBlind, BigBlind: a.st.Settings.BigBlind, Positions: pos}
+	if a.isSng() {
+		a.advanceClock(time.Now())
+		cfg.SmallBlind, cfg.BigBlind = a.st.Sng.SmallBlind, a.st.Sng.BigBlind
+	}
 	a.users = map[int]string{}
 	for _, i := range active {
 		cfg.Seats = append(cfg.Seats, engine.Seat{Seat: i, Stack: a.st.Seats[i].Stack})
@@ -525,8 +572,15 @@ func (a *actor) endHand() {
 		}
 		if p.Leaving {
 			a.st.Seats[i] = nil
-		} else if p.Stack == 0 {
+		} else if p.Stack == 0 && !a.isSng() {
 			p.SittingOut = true // busted: comes back with a new buy-in
+		}
+	}
+	if a.isSng() {
+		a.eliminate()
+		if a.st.Sng.Phase == PhaseFinished {
+			a.changed() // the last hand stays on the table, no next hand
+			return
 		}
 	}
 	a.changed()

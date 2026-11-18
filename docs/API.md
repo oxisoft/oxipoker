@@ -126,7 +126,7 @@ A user holding a temporary password gets 403 `password_change_required` on every
 Signed in. Settings in JSON use whole seconds for `turn_time`.
 
 - `GET /api/v1/tables` lists the open tables, oldest first: `{"tables":[{"id","host","settings":{name, seats, small_blind, big_blind, starting_stack, turn_time, spectators},"taken","players":[names],"hand_no"}]}`.
-- `POST /api/v1/tables` `{name, seats, small_blind, big_blind, starting_stack, turn_time, spectators}` creates a table hosted by the caller (201, lobby entry). Limits: name 1 to 40 characters, 2 to 9 seats, big blind at least 1 and small blind not above it, starting stack at least two big blinds, turn time 5 to 300 s. Errors: `bad_settings` (with `detail`), `admins_only` when the admin setting `table_creation` is `admins`, `too_many_tables` (100 open tables).
+- `POST /api/v1/tables` `{name, seats, small_blind, big_blind, starting_stack, turn_time, spectators, kind?, structure?}` creates a table hosted by the caller (201, lobby entry). `kind` is `cash` (default) or `sng` (sit-and-go); a sit-and-go needs `structure`: `turbo` (3 minute levels), `regular` (6) or `slow` (10), and its small and big blind are those of the first level. Limits: name 1 to 40 characters, 2 to 9 seats, big blind at least 1 and small blind not above it, starting stack at least two big blinds, turn time 5 to 300 s. Errors: `bad_settings` (with `detail`), `admins_only` when the admin setting `table_creation` is `admins`, `too_many_tables` (100 open tables).
 - `DELETE /api/v1/tables/{id}` closes a table (204); only its host or an admin (`host_or_admin_only`). A running hand is cancelled and every stack goes back to where it was before it.
 
 Empty tables close by themselves after 30 minutes.
@@ -142,7 +142,9 @@ Client messages (`id` is optional; when set, the server answers `{"type":"ok","i
 
 - `{"type":"lobby","on":true}` / `false`: receive `lobby` messages whenever a table opens, closes or changes.
 - `{"type":"watch","table":"<id>"}`: watch one table (replaces the previous one); the current view is sent at once, so a client that reconnects (a phone that slept) sends `watch` again and is back where it was. `{"type":"unwatch"}`.
-- On the watched table: `{"type":"sit","seat":n}` (buy in with the starting stack), `{"type":"sitout"}`, `{"type":"comeback"}` (a player with no chips buys in again), `{"type":"leave"}` (folds if in a hand), `{"type":"act","action":"fold|check|call|bet|raise","to":n}` (`to` = the player's total for the street, for bet and raise), `{"type":"chat","text":"..."}`, `{"type":"ping"}`.
+- On the watched table: `{"type":"sit","seat":n}` (buy in with the starting stack), `{"type":"sitout"}`, `{"type":"comeback"}` (a player with no chips buys in again), `{"type":"leave"}` (folds if in a hand), `{"type":"act","action":"fold|check|call|bet|raise","to":n}` (`to` = the player's total for the street, for bet and raise), `{"type":"chat","text":"..."}`, `{"type":"ping"}`, `{"type":"start"}` (host or admin starts a sit-and-go with the players seated; it also starts by itself when every seat is taken).
+
+Sit-and-go tables carry `sng` in the view: `{phase: registering|running|finished, level, small_blind, big_blind, next_small_blind?, next_big_blind?, level_ends?, places: [{place, user, name}], started?}`. Blinds rise between hands once `level_ends` has passed; places list the finished players, best first, and the winner as place 1 when the phase is `finished`. During registration players take and leave seats freely; once it runs nobody joins, nobody rebuys, and a player who leaves keeps the seat sitting out: blinds are posted and the hand folded until the chips are gone. Busted players leave the table with their place. Errors: `not_sng`, `sng_started`, `too_few_players`, `host_or_admin_only`.
 
 Server messages:
 
