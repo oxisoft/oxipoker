@@ -99,11 +99,13 @@ type State struct {
 
 // HandDone is passed to the OnHandDone hook when a hand is over.
 type HandDone struct {
-	TableID string
-	HandNo  int
-	Hand    *engine.Hand
-	Users   map[int]string // seat -> user at the time of the hand
-	Config  engine.Config
+	TableID   string
+	TableName string
+	HandNo    int
+	Hand      *engine.Hand
+	Users     map[int]string // seat -> user at the time of the hand
+	Names     map[int]string // seat -> display name
+	Config    engine.Config
 }
 
 // Options tune a table; zero values are production defaults.
@@ -508,7 +510,14 @@ func (a *actor) autoAct(seat int) {
 
 func (a *actor) endHand() {
 	if a.opt.OnHandDone != nil {
-		a.opt.OnHandDone(HandDone{TableID: a.st.ID, HandNo: a.st.HandNo, Hand: a.st.Hand, Users: a.users, Config: a.cfg})
+		names := map[int]string{}
+		for seat, u := range a.users {
+			if p := a.st.Seats[seat]; p != nil && p.User == u {
+				names[seat] = p.Name
+			}
+		}
+		a.opt.OnHandDone(HandDone{TableID: a.st.ID, TableName: a.st.Settings.Name, HandNo: a.st.HandNo,
+			Hand: a.st.Hand.Clone(), Users: maps.Clone(a.users), Names: names, Config: a.cfg})
 	}
 	for i, p := range a.st.Seats {
 		if p == nil {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -13,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/history"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/table"
 )
@@ -24,11 +26,12 @@ type gameAPI struct {
 	*authAPI
 	tables *table.Manager
 	hub    *realtime.Hub
+	hist   *history.Store
 	rt     *realtime.Server
 }
 
 func newGameAPI(a *authAPI, opt Options) *gameAPI {
-	g := &gameAPI{authAPI: a, tables: opt.Tables, hub: opt.Hub}
+	g := &gameAPI{authAPI: a, tables: opt.Tables, hub: opt.Hub, hist: opt.History}
 	g.rt = &realtime.Server{Hub: opt.Hub, Tables: opt.Tables, PingEvery: opt.PingEvery}
 	return g
 }
@@ -44,6 +47,48 @@ func (g *gameAPI) routes(r chi.Router) {
 	r.Get("/tables", g.listTables)
 	r.Post("/tables", g.createTable)
 	r.Delete("/tables/{id}", g.closeTable)
+	if g.hist != nil {
+		r.Get("/me/hands", g.listHands)
+		r.Get("/me/hands/{id}", g.getHand)
+		r.Get("/me/stats", g.stats)
+	}
+}
+
+func (g *gameAPI) listHands(w http.ResponseWriter, r *http.Request) {
+	before, _ := strconv.ParseInt(r.URL.Query().Get("before"), 10, 64)
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	hs, err := g.hist.List(r.Context(), currentUser(r).ID, before, limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"hands": hs})
+}
+
+func (g *gameAPI) getHand(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "not_found")
+		return
+	}
+	h, err := g.hist.Get(r.Context(), currentUser(r).ID, id)
+	switch {
+	case errors.Is(err, history.ErrNotFound):
+		writeError(w, http.StatusNotFound, "not_found")
+	case err != nil:
+		writeError(w, http.StatusInternalServerError, "internal")
+	default:
+		writeJSON(w, http.StatusOK, h)
+	}
+}
+
+func (g *gameAPI) stats(w http.ResponseWriter, r *http.Request) {
+	st, err := g.hist.StatsOf(r.Context(), currentUser(r).ID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "internal")
+		return
+	}
+	writeJSON(w, http.StatusOK, st)
 }
 
 func (g *gameAPI) listTables(w http.ResponseWriter, _ *http.Request) {

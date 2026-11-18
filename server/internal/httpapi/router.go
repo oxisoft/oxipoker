@@ -12,6 +12,7 @@ import (
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/applinks"
+	"github.com/oxisoft/oxipoker/server/internal/history"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
@@ -39,6 +40,8 @@ type Options struct {
 	// Tables and Hub enable the game: lobby API and WebSocket. Both or neither.
 	Tables *table.Manager
 	Hub    *realtime.Hub
+	// History serves the own hand history and stats; nil = off.
+	History *history.Store
 	// PingEvery is the WebSocket keepalive interval (0 = default).
 	PingEvery time.Duration
 }

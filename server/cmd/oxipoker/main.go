@@ -18,6 +18,7 @@ import (
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/applinks"
+	"github.com/oxisoft/oxipoker/server/internal/history"
 	"github.com/oxisoft/oxipoker/server/internal/httpapi"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
@@ -99,14 +100,19 @@ func main() {
 	}
 
 	hub := realtime.NewHub()
-	tables := table.NewManager(30*time.Minute, hub.TableOptions)
+	hist := history.New(ctx, st.DB(), log)
+	tables := table.NewManager(30*time.Minute, func(id string) table.Options {
+		o := hub.TableOptions(id)
+		o.OnHandDone = hist.Record
+		return o
+	})
 	defer tables.Shutdown()
 
 	srv := &http.Server{
 		Addr: net.JoinHostPort("", port),
 		Handler: httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec,
 			Accounts: acc, Passkeys: passkeys, PublicURL: publicURL, AndroidApps: apps,
-			Tables: tables, Hub: hub}),
+			Tables: tables, Hub: hub, History: hist}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}

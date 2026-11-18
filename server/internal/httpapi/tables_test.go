@@ -13,6 +13,7 @@ import (
 	"github.com/coder/websocket"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/history"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/table"
@@ -33,8 +34,9 @@ func newGameServer(t *testing.T) *testServer {
 		}
 	}
 	hub := realtime.NewHub()
+	hist := history.New(t.Context(), st.DB(), nil)
 	mgr := table.NewManager(time.Hour, hub.TableOptions)
-	srv := httptest.NewServer(NewRouter(Options{Store: st, Accounts: acc, Tables: mgr, Hub: hub, PingEvery: 50 * time.Millisecond}))
+	srv := httptest.NewServer(NewRouter(Options{Store: st, Accounts: acc, Tables: mgr, Hub: hub, History: hist, PingEvery: 50 * time.Millisecond}))
 	t.Cleanup(func() { srv.Close(); mgr.Shutdown(); st.Close() })
 	return &testServer{Server: srv, acc: acc, st: st}
 }
@@ -121,6 +123,25 @@ func TestTablesAPI(t *testing.T) {
 }
 
 func wsURL(ts *testServer) string { return "ws" + strings.TrimPrefix(ts.URL, "http") + "/api/v1/ws" }
+
+func TestOwnHistoryEndpoints(t *testing.T) {
+	ts := newGameServer(t)
+	bob := signinAs(t, ts, "bob", "bob long password")
+	if res, out := ts.do(t, nil, req{method: "GET", path: "/api/v1/me/hands", token: bob}); res.StatusCode != 200 || len(out["hands"].([]any)) != 0 {
+		t.Fatalf("hands: %d %v", res.StatusCode, out)
+	}
+	if res, out := ts.do(t, nil, req{method: "GET", path: "/api/v1/me/stats", token: bob}); res.StatusCode != 200 || out["hands_played"] != float64(0) {
+		t.Fatalf("stats: %d %v", res.StatusCode, out)
+	}
+	for _, p := range []string{"/api/v1/me/hands/1", "/api/v1/me/hands/x"} {
+		if res, _ := ts.do(t, nil, req{method: "GET", path: p, token: bob}); res.StatusCode != 404 {
+			t.Fatalf("%s: %d", p, res.StatusCode)
+		}
+	}
+	if res, _ := ts.do(t, nil, req{method: "GET", path: "/api/v1/me/stats"}); res.StatusCode != 401 {
+		t.Fatalf("anonymous stats: %d", res.StatusCode)
+	}
+}
 
 func TestWebSocketAuthAndOrigin(t *testing.T) {
 	ts := newGameServer(t)

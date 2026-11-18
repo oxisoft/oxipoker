@@ -152,3 +152,11 @@ Server messages:
 - `{"type":"chat","table","user","name","text","at"}`. Chat is for players and spectators of the table, 1 to 300 characters, 5 messages per 10 s per connection, and is never stored.
 
 Error codes: `bad_intent`, `not_watching`, `no_table`, `seat_taken`, `bad_seat`, `already_seated`, `not_seated`, `not_in_hand`, `not_your_turn`, `illegal_action`, `bad_amount`, `bad_chat`, `rate_limited`, `spectators_off`. An error never changes the table.
+
+## Hand history and stats
+
+Every finished hand is stored with what was seen at the table: public actions, the board, cards shown at showdown and the pots. Each player's own hole cards are kept in their own row and only returned to them; cards of others that were never shown are never written.
+
+- `GET /api/v1/me/hands?before=<id>&limit=<1..100>` lists your hands, newest first: `{"hands":[{"id","table_name","hand_no","big_blind","pot","board","seat","cards","won","net","ended_at"}]}` (`net` = end stack minus start stack).
+- `GET /api/v1/me/hands/{id}` replays one of your hands: settings, `button`, `board`, `events` (in order), `results`, `seats` (name, start and end stack, chips won), `your_seat`, `your_cards`. 404 for hands you did not play.
+- `GET /api/v1/me/stats`: `{"hands_played","hands_won","biggest_pot"}` (`biggest_pot` = most chips won in one hand).
