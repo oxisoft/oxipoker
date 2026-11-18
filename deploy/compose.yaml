@@ -27,6 +27,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SERVER_SECRET: ${SERVER_SECRET:-}
+      ANDROID_APPS: ${ANDROID_APPS:-}
       # Full option only: leave empty for minimal.
       LIVEKIT_URL: ${LIVEKIT_URL:-}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}

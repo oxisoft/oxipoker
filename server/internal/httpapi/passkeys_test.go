@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/applinks"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/webauthntest"
 )
@@ -26,7 +27,7 @@ func newPasskeyServer(t *testing.T) *testServer {
 	if _, err := acc.CreateUser(context.Background(), accounts.NewUser{Username: "alex", Password: "long enough pw", IsAdmin: true}); err != nil {
 		t.Fatal(err)
 	}
-	pk, err := accounts.NewPasskeys(acc, pkOrigin)
+	pk, err := accounts.NewPasskeys(acc, pkOrigin, applinks.Official.Origin())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -209,5 +210,33 @@ func TestPasskeysOffWithoutPublicURL(t *testing.T) {
 	ts := newTestServer(t, "")
 	if res, _ := ts.do(t, nil, req{method: "POST", path: "/api/v1/auth/passkey/begin"}); res.StatusCode != 404 {
 		t.Fatalf("passkeys without PUBLIC_URL: %d", res.StatusCode)
+	}
+}
+
+func TestPasskeyFromAndroidApp(t *testing.T) {
+	ts := newPasskeyServer(t)
+	token := appSignin(t, ts)
+	app := webauthntest.New(applinks.Official.Origin(), "poker.example")
+	if res, out := addPasskey(t, ts, app, token, "Phone"); res.StatusCode != 201 {
+		t.Fatalf("register from the app: %d %v", res.StatusCode, out)
+	}
+	if res, out := passkeySignin(t, ts, app, 1); res.StatusCode != 200 || out["token"] == nil {
+		t.Fatalf("signin from the app: %d %v", res.StatusCode, out)
+	}
+	// Another signing certificate (a repackaged app) is refused.
+	fake := webauthntest.New("android:apk-key-hash:AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHv8", "poker.example")
+	if res, _ := addPasskey(t, ts, fake, token, "Fake"); res.StatusCode == 201 {
+		t.Fatal("passkey from an unknown app accepted")
+	}
+
+	res, err := http.Get(ts.URL + "/.well-known/assetlinks.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	var list []map[string]any
+	if err := json.NewDecoder(res.Body).Decode(&list); err != nil || res.StatusCode != 200 || len(list) != 1 ||
+		list[0]["target"].(map[string]any)["package_name"] != applinks.Official.Package {
+		t.Fatalf("assetlinks: %d %v %v", res.StatusCode, list, err)
 	}
 }

@@ -30,6 +30,11 @@ This file grows with each milestone. Status: M1 in progress.
 Passkey endpoints exist only when `PUBLIC_URL` is set (the relying party id is its host). A passkey sign-in
 needs no TOTP step: the passkey with user verification already is two factors.
 
+The Android app signs in with passkeys too: every server publishes `GET /.well-known/assetlinks.json` for the
+official app (`io.oxisoft.oxipoker`) and accepts its `android:apk-key-hash:...` WebAuthn origin. Own builds
+of the app with another signing key are added with `ANDROID_APPS=package=AA:BB:...` (SHA-256 of the signing
+certificate as keytool prints it, comma-separated for several).
+
 ## Own account
 
 - `GET /me`: the signed-in user.

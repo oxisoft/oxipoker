@@ -63,15 +63,18 @@ type Passkeys struct {
 }
 
 // NewPasskeys configures WebAuthn for publicURL (scheme://host[:port]).
-func NewPasskeys(acc *Service, publicURL string) (*Passkeys, error) {
+// appOrigins are extra opaque origins of native apps, such as the
+// "android:apk-key-hash:..." origin of the Android app.
+func NewPasskeys(acc *Service, publicURL string, appOrigins ...string) (*Passkeys, error) {
 	u, err := url.Parse(publicURL)
 	if err != nil || u.Hostname() == "" || (u.Scheme != "https" && u.Scheme != "http") {
 		return nil, fmt.Errorf("accounts: passkeys need PUBLIC_URL as http(s)://host, got %q", publicURL)
 	}
 	wa, err := webauthn.New(&webauthn.Config{
-		RPID:          u.Hostname(),
-		RPDisplayName: "Oxi Poker",
-		RPOrigins:     []string{u.Scheme + "://" + u.Host},
+		RPID:            u.Hostname(),
+		RPDisplayName:   "Oxi Poker",
+		RPOrigins:       []string{u.Scheme + "://" + u.Host},
+		RPOpaqueOrigins: appOrigins,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("accounts: webauthn: %w", err)

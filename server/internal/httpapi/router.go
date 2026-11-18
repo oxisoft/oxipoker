@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/applinks"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 	"github.com/oxisoft/oxipoker/server/internal/version"
@@ -31,6 +32,8 @@ type Options struct {
 	Passkeys *accounts.Passkeys
 	// PublicURL is the server's public address (Origin check, Secure cookies).
 	PublicURL string
+	// AndroidApps are published in /.well-known/assetlinks.json; nil = the official app.
+	AndroidApps []applinks.App
 }
 
 // Health is the body of GET /api/v1/health.
@@ -73,6 +76,12 @@ func NewRouter(opt Options) http.Handler {
 			})
 		}
 	})
+
+	apps := opt.AndroidApps
+	if apps == nil {
+		apps = []applinks.App{applinks.Official}
+	}
+	r.Method(http.MethodGet, "/.well-known/assetlinks.json", applinks.Handler(apps))
 
 	// Never r.NotFound for the web app: chi would propagate it into /api/v1.
 	r.Handle("/*", webapp.Handler())

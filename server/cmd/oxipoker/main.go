@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/applinks"
 	"github.com/oxisoft/oxipoker/server/internal/httpapi"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
@@ -78,9 +79,14 @@ func main() {
 	if publicURL == "" {
 		log.Warn("PUBLIC_URL is not set: Origin is checked against the request host, cookies are not Secure, passkeys are off")
 	}
+	apps, err := applinks.Parse(os.Getenv("ANDROID_APPS"))
+	if err != nil {
+		log.Error("android apps", "err", err)
+		os.Exit(1)
+	}
 	var passkeys *accounts.Passkeys
 	if publicURL != "" {
-		if passkeys, err = accounts.NewPasskeys(acc, publicURL); err != nil {
+		if passkeys, err = accounts.NewPasskeys(acc, publicURL, applinks.Origins(apps)...); err != nil {
 			log.Error("passkeys", "err", err)
 			os.Exit(1)
 		}
@@ -89,7 +95,7 @@ func main() {
 	srv := &http.Server{
 		Addr: net.JoinHostPort("", port),
 		Handler: httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec,
-			Accounts: acc, Passkeys: passkeys, PublicURL: publicURL}),
+			Accounts: acc, Passkeys: passkeys, PublicURL: publicURL, AndroidApps: apps}),
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       120 * time.Second,
 	}
