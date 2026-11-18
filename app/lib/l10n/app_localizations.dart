@@ -61,8 +61,7 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,8 +69,7 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate =
-      _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -83,13 +81,12 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
-      <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
@@ -1335,10 +1332,147 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Biggest pot won'**
   String get biggestPot;
+
+  /// No description provided for @sngGames.
+  ///
+  /// In en, this message translates to:
+  /// **'Sit-and-go games'**
+  String get sngGames;
+
+  /// No description provided for @sngWins.
+  ///
+  /// In en, this message translates to:
+  /// **'Sit-and-go wins'**
+  String get sngWins;
+
+  /// No description provided for @sngBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best place'**
+  String get sngBest;
+
+  /// No description provided for @tableKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Game'**
+  String get tableKind;
+
+  /// No description provided for @kindCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash game'**
+  String get kindCash;
+
+  /// No description provided for @kindSng.
+  ///
+  /// In en, this message translates to:
+  /// **'Sit-and-go'**
+  String get kindSng;
+
+  /// No description provided for @structure.
+  ///
+  /// In en, this message translates to:
+  /// **'Blind levels'**
+  String get structure;
+
+  /// No description provided for @structureTurbo.
+  ///
+  /// In en, this message translates to:
+  /// **'Turbo, {min} min'**
+  String structureTurbo(int min);
+
+  /// No description provided for @structureRegular.
+  ///
+  /// In en, this message translates to:
+  /// **'Regular, {min} min'**
+  String structureRegular(int min);
+
+  /// No description provided for @structureSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow, {min} min'**
+  String structureSlow(int min);
+
+  /// No description provided for @firstBlinds.
+  ///
+  /// In en, this message translates to:
+  /// **'First level blinds'**
+  String get firstBlinds;
+
+  /// No description provided for @sngRegistering.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration: {n} seated. The host starts the game, or it starts when every seat is taken.'**
+  String sngRegistering(int n);
+
+  /// No description provided for @startGame.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the game'**
+  String get startGame;
+
+  /// No description provided for @sngLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {n}: {sb}/{bb}'**
+  String sngLevel(int n, int sb, int bb);
+
+  /// No description provided for @sngNext.
+  ///
+  /// In en, this message translates to:
+  /// **'next {sb}/{bb} in {time}'**
+  String sngNext(int sb, int bb, String time);
+
+  /// No description provided for @sngNextHand.
+  ///
+  /// In en, this message translates to:
+  /// **'next {sb}/{bb} from the next hand'**
+  String sngNextHand(int sb, int bb);
+
+  /// No description provided for @sngLastLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'last level'**
+  String get sngLastLevel;
+
+  /// No description provided for @standings.
+  ///
+  /// In en, this message translates to:
+  /// **'Final standings'**
+  String get standings;
+
+  /// No description provided for @placeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{place}. {name}'**
+  String placeLine(int place, String name);
+
+  /// No description provided for @youFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'You finished #{place}'**
+  String youFinished(int place);
+
+  /// No description provided for @wsSngStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The sit-and-go has already started.'**
+  String get wsSngStarted;
+
+  /// No description provided for @wsTooFewPlayers.
+  ///
+  /// In en, this message translates to:
+  /// **'A sit-and-go needs at least two players.'**
+  String get wsTooFewPlayers;
+
+  /// No description provided for @wsHostOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the host or an admin can do that.'**
+  String get wsHostOnly;
 }
 
-class _AppLocalizationsDelegate
-    extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -1347,8 +1481,7 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>['en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;

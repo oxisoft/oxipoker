@@ -13,14 +13,7 @@ enum Link { offline, connecting, online }
 
 /// The one realtime connection of this app: lobby, watched table, chat.
 class RealtimeState {
-  const RealtimeState({
-    this.link = Link.offline,
-    this.tables,
-    this.watching,
-    this.view,
-    this.chat = const [],
-    this.lastError,
-  });
+  const RealtimeState({this.link = Link.offline, this.tables, this.watching, this.view, this.chat = const [], this.lastError});
 
   final Link link;
   final List<TableEntry>? tables; // null until the first lobby message
@@ -38,15 +31,14 @@ class RealtimeState {
     String? lastError,
     bool clearWatch = false,
     bool clearError = false,
-  }) =>
-      RealtimeState(
-        link: link ?? this.link,
-        tables: tables ?? this.tables,
-        watching: clearWatch ? null : watching ?? this.watching,
-        view: clearWatch ? null : view ?? this.view,
-        chat: clearWatch ? const [] : chat ?? this.chat,
-        lastError: clearError ? null : lastError ?? this.lastError,
-      );
+  }) => RealtimeState(
+    link: link ?? this.link,
+    tables: tables ?? this.tables,
+    watching: clearWatch ? null : watching ?? this.watching,
+    view: clearWatch ? null : view ?? this.view,
+    chat: clearWatch ? const [] : chat ?? this.chat,
+    lastError: clearError ? null : lastError ?? this.lastError,
+  );
 }
 
 /// How sockets are opened; tests put an in-memory server here.
@@ -89,13 +81,15 @@ class RealtimeController extends Notifier<RealtimeState> {
   void ensure() {
     if (_disposed) return;
     _wanted = true;
-    _lifecycle ??= AppLifecycleListener(onResume: () {
-      // A phone or a browser tab that slept: reconnect at once, not after the backoff.
-      if (_wanted && state.link == Link.offline) {
-        _attempt = 0;
-        _connect();
-      }
-    });
+    _lifecycle ??= AppLifecycleListener(
+      onResume: () {
+        // A phone or a browser tab that slept: reconnect at once, not after the backoff.
+        if (_wanted && state.link == Link.offline) {
+          _attempt = 0;
+          _connect();
+        }
+      },
+    );
     if (_socket == null && _retry == null) _connect();
   }
 
@@ -170,7 +164,8 @@ class RealtimeController extends Notifier<RealtimeState> {
     switch (m['type']) {
       case 'lobby':
         state = state.copyWith(
-            tables: (m['tables'] as List? ?? const []).map((e) => TableEntry.fromJson(e as Map<String, dynamic>)).toList());
+          tables: (m['tables'] as List? ?? const []).map((e) => TableEntry.fromJson(e as Map<String, dynamic>)).toList(),
+        );
       case 'view':
         final v = TableView.fromJson(m['view'] as Map<String, dynamic>);
         if (v.id == state.watching) state = state.copyWith(view: v);
@@ -201,10 +196,13 @@ class RealtimeController extends Notifier<RealtimeState> {
     final c = Completer<String?>();
     _pending[id] = c;
     _raw({...msg, 'id': id});
-    return c.future.timeout(const Duration(seconds: 10), onTimeout: () {
-      _pending.remove(id);
-      return 'timeout';
-    });
+    return c.future.timeout(
+      const Duration(seconds: 10),
+      onTimeout: () {
+        _pending.remove(id);
+        return 'timeout';
+      },
+    );
   }
 
   void lobby(bool on) {
@@ -233,6 +231,7 @@ class RealtimeController extends Notifier<RealtimeState> {
   Future<String?> sitOut() => send({'type': 'sitout'});
   Future<String?> comeBack() => send({'type': 'comeback'});
   Future<String?> leave() => send({'type': 'leave'});
+  Future<String?> startSng() => send({'type': 'start'});
   Future<String?> act(String action, [int? to]) => send({'type': 'act', 'action': action, 'to': ?to});
   Future<String?> chat(String text) => send({'type': 'chat', 'text': text});
 }

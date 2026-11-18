@@ -19,8 +19,16 @@ class TableSettings {
     this.startingStack = 1000,
     this.turnTime = 30,
     this.spectators = true,
+    this.kind = 'cash',
+    this.structure = '',
   });
 
+  /// Blind structures of a sit-and-go and their level length in minutes.
+  static const structures = {'turbo': 3, 'regular': 6, 'slow': 10};
+
+  final String kind; // 'cash' or 'sng'
+  final String structure; // sit-and-go only: turbo, regular, slow
+  bool get isSng => kind == 'sng';
   final String name;
   final int seats;
   final int smallBlind;
@@ -30,29 +38,40 @@ class TableSettings {
   final bool spectators;
 
   factory TableSettings.fromJson(Map<String, dynamic> j) => TableSettings(
-        name: j['name'] as String? ?? '',
-        seats: _int(j['seats']),
-        smallBlind: _int(j['small_blind']),
-        bigBlind: _int(j['big_blind']),
-        startingStack: _int(j['starting_stack']),
-        turnTime: _int(j['turn_time']),
-        spectators: j['spectators'] as bool? ?? false,
-      );
+    name: j['name'] as String? ?? '',
+    seats: _int(j['seats']),
+    smallBlind: _int(j['small_blind']),
+    bigBlind: _int(j['big_blind']),
+    startingStack: _int(j['starting_stack']),
+    turnTime: _int(j['turn_time']),
+    spectators: j['spectators'] as bool? ?? false,
+    kind: j['kind'] as String? ?? 'cash',
+    structure: j['structure'] as String? ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'seats': seats,
-        'small_blind': smallBlind,
-        'big_blind': bigBlind,
-        'starting_stack': startingStack,
-        'turn_time': turnTime,
-        'spectators': spectators,
-      };
+    'kind': kind,
+    if (isSng) 'structure': structure,
+    'name': name,
+    'seats': seats,
+    'small_blind': smallBlind,
+    'big_blind': bigBlind,
+    'starting_stack': startingStack,
+    'turn_time': turnTime,
+    'spectators': spectators,
+  };
 }
 
 /// One open table in the lobby.
 class TableEntry {
-  const TableEntry({required this.id, required this.host, required this.settings, this.taken = 0, this.players = const [], this.handNo = 0});
+  const TableEntry({
+    required this.id,
+    required this.host,
+    required this.settings,
+    this.taken = 0,
+    this.players = const [],
+    this.handNo = 0,
+  });
 
   final String id;
   final String host;
@@ -62,13 +81,13 @@ class TableEntry {
   final int handNo;
 
   factory TableEntry.fromJson(Map<String, dynamic> j) => TableEntry(
-        id: j['id'] as String,
-        host: j['host'] as String? ?? '',
-        settings: TableSettings.fromJson(j['settings'] as Map<String, dynamic>),
-        taken: _int(j['taken']),
-        players: (j['players'] as List?)?.cast<String>() ?? const [],
-        handNo: _int(j['hand_no']),
-      );
+    id: j['id'] as String,
+    host: j['host'] as String? ?? '',
+    settings: TableSettings.fromJson(j['settings'] as Map<String, dynamic>),
+    taken: _int(j['taken']),
+    players: (j['players'] as List?)?.cast<String>() ?? const [],
+    handNo: _int(j['hand_no']),
+  );
 }
 
 class SeatView {
@@ -97,22 +116,30 @@ class SeatView {
   final List<String> cards;
 
   factory SeatView.fromJson(Map<String, dynamic> j) => SeatView(
-        user: j['user'] as String? ?? '',
-        name: j['name'] as String? ?? '',
-        stack: _int(j['stack']),
-        sittingOut: j['sitting_out'] as bool? ?? false,
-        inHand: j['in_hand'] as bool? ?? false,
-        folded: j['folded'] as bool? ?? false,
-        allIn: j['all_in'] as bool? ?? false,
-        bet: _int(j['bet']),
-        hasCards: j['has_cards'] as bool? ?? false,
-        cards: _cards(j['cards']),
-      );
+    user: j['user'] as String? ?? '',
+    name: j['name'] as String? ?? '',
+    stack: _int(j['stack']),
+    sittingOut: j['sitting_out'] as bool? ?? false,
+    inHand: j['in_hand'] as bool? ?? false,
+    folded: j['folded'] as bool? ?? false,
+    allIn: j['all_in'] as bool? ?? false,
+    bet: _int(j['bet']),
+    hasCards: j['has_cards'] as bool? ?? false,
+    cards: _cards(j['cards']),
+  );
 }
 
 /// What the player to act may do; only sent to that player.
 class Legal {
-  const Legal({required this.seat, this.fold = false, this.check = false, this.call = 0, this.betKind = '', this.minTo = 0, this.maxTo = 0});
+  const Legal({
+    required this.seat,
+    this.fold = false,
+    this.check = false,
+    this.call = 0,
+    this.betKind = '',
+    this.minTo = 0,
+    this.maxTo = 0,
+  });
 
   final int seat;
   final bool fold;
@@ -125,14 +152,14 @@ class Legal {
   bool get canBet => betKind.isNotEmpty && maxTo > 0;
 
   factory Legal.fromJson(Map<String, dynamic> j) => Legal(
-        seat: _int(j['seat']),
-        fold: j['fold'] as bool? ?? false,
-        check: j['check'] as bool? ?? false,
-        call: _int(j['call']),
-        betKind: j['bet_kind'] as String? ?? '',
-        minTo: _int(j['min_to']),
-        maxTo: _int(j['max_to']),
-      );
+    seat: _int(j['seat']),
+    fold: j['fold'] as bool? ?? false,
+    check: j['check'] as bool? ?? false,
+    call: _int(j['call']),
+    betKind: j['bet_kind'] as String? ?? '',
+    minTo: _int(j['min_to']),
+    maxTo: _int(j['max_to']),
+  );
 }
 
 class Pot {
@@ -141,8 +168,7 @@ class Pot {
   final int amount;
   final List<int> eligible;
 
-  factory Pot.fromJson(Map<String, dynamic> j) =>
-      Pot(_int(j['amount']), (j['eligible'] as List?)?.map(_int).toList() ?? const []);
+  factory Pot.fromJson(Map<String, dynamic> j) => Pot(_int(j['amount']), (j['eligible'] as List?)?.map(_int).toList() ?? const []);
 }
 
 class PotResult {
@@ -151,12 +177,19 @@ class PotResult {
   final List<int> winners;
   final List<int> shares;
 
-  factory PotResult.fromJson(Map<String, dynamic> j) => PotResult(
-      (j['winners'] as List?)?.map(_int).toList() ?? const [], (j['shares'] as List?)?.map(_int).toList() ?? const []);
+  factory PotResult.fromJson(Map<String, dynamic> j) =>
+      PotResult((j['winners'] as List?)?.map(_int).toList() ?? const [], (j['shares'] as List?)?.map(_int).toList() ?? const []);
 }
 
 class HandEvent {
-  const HandEvent({required this.kind, required this.seat, required this.street, this.amount = 0, this.allIn = false, this.cards = const []});
+  const HandEvent({
+    required this.kind,
+    required this.seat,
+    required this.street,
+    this.amount = 0,
+    this.allIn = false,
+    this.cards = const [],
+  });
 
   final String kind; // post_sb, post_bb, hole, fold, check, call, bet, raise, return, board, show, win
   final int seat;
@@ -166,13 +199,13 @@ class HandEvent {
   final List<String> cards;
 
   factory HandEvent.fromJson(Map<String, dynamic> j) => HandEvent(
-        kind: j['kind'] as String? ?? '',
-        seat: _int(j['seat']),
-        street: _street(j['street']),
-        amount: _int(j['amount']),
-        allIn: j['all_in'] as bool? ?? false,
-        cards: _cards(j['cards']),
-      );
+    kind: j['kind'] as String? ?? '',
+    seat: _int(j['seat']),
+    street: _street(j['street']),
+    amount: _int(j['amount']),
+    allIn: j['all_in'] as bool? ?? false,
+    cards: _cards(j['cards']),
+  );
 }
 
 class HandView {
@@ -209,20 +242,69 @@ class HandView {
   int get potTotal => pots.fold(0, (s, p) => s + p.amount);
 
   factory HandView.fromJson(Map<String, dynamic> j) => HandView(
-        street: _street(j['street']),
-        board: _cards(j['board']),
-        pots: (j['pots'] as List?)?.map((e) => Pot.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        button: _int(j['button']),
-        sb: _int(j['sb']),
-        bb: _int(j['bb']),
-        toAct: j['to_act'] == null ? -1 : _int(j['to_act']),
-        deadline: _time(j['deadline']),
-        currentBet: _int(j['current_bet']),
-        legal: j['legal'] == null ? null : Legal.fromJson(j['legal'] as Map<String, dynamic>),
-        events: (j['events'] as List?)?.map((e) => HandEvent.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        results: (j['results'] as List?)?.map((e) => PotResult.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        done: j['done'] as bool? ?? false,
-      );
+    street: _street(j['street']),
+    board: _cards(j['board']),
+    pots: (j['pots'] as List?)?.map((e) => Pot.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    button: _int(j['button']),
+    sb: _int(j['sb']),
+    bb: _int(j['bb']),
+    toAct: j['to_act'] == null ? -1 : _int(j['to_act']),
+    deadline: _time(j['deadline']),
+    currentBet: _int(j['current_bet']),
+    legal: j['legal'] == null ? null : Legal.fromJson(j['legal'] as Map<String, dynamic>),
+    events: (j['events'] as List?)?.map((e) => HandEvent.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    results: (j['results'] as List?)?.map((e) => PotResult.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    done: j['done'] as bool? ?? false,
+  );
+}
+
+class SngPlace {
+  const SngPlace(this.place, this.name, [this.user = '']);
+
+  final int place;
+  final String name;
+  final String user;
+
+  factory SngPlace.fromJson(Map<String, dynamic> j) => SngPlace(_int(j['place']), j['name'] as String? ?? '', j['user'] as String? ?? '');
+}
+
+/// The sit-and-go part of a table view. The server runs the clock; the app
+/// only shows it.
+class SngView {
+  const SngView({
+    required this.phase,
+    this.level = 0,
+    this.smallBlind = 0,
+    this.bigBlind = 0,
+    this.nextSmall = 0,
+    this.nextBig = 0,
+    this.levelEnds,
+    this.places = const [],
+  });
+
+  final String phase; // registering, running, finished
+  final int level; // 0-based
+  final int smallBlind;
+  final int bigBlind;
+  final int nextSmall;
+  final int nextBig;
+  final DateTime? levelEnds; // null on the last level
+  final List<SngPlace> places; // best first
+
+  bool get registering => phase == 'registering';
+  bool get running => phase == 'running';
+  bool get finished => phase == 'finished';
+
+  factory SngView.fromJson(Map<String, dynamic> j) => SngView(
+    phase: j['phase'] as String? ?? 'registering',
+    level: _int(j['level']),
+    smallBlind: _int(j['small_blind']),
+    bigBlind: _int(j['big_blind']),
+    nextSmall: _int(j['next_small_blind']),
+    nextBig: _int(j['next_big_blind']),
+    levelEnds: _time(j['level_ends']),
+    places: (j['places'] as List?)?.map((e) => SngPlace.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+  );
 }
 
 /// The table as this viewer may see it (built per viewer on the server).
@@ -237,8 +319,10 @@ class TableView {
     this.handNo = 0,
     this.hand,
     this.closed = false,
+    this.sng,
   });
 
+  final SngView? sng;
   final String id;
   final int version;
   final TableSettings settings;
@@ -259,17 +343,17 @@ class TableView {
   }
 
   factory TableView.fromJson(Map<String, dynamic> j) => TableView(
-        id: j['id'] as String,
-        version: _int(j['version']),
-        settings: TableSettings.fromJson(j['settings'] as Map<String, dynamic>),
-        host: j['host'] as String? ?? '',
-        yourSeat: j['your_seat'] == null ? -1 : _int(j['your_seat']),
-        seats: (j['seats'] as List?)?.map((e) => e == null ? null : SeatView.fromJson(e as Map<String, dynamic>)).toList() ??
-            const [],
-        handNo: _int(j['hand_no']),
-        hand: j['hand'] == null ? null : HandView.fromJson(j['hand'] as Map<String, dynamic>),
-        closed: j['closed'] as bool? ?? false,
-      );
+    id: j['id'] as String,
+    version: _int(j['version']),
+    settings: TableSettings.fromJson(j['settings'] as Map<String, dynamic>),
+    host: j['host'] as String? ?? '',
+    yourSeat: j['your_seat'] == null ? -1 : _int(j['your_seat']),
+    seats: (j['seats'] as List?)?.map((e) => e == null ? null : SeatView.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    handNo: _int(j['hand_no']),
+    hand: j['hand'] == null ? null : HandView.fromJson(j['hand'] as Map<String, dynamic>),
+    closed: j['closed'] as bool? ?? false,
+    sng: j['sng'] == null ? null : SngView.fromJson(j['sng'] as Map<String, dynamic>),
+  );
 }
 
 class ChatMessage {
@@ -313,18 +397,18 @@ class HandSummary {
   final DateTime? endedAt;
 
   factory HandSummary.fromJson(Map<String, dynamic> j) => HandSummary(
-        id: _int(j['id']),
-        tableName: j['table_name'] as String? ?? '',
-        handNo: _int(j['hand_no']),
-        bigBlind: _int(j['big_blind']),
-        pot: _int(j['pot']),
-        board: _cards(j['board']),
-        seat: _int(j['seat']),
-        cards: _cards(j['cards']),
-        won: _int(j['won']),
-        net: _int(j['net']),
-        endedAt: _time(j['ended_at']),
-      );
+    id: _int(j['id']),
+    tableName: j['table_name'] as String? ?? '',
+    handNo: _int(j['hand_no']),
+    bigBlind: _int(j['big_blind']),
+    pot: _int(j['pot']),
+    board: _cards(j['board']),
+    seat: _int(j['seat']),
+    cards: _cards(j['cards']),
+    won: _int(j['won']),
+    net: _int(j['net']),
+    endedAt: _time(j['ended_at']),
+  );
 }
 
 class ReplaySeat {
@@ -337,12 +421,12 @@ class ReplaySeat {
   final int won;
 
   factory ReplaySeat.fromJson(Map<String, dynamic> j) => ReplaySeat(
-        seat: _int(j['seat']),
-        name: j['name'] as String? ?? '',
-        startStack: _int(j['start_stack']),
-        endStack: _int(j['end_stack']),
-        won: _int(j['won']),
-      );
+    seat: _int(j['seat']),
+    name: j['name'] as String? ?? '',
+    startStack: _int(j['start_stack']),
+    endStack: _int(j['end_stack']),
+    won: _int(j['won']),
+  );
 }
 
 /// A stored hand, replayable event by event.
@@ -382,30 +466,39 @@ class HandReplay {
   String nameOf(int seat) => seats.where((s) => s.seat == seat).firstOrNull?.name ?? '#${seat + 1}';
 
   factory HandReplay.fromJson(Map<String, dynamic> j) => HandReplay(
-        id: _int(j['id']),
-        tableName: j['table_name'] as String? ?? '',
-        handNo: _int(j['hand_no']),
-        smallBlind: _int(j['small_blind']),
-        bigBlind: _int(j['big_blind']),
-        button: _int(j['button']),
-        pot: _int(j['pot']),
-        board: _cards(j['board']),
-        events: (j['events'] as List?)?.map((e) => HandEvent.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        results: (j['results'] as List?)?.map((e) => PotResult.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        seats: (j['seats'] as List?)?.map((e) => ReplaySeat.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
-        yourSeat: j['your_seat'] == null ? -1 : _int(j['your_seat']),
-        yourCards: _cards(j['your_cards']),
-        endedAt: _time(j['ended_at']),
-      );
+    id: _int(j['id']),
+    tableName: j['table_name'] as String? ?? '',
+    handNo: _int(j['hand_no']),
+    smallBlind: _int(j['small_blind']),
+    bigBlind: _int(j['big_blind']),
+    button: _int(j['button']),
+    pot: _int(j['pot']),
+    board: _cards(j['board']),
+    events: (j['events'] as List?)?.map((e) => HandEvent.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    results: (j['results'] as List?)?.map((e) => PotResult.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    seats: (j['seats'] as List?)?.map((e) => ReplaySeat.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+    yourSeat: j['your_seat'] == null ? -1 : _int(j['your_seat']),
+    yourCards: _cards(j['your_cards']),
+    endedAt: _time(j['ended_at']),
+  );
 }
 
 class PlayerStats {
-  const PlayerStats({this.handsPlayed = 0, this.handsWon = 0, this.biggestPot = 0});
+  const PlayerStats({this.handsPlayed = 0, this.handsWon = 0, this.biggestPot = 0, this.sngGames = 0, this.sngWins = 0, this.sngBest = 0});
 
   final int handsPlayed;
   final int handsWon;
   final int biggestPot;
+  final int sngGames;
+  final int sngWins;
+  final int sngBest; // 0 = none finished
 
-  factory PlayerStats.fromJson(Map<String, dynamic> j) =>
-      PlayerStats(handsPlayed: _int(j['hands_played']), handsWon: _int(j['hands_won']), biggestPot: _int(j['biggest_pot']));
+  factory PlayerStats.fromJson(Map<String, dynamic> j) => PlayerStats(
+    handsPlayed: _int(j['hands_played']),
+    handsWon: _int(j['hands_won']),
+    biggestPot: _int(j['biggest_pot']),
+    sngGames: _int(j['sng_games']),
+    sngWins: _int(j['sng_wins']),
+    sngBest: _int(j['sng_best_place']),
+  );
 }

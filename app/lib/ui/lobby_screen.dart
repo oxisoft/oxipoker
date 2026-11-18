@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../api/poker.dart';
+import '../l10n/app_localizations.dart';
 import '../state/realtime.dart';
 import '../state/session.dart';
 import 'common.dart';
@@ -56,21 +57,24 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
         title: Text(l.appTitle),
         actions: [
           IconButton(
-              key: const Key('open-hands'),
-              tooltip: l.handHistory,
-              icon: const Icon(Icons.history),
-              onPressed: () => context.go('/hands')),
+            key: const Key('open-hands'),
+            tooltip: l.handHistory,
+            icon: const Icon(Icons.history),
+            onPressed: () => context.go('/hands'),
+          ),
           if (user.isAdmin)
             IconButton(
-                key: const Key('open-admin'),
-                tooltip: l.admin,
-                icon: const Icon(Icons.admin_panel_settings),
-                onPressed: () => context.go('/admin')),
+              key: const Key('open-admin'),
+              tooltip: l.admin,
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () => context.go('/admin'),
+            ),
           IconButton(
-              key: const Key('open-account'),
-              tooltip: l.account,
-              icon: const Icon(Icons.account_circle),
-              onPressed: () => context.go('/account')),
+            key: const Key('open-account'),
+            tooltip: l.account,
+            icon: const Icon(Icons.account_circle),
+            onPressed: () => context.go('/account'),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -79,46 +83,57 @@ class _LobbyScreenState extends ConsumerState<LobbyScreen> {
         icon: const Icon(Icons.add),
         label: Text(l.createTable),
       ),
-      body: Column(children: [
-        LinkBanner(rt.link),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(l.lobbyWelcome(user.shownName),
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
-        ),
-        Expanded(
-          child: tables == null
-              ? const SizedBox.shrink()
-              : tables.isEmpty
-                  ? Center(child: Text(l.noTables, key: const Key('no-tables'), style: const TextStyle(color: Colors.white70)))
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 96),
-                      children: [
-                        for (final t in tables)
-                          Card(
-                            key: Key('table-${t.id}'),
-                            child: ListTile(
-                              leading: CircleAvatar(child: Text('${t.taken}/${t.settings.seats}')),
-                              title: Text(t.settings.name),
-                              subtitle: Text([
+      body: Column(
+        children: [
+          LinkBanner(rt.link),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(l.lobbyWelcome(user.shownName), style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white)),
+          ),
+          Expanded(
+            child: tables == null
+                ? const SizedBox.shrink()
+                : tables.isEmpty
+                ? Center(
+                    child: Text(
+                      l.noTables,
+                      key: const Key('no-tables'),
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 96),
+                    children: [
+                      for (final t in tables)
+                        Card(
+                          key: Key('table-${t.id}'),
+                          child: ListTile(
+                            leading: CircleAvatar(child: Text('${t.taken}/${t.settings.seats}')),
+                            title: Text(t.settings.name),
+                            subtitle: Text(
+                              [
+                                if (t.settings.isSng) l.kindSng,
                                 l.blinds(t.settings.smallBlind, t.settings.bigBlind),
                                 l.stackLabel(t.settings.startingStack),
                                 if (t.players.isNotEmpty) t.players.join(', '),
-                              ].join(' \u00b7 ')),
-                              onTap: () => context.go('/table/${t.id}'),
-                              trailing: t.host == user.id || user.isAdmin
-                                  ? IconButton(
-                                      key: Key('close-${t.id}'),
-                                      tooltip: l.closeTable,
-                                      icon: const Icon(Icons.close),
-                                      onPressed: () => _close(t))
-                                  : null,
+                              ].join(' \u00b7 '),
                             ),
+                            onTap: () => context.go('/table/${t.id}'),
+                            trailing: t.host == user.id || user.isAdmin
+                                ? IconButton(
+                                    key: Key('close-${t.id}'),
+                                    tooltip: l.closeTable,
+                                    icon: const Icon(Icons.close),
+                                    onPressed: () => _close(t),
+                                  )
+                                : null,
                           ),
-                      ],
-                    ),
-        ),
-      ]),
+                        ),
+                    ],
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -137,8 +152,7 @@ class LinkBanner extends StatelessWidget {
           width: double.infinity,
           color: const Color(0xFF5D4037),
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-          child: Text(link == Link.connecting ? context.l.connecting : context.l.reconnecting,
-              style: const TextStyle(color: Colors.white)),
+          child: Text(link == Link.connecting ? context.l.connecting : context.l.reconnecting, style: const TextStyle(color: Colors.white)),
         );
 }
 
@@ -157,6 +171,8 @@ class _CreateTableDialogState extends State<CreateTableDialog> {
   final _turn = TextEditingController(text: '30');
   int _seats = 6;
   bool _spectators = true;
+  String _kind = 'cash';
+  String _structure = 'regular';
   String? _error;
 
   static final _digits = [FilteringTextInputFormatter.digitsOnly];
@@ -178,9 +194,28 @@ class _CreateTableDialogState extends State<CreateTableDialog> {
     }
     if (err != null) return setState(() => _error = err);
     Navigator.pop(
-        context,
-        TableSettings(
-            name: name, seats: _seats, smallBlind: sb, bigBlind: bb, startingStack: stack, turnTime: turn, spectators: _spectators));
+      context,
+      TableSettings(
+        name: name,
+        seats: _seats,
+        smallBlind: sb,
+        bigBlind: bb,
+        startingStack: stack,
+        turnTime: turn,
+        spectators: _spectators,
+        kind: _kind,
+        structure: _kind == 'sng' ? _structure : '',
+      ),
+    );
+  }
+
+  String _structureName(AppLocalizations l, String s) {
+    final min = TableSettings.structures[s] ?? 0;
+    return switch (s) {
+      'turbo' => l.structureTurbo(min),
+      'slow' => l.structureSlow(min),
+      _ => l.structureRegular(min),
+    };
   }
 
   @override
@@ -189,53 +224,108 @@ class _CreateTableDialogState extends State<CreateTableDialog> {
     return AlertDialog(
       title: Text(l.createTable),
       content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ErrorLine(_error),
-          TextField(key: const Key('table-name'), controller: _name, decoration: InputDecoration(labelText: l.tableName)),
-          DropdownButtonFormField<int>(
-            key: const Key('table-seats'),
-            initialValue: _seats,
-            decoration: InputDecoration(labelText: l.seats),
-            items: [for (var i = 2; i <= 9; i++) DropdownMenuItem(value: i, child: Text('$i'))],
-            onChanged: (v) => setState(() => _seats = v ?? 6),
-          ),
-          Row(children: [
-            Expanded(
-                child: TextField(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ErrorLine(_error),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SegmentedButton<String>(
+                key: const Key('table-kind'),
+                segments: [
+                  ButtonSegment(
+                    value: 'cash',
+                    label: Text(l.kindCash, key: const Key('kind-cash')),
+                  ),
+                  ButtonSegment(
+                    value: 'sng',
+                    label: Text(l.kindSng, key: const Key('kind-sng')),
+                  ),
+                ],
+                selected: {_kind},
+                onSelectionChanged: (v) => setState(() => _kind = v.first),
+              ),
+            ),
+            TextField(
+              key: const Key('table-name'),
+              controller: _name,
+              decoration: InputDecoration(labelText: l.tableName),
+            ),
+            DropdownButtonFormField<int>(
+              key: const Key('table-seats'),
+              initialValue: _seats,
+              decoration: InputDecoration(labelText: l.seats),
+              items: [for (var i = 2; i <= 9; i++) DropdownMenuItem(value: i, child: Text('$i'))],
+              onChanged: (v) => setState(() => _seats = v ?? 6),
+            ),
+            if (_kind == 'sng') ...[
+              DropdownButtonFormField<String>(
+                key: const Key('table-structure'),
+                initialValue: _structure,
+                decoration: InputDecoration(labelText: l.structure),
+                items: [
+                  for (final s in TableSettings.structures.keys)
+                    DropdownMenuItem(
+                      value: s,
+                      child: Text(_structureName(l, s), key: Key('structure-$s')),
+                    ),
+                ],
+                onChanged: (v) => setState(() => _structure = v ?? 'regular'),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(l.firstBlinds, style: Theme.of(context).textTheme.labelMedium),
+                ),
+              ),
+            ],
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
                     key: const Key('table-sb'),
                     controller: _sb,
                     keyboardType: TextInputType.number,
                     inputFormatters: _digits,
-                    decoration: InputDecoration(labelText: l.smallBlind))),
-            const SizedBox(width: 12),
-            Expanded(
-                child: TextField(
+                    decoration: InputDecoration(labelText: l.smallBlind),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
                     key: const Key('table-bb'),
                     controller: _bb,
                     keyboardType: TextInputType.number,
                     inputFormatters: _digits,
-                    decoration: InputDecoration(labelText: l.bigBlind))),
-          ]),
-          TextField(
+                    decoration: InputDecoration(labelText: l.bigBlind),
+                  ),
+                ),
+              ],
+            ),
+            TextField(
               key: const Key('table-stack'),
               controller: _stack,
               keyboardType: TextInputType.number,
               inputFormatters: _digits,
-              decoration: InputDecoration(labelText: l.startingStack)),
-          TextField(
+              decoration: InputDecoration(labelText: l.startingStack),
+            ),
+            TextField(
               key: const Key('table-turn'),
               controller: _turn,
               keyboardType: TextInputType.number,
               inputFormatters: _digits,
-              decoration: InputDecoration(labelText: l.turnTime)),
-          SwitchListTile(
-            key: const Key('table-spectators'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.allowSpectators),
-            value: _spectators,
-            onChanged: (v) => setState(() => _spectators = v),
-          ),
-        ]),
+              decoration: InputDecoration(labelText: l.turnTime),
+            ),
+            SwitchListTile(
+              key: const Key('table-spectators'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(l.allowSpectators),
+              value: _spectators,
+              onChanged: (v) => setState(() => _spectators = v),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
