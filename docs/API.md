@@ -33,6 +33,11 @@ needs no TOTP step: the passkey with user verification already is two factors.
 ## Own account
 
 - `GET /me`: the signed-in user.
+- `PATCH /me` `{display_name}`: the updated user; 400 `bad_display_name` (1 to 64 characters).
+- `POST /me/password` `{current_password, new_password}`: 204, every other session is signed out; 403
+  `wrong_password`; 400 `bad_password` (10 to 256 characters). Passkey-only accounts send no current password.
+- `DELETE /me` `{password}`: 204, the account and all its data are gone; 403 `wrong_password`; 409
+  `last_admin`.
 - `GET /me/sessions`: `{sessions: [...]}` with `current` marking this one.
 - `DELETE /me/sessions/{id}`: 204; 404 for a session that is not yours.
 - `POST /me/sessions/revoke-others`: `{revoked: n}`.
