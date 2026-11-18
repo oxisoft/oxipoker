@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../api/models.dart';
+import '../passkey/passkey.dart';
 import '../state/session.dart';
 import 'common.dart';
 
@@ -56,6 +57,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   final _next = TextEditingController();
   late Future<List<SessionInfo>> _sessions;
   late Future<TotpStatus> _totp;
+  late Future<List<PasskeyInfo>> _passkeys;
 
   SessionController get _s => ref.read(sessionProvider.notifier);
 
@@ -68,6 +70,24 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
   void _reload() {
     _sessions = _s.api().sessions();
     _totp = _s.api().totpStatus();
+    _passkeys = _s.api().passkeys();
+  }
+
+  Future<void> _addPasskey() async {
+    final l = context.l;
+    final name = await prompt(context, l.passkeyName, initial: 'Passkey');
+    if (name == null || !mounted) return;
+    try {
+      final api = _s.api();
+      final b = await api.passkeyAddBegin();
+      final cred = await ref.read(passkeyProvider).create(b['options'] as Map<String, dynamic>);
+      await api.passkeyAddFinish(b['ceremony'] as String, cred, name.trim());
+    } on PasskeyCancelled {
+      return;
+    } catch (e) {
+      if (mounted) toast(context, errorText(l, e));
+    }
+    if (mounted) setState(_reload);
   }
 
   Future<void> _saveName() async {
@@ -196,6 +216,66 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                     t.enabled
                         ? OutlinedButton(onPressed: _disableTotp, child: Text(l.disable))
                         : FilledButton(key: const Key('totp-enable'), onPressed: _enableTotp, child: Text(l.enable)),
+                  ]);
+                },
+              ),
+            ]),
+            section(l.passkeys, [
+              FutureBuilder<List<PasskeyInfo>>(
+                future: _passkeys,
+                builder: (context, snap) {
+                  final list = snap.data;
+                  if (list == null) return const LinearProgressIndicator();
+                  return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    if (list.isEmpty) Text(l.noPasskeys),
+                    for (final p in list)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.key),
+                        title: Text(p.name),
+                        subtitle: Text([
+                          formatDate(context, p.createdAt),
+                          if (p.lastUsedAt != null) l.lastSeen(formatDate(context, p.lastUsedAt)),
+                          if (p.synced) l.synced,
+                        ].join(' · ')),
+                        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                          IconButton(
+                            tooltip: l.rename,
+                            icon: const Icon(Icons.edit),
+                            onPressed: () async {
+                              final n = await prompt(context, l.passkeyName, initial: p.name);
+                              if (n == null || !context.mounted) return;
+                              await guard(context, ref, () async {
+                                await _s.api().renamePasskey(p.id, n.trim());
+                                return true;
+                              });
+                              if (mounted) setState(_reload);
+                            },
+                          ),
+                          IconButton(
+                            tooltip: l.remove,
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () async {
+                              await guard(context, ref, () async {
+                                await _s.api().removePasskey(p.id);
+                                return true;
+                              });
+                              if (mounted) setState(_reload);
+                            },
+                          ),
+                        ]),
+                      ),
+                    const SizedBox(height: 8),
+                    ref.watch(passkeyProvider).available
+                        ? Align(
+                            alignment: Alignment.centerRight,
+                            child: FilledButton.icon(
+                                key: const Key('add-passkey'),
+                                onPressed: _addPasskey,
+                                icon: const Icon(Icons.add),
+                                label: Text(l.addPasskey)),
+                          )
+                        : Text(l.passkeyUnsupported),
                   ]);
                 },
               ),

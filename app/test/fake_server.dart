@@ -65,6 +65,27 @@ class FakeServer {
         };
         passwords[body['username'] as String] = body['password'] as String;
         return _json(200, _signin(id));
+      case 'POST /auth/passkey/begin':
+        return _json(200, {'ceremony': 'c1', 'options': {'publicKey': {'challenge': 'abc'}}});
+      case 'POST /auth/passkey/finish':
+        if (body['ceremony'] != 'c1' || (body['credential'] as Map)['id'] != 'cred-alice') {
+          return _err(401, 'invalid_credentials');
+        }
+        return _json(200, _signin('u1'));
+      case 'GET /me/totp':
+        return _json(200, {'enabled': false, 'recovery_codes_left': 0});
+      case 'GET /me/sessions':
+        return _json(200, {
+          'sessions': [
+            {'id': 's1', 'kind': 'web', 'ip': '10.0.0.1', 'user_agent': 'Test browser', 'current': true, 'last_seen_at': '2026-11-18T10:00:00Z'},
+          ]
+        });
+      case 'GET /me/passkeys':
+        return _json(200, {
+          'passkeys': [
+            {'id': 'p1', 'name': 'Laptop', 'created_at': '2026-11-18T10:00:00Z', 'synced': true},
+          ]
+        });
       case 'GET /me':
         return me == null ? _err(401, 'unauthorized') : _json(200, me);
       case 'POST /me/password':

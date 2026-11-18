@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../api/api.dart';
 import '../api/models.dart';
+import '../passkey/passkey.dart';
 import '../state/session.dart';
 import 'common.dart';
 
@@ -99,6 +100,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       } else {
         await s.signedIn(r);
       }
+    } on PasskeyCancelled {
+      // The player closed the prompt: nothing to say.
     } catch (e) {
       if (e is ApiException && e.code == 'challenge_expired') _challenge = null;
       if (mounted) setState(() => _error = errorText(context.l, e));
@@ -154,6 +157,21 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       const SizedBox(height: 16),
       ErrorLine(_error),
       BusyButton(key: const Key('sign-in'), label: l.signIn, busy: _busy, onPressed: submit),
+      if (ref.watch(passkeyProvider).available) ...[
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          key: const Key('sign-in-passkey'),
+          icon: const Icon(Icons.key),
+          label: Text(l.signInPasskey),
+          onPressed: _busy
+              ? null
+              : () => _run((a) async {
+                    final b = await a.passkeySignInBegin();
+                    final cred = await ref.read(passkeyProvider).get(b['options'] as Map<String, dynamic>);
+                    return a.passkeySignInFinish(b['ceremony'] as String, cred);
+                  }),
+        ),
+      ],
       if (native)
         TextButton(
           onPressed: () => ref.read(sessionProvider.notifier).forgetServer(),
@@ -208,9 +226,31 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
     }
   }
 
+  Future<void> _signUpPasskey() async {
+    final l = context.l;
+    final s = ref.read(sessionProvider.notifier);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final api = s.api();
+      final b = await api.signUpPasskeyBegin(_token, _user.text.trim(), _name.text.trim());
+      final cred = await ref.read(passkeyProvider).create(b['options'] as Map<String, dynamic>);
+      await s.signedIn(await api.signUpPasskeyFinish(b['ceremony'] as String, cred));
+    } on PasskeyCancelled {
+      // Prompt closed.
+    } catch (e) {
+      if (mounted) setState(() => _error = errorText(l, e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l;
+    final passkeys = ref.watch(passkeyProvider).available;
     return FutureBuilder<InvitationInfo>(
       future: _info,
       builder: (context, snap) {
@@ -238,6 +278,17 @@ class _InviteScreenState extends ConsumerState<InviteScreen> {
             controller: _name,
             decoration: InputDecoration(labelText: l.displayNameOptional),
           ),
+          if (passkeys && info.passkeys) ...[
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              key: const Key('sign-up-passkey'),
+              icon: const Icon(Icons.key),
+              label: Text(l.createWithPasskey),
+              onPressed: _busy ? null : _signUpPasskey,
+            ),
+            const SizedBox(height: 12),
+            Text(l.orPassword, textAlign: TextAlign.center),
+          ],
           const SizedBox(height: 12),
           TextField(
             key: const Key('password-field'),

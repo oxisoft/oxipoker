@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:oxipoker/api/models.dart';
 import 'package:oxipoker/main.dart';
+import 'package:oxipoker/passkey/passkey.dart';
 import 'package:oxipoker/router.dart';
 import 'package:oxipoker/state/session.dart';
 
@@ -14,6 +15,7 @@ Future<(FakeServer, MemorySessionStore)> pumpApp(
   Uri? server,
   String? invite,
   FakeServer? fake,
+  PasskeyClient? passkeys,
 }) async {
   final f = fake ?? FakeServer();
   final store = MemorySessionStore(server: native ? server : (server ?? Uri.parse('https://poker.example.com')));
@@ -24,6 +26,7 @@ Future<(FakeServer, MemorySessionStore)> pumpApp(
       sessionStoreProvider.overrideWithValue(store),
       httpClientProvider.overrideWithValue(f.client),
       initialInviteProvider.overrideWithValue(invite),
+      if (passkeys != null) passkeyProvider.overrideWithValue(passkeys),
     ],
     child: const OxiPokerApp(),
   ));
@@ -36,6 +39,25 @@ Future<void> signIn(WidgetTester tester, String user, String pass) async {
   await tester.enterText(find.byKey(const Key('password-field')), pass);
   await tester.tap(find.byKey(const Key('sign-in')));
   await tester.pumpAndSettle();
+}
+
+class FakePasskeys implements PasskeyClient {
+  FakePasskeys({this.cancel = false});
+
+  final bool cancel;
+
+  @override
+  bool get available => true;
+
+  @override
+  Future<Object> get(Map<String, dynamic> options) async {
+    if (cancel) throw const PasskeyCancelled();
+    expect((options['publicKey'] as Map)['challenge'], 'abc');
+    return {'id': 'cred-alice', 'type': 'public-key'};
+  }
+
+  @override
+  Future<Object> create(Map<String, dynamic> options) async => {'id': 'new', 'type': 'public-key'};
 }
 
 void main() {
@@ -102,6 +124,40 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Welcome, bob'), findsOneWidget);
       expect(find.byKey(const Key('open-admin')), findsNothing);
+    });
+
+    testWidgets('passkey sign-in', (tester) async {
+      await pumpApp(tester, passkeys: FakePasskeys());
+      await tester.tap(find.byKey(const Key('sign-in-passkey')));
+      await tester.pumpAndSettle();
+      expect(find.text('Welcome, Alice'), findsOneWidget);
+    });
+
+    testWidgets('a cancelled passkey prompt stays quiet', (tester) async {
+      await pumpApp(tester, passkeys: FakePasskeys(cancel: true));
+      await tester.tap(find.byKey(const Key('sign-in-passkey')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('form-error')), findsNothing);
+      expect(find.text('Sign in with a passkey'), findsOneWidget);
+    });
+
+    testWidgets('no passkey button where the device has none', (tester) async {
+      await pumpApp(tester);
+      expect(find.byKey(const Key('sign-in-passkey')), findsNothing);
+    });
+
+    testWidgets('account screen lists passkeys and sessions', (tester) async {
+      await pumpApp(tester, passkeys: FakePasskeys());
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-account')));
+      await tester.pumpAndSettle();
+      expect(find.text('Laptop'), findsOneWidget);
+      expect(find.text('Test browser'), findsOneWidget);
+      expect(find.byKey(const Key('add-passkey')), findsOneWidget);
+      expect(find.byKey(const Key('totp-enable')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('sign-out')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sign-in')), findsOneWidget);
     });
 
     testWidgets('native app keeps the token after sign-in', (tester) async {
