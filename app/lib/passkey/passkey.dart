@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'passkey_stub.dart' if (dart.library.js_interop) 'passkey_web.dart' as impl;
+import 'passkey_native.dart' if (dart.library.js_interop) 'passkey_web.dart' as impl;
 
 /// Thrown when the player cancels the passkey prompt or the device refuses.
 class PasskeyCancelled implements Exception {

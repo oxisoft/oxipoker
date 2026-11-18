@@ -42,12 +42,12 @@ Future<void> signIn(WidgetTester tester, String user, String pass) async {
 }
 
 class FakePasskeys implements PasskeyClient {
-  FakePasskeys({this.cancel = false});
+  FakePasskeys({this.cancel = false, this.available = true});
 
   final bool cancel;
 
   @override
-  bool get available => true;
+  final bool available;
 
   @override
   Future<Object> get(Map<String, dynamic> options) async {
@@ -142,7 +142,7 @@ void main() {
     });
 
     testWidgets('no passkey button where the device has none', (tester) async {
-      await pumpApp(tester);
+      await pumpApp(tester, passkeys: FakePasskeys(available: false));
       expect(find.byKey(const Key('sign-in-passkey')), findsNothing);
     });
 
