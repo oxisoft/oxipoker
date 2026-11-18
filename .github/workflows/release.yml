@@ -27,7 +27,7 @@ jobs:
         run: |
           flutter pub get
           flutter test
-          flutter build web --release
+          flutter build web --release --no-web-resources-cdn
       - uses: actions/upload-artifact@v7
         with:
           name: web
