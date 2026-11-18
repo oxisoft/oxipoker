@@ -61,3 +61,33 @@ needs no TOTP step: the passkey with user verification already is two factors.
 - `PATCH /me/passkeys/{id}` `{name}`: 204.
 - `DELETE /me/passkeys/{id}`: 204; 409 `last_sign_in_method` when the account has no password and this is
   its last passkey.
+
+## Invitations
+
+There is no open registration: new players join through an invitation link `<server>/invite#<token>`. The
+token sits in the URL fragment, so it never reaches an access log; the app reads it, and native apps take the
+server address from the same link. Only the SHA-256 of a token is stored.
+
+Admins (403 `admin_only` for everyone else):
+
+- `POST /admin/invitations` `{expires_in_hours?, max_uses?, note?}`: 201 `{invitation, token, url}`; the
+  token is shown only here. Defaults: 72 hours, one use. 400 `bad_invitation` outside 1 to 720 hours, 1 to 100
+  uses, a note up to 200 characters.
+- `GET /admin/invitations`: `{invitations: [{id, note, max_uses, uses, created_at, expires_at, revoked_at?,
+  created_by, joined: [{id, username, display_name, joined_at}]}]}`, newest first.
+- `DELETE /admin/invitations/{id}`: 204; the link stops working, accounts made through it stay.
+
+Anyone holding a link (callable by native apps without a token, like sign-in):
+
+- `POST /invitations/check` `{token}`: `{expires_at, note, passkeys}` (`passkeys` = passkey sign-up offered).
+- `POST /auth/signup` `{token, username, display_name?, password, client?}`: signs the new player in, same
+  answer as `/auth/signin`.
+- `POST /auth/signup/passkey/begin` `{token, username, display_name?}`: `{ceremony, options}` for
+  `navigator.credentials.create`; nothing is stored yet.
+- `POST /auth/signup/passkey/finish` `{ceremony, credential, name?, client?}`: creates the account with that
+  passkey and no password, then signs in; 400 `passkey_rejected`.
+
+The link is checked again inside the transaction that creates the account, so a link used up meanwhile
+refuses. Errors of all four: 404 `invitation_invalid` (unknown or revoked), 410 `invitation_expired`, 410
+`invitation_used`, 400 `bad_username` / `bad_display_name` / `bad_password`, 409 `username_taken`, 429
+`rate_limited` after too many bad tokens from one IP.

@@ -89,6 +89,23 @@ type NewUser struct {
 
 // CreateUser creates an account.
 func (s *Service) CreateUser(ctx context.Context, n NewUser) (*User, error) {
+	u, err := s.prepareUser(n)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.insertUser(ctx, s.db, u); err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+
+// execer is *sql.DB or *sql.Tx.
+type execer interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+}
+
+// prepareUser validates n and hashes its password; nothing is stored yet.
+func (s *Service) prepareUser(n NewUser) (*User, error) {
 	if err := CheckUsername(n.Username); err != nil {
 		return nil, err
 	}
@@ -108,20 +125,23 @@ func (s *Service) CreateUser(ctx context.Context, n NewUser) (*User, error) {
 			return nil, err
 		}
 	}
-	now := s.now()
-	u := &User{ID: NewID(), Username: n.Username, DisplayName: display, IsAdmin: n.IsAdmin,
-		MustChangePassword: n.MustChange, CreatedAt: now.UTC().Truncate(time.Millisecond), PasswordHash: hash}
-	_, err = s.db.ExecContext(ctx, `INSERT INTO users
+	return &User{ID: NewID(), Username: n.Username, DisplayName: display, IsAdmin: n.IsAdmin,
+		MustChangePassword: n.MustChange, CreatedAt: s.now().UTC().Truncate(time.Millisecond), PasswordHash: hash}, nil
+}
+
+func (s *Service) insertUser(ctx context.Context, db execer, u *User) error {
+	ms := u.CreatedAt.UnixMilli()
+	_, err := db.ExecContext(ctx, `INSERT INTO users
 		(id, username, username_key, display_name, password_hash, must_change_password, is_admin, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		u.ID, u.Username, strings.ToLower(u.Username), u.DisplayName, hash, n.MustChange, n.IsAdmin, now.UnixMilli(), now.UnixMilli())
+		u.ID, u.Username, strings.ToLower(u.Username), u.DisplayName, u.PasswordHash, u.MustChangePassword, u.IsAdmin, ms, ms)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
-			return nil, ErrUsernameTaken
+			return ErrUsernameTaken
 		}
-		return nil, fmt.Errorf("accounts: create user: %w", err)
+		return fmt.Errorf("accounts: create user: %w", err)
 	}
-	return u, nil
+	return nil
 }
 
 const userCols = `id, username, display_name, password_hash, must_change_password, is_admin, avatar, created_at, disabled_at`

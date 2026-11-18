@@ -47,6 +47,8 @@ type Passkey struct {
 type ceremony struct {
 	data    webauthn.SessionData
 	userID  string // registration: the account the passkey is for
+	signup  *User  // sign-up: the account to create (not stored yet)
+	invite  string // sign-up: the invitation token
 	expires time.Time
 }
 
@@ -153,14 +155,7 @@ func (p *Passkeys) BeginRegistration(ctx context.Context, u *User) (string, *pro
 	for _, c := range w.creds {
 		exclude = append(exclude, c.Descriptor())
 	}
-	opts, data, err := p.wa.BeginRegistration(w,
-		webauthn.WithResidentKeyRequirement(protocol.ResidentKeyRequirementRequired),
-		webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
-			ResidentKey:      protocol.ResidentKeyRequirementRequired,
-			UserVerification: protocol.VerificationRequired,
-		}),
-		webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
-		webauthn.WithExclusions(exclude))
+	opts, data, err := p.wa.BeginRegistration(w, registrationOptions(exclude)...)
 	if err != nil {
 		return "", nil, fmt.Errorf("accounts: begin registration: %w", err)
 	}
@@ -197,14 +192,18 @@ func (p *Passkeys) FinishRegistration(ctx context.Context, u *User, ceremonyID s
 	if err != nil {
 		return nil, ErrPasskeyInvalid
 	}
+	return p.insertPasskey(ctx, p.acc.db, u.ID, name, cred)
+}
+
+func (p *Passkeys) insertPasskey(ctx context.Context, db execer, userID, name string, cred *webauthn.Credential) (*Passkey, error) {
 	data, err := json.Marshal(cred)
 	if err != nil {
 		return nil, err
 	}
 	now := p.acc.now()
 	pk := &Passkey{ID: NewID(), Name: name, CreatedAt: now.UTC().Truncate(time.Millisecond), Synced: cred.Flags.BackupState}
-	_, err = p.acc.db.ExecContext(ctx, `INSERT INTO passkeys (id, credential, user_id, name, data, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, pk.ID, cred.ID, u.ID, name, string(data), now.UnixMilli())
+	_, err = db.ExecContext(ctx, `INSERT INTO passkeys (id, credential, user_id, name, data, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, pk.ID, cred.ID, userID, name, string(data), now.UnixMilli())
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			return nil, ErrPasskeyInvalid
@@ -212,6 +211,75 @@ func (p *Passkeys) FinishRegistration(ctx context.Context, u *User, ceremonyID s
 		return nil, fmt.Errorf("accounts: store passkey: %w", err)
 	}
 	return pk, nil
+}
+
+func registrationOptions(exclude []protocol.CredentialDescriptor) []webauthn.RegistrationOption {
+	return []webauthn.RegistrationOption{
+		webauthn.WithResidentKeyRequirement(protocol.ResidentKeyRequirementRequired),
+		webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
+			ResidentKey:      protocol.ResidentKeyRequirementRequired,
+			UserVerification: protocol.VerificationRequired,
+		}),
+		webauthn.WithConveyancePreference(protocol.PreferNoAttestation),
+		webauthn.WithExclusions(exclude),
+	}
+}
+
+// BeginSignup starts a passkey-only sign-up through an invitation. Nothing is
+// stored until FinishSignup.
+func (p *Passkeys) BeginSignup(ctx context.Context, token, username, displayName string) (string, *protocol.CredentialCreation, error) {
+	if _, err := p.acc.CheckInvitation(ctx, token); err != nil {
+		return "", nil, err
+	}
+	if err := p.acc.UsernameFree(ctx, username); err != nil {
+		return "", nil, err
+	}
+	u, err := p.acc.prepareUser(NewUser{Username: username, DisplayName: displayName})
+	if err != nil {
+		return "", nil, err
+	}
+	opts, data, err := p.wa.BeginRegistration(&waUser{u: u}, registrationOptions(nil)...)
+	if err != nil {
+		return "", nil, fmt.Errorf("accounts: begin sign-up: %w", err)
+	}
+	id, err := p.putCeremony(ceremony{data: *data, userID: u.ID, signup: u, invite: token})
+	if err != nil {
+		return "", nil, err
+	}
+	return id, opts, nil
+}
+
+// FinishSignup verifies the new passkey and creates the account with it. The
+// invitation is checked again and used up in the same transaction.
+func (p *Passkeys) FinishSignup(ctx context.Context, ceremonyID string, response json.RawMessage, name string) (*User, error) {
+	name, err := checkPasskeyName(name)
+	if err != nil {
+		return nil, err
+	}
+	c, err := p.takeCeremony(ceremonyID)
+	if err != nil || c.signup == nil {
+		return nil, ErrCeremony
+	}
+	if len(response) > maxCredJSONLen {
+		return nil, ErrPasskeyInvalid
+	}
+	parsed, err := protocol.ParseCredentialCreationResponseBytes(response)
+	if err != nil {
+		return nil, ErrPasskeyInvalid
+	}
+	cred, err := p.wa.CreateCredential(&waUser{u: c.signup}, c.data, parsed)
+	if err != nil {
+		return nil, ErrPasskeyInvalid
+	}
+	u := c.signup
+	err = p.acc.signUp(ctx, c.invite, u, func(tx *sql.Tx) error {
+		_, err := p.insertPasskey(ctx, tx, u.ID, name, cred)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 // BeginLogin starts a username-less sign-in (discoverable credentials).

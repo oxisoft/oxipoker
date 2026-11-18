@@ -92,10 +92,14 @@ func (a *authAPI) checkOrigin(next http.Handler) http.Handler {
 
 // signinPaths may be called by native apps before they hold a token.
 var signinPaths = map[string]bool{
-	"/api/v1/auth/signin":         true,
-	"/api/v1/auth/totp":           true,
-	"/api/v1/auth/passkey/begin":  true,
-	"/api/v1/auth/passkey/finish": true,
+	"/api/v1/auth/signin":                true,
+	"/api/v1/auth/totp":                  true,
+	"/api/v1/auth/passkey/begin":         true,
+	"/api/v1/auth/passkey/finish":        true,
+	"/api/v1/invitations/check":          true,
+	"/api/v1/auth/signup":                true,
+	"/api/v1/auth/signup/passkey/begin":  true,
+	"/api/v1/auth/signup/passkey/finish": true,
 }
 
 func hasCookie(r *http.Request, name string) bool {
@@ -157,10 +161,20 @@ func requireUser(next http.Handler) http.Handler {
 func (a *authAPI) routes(r chi.Router) {
 	r.Post("/auth/signin", a.signin)
 	r.Post("/auth/totp", a.totpSignin)
+	r.Post("/invitations/check", a.checkInvitation)
+	r.Post("/auth/signup", a.signup)
 	if a.pk != nil {
 		r.Post("/auth/passkey/begin", a.passkeyLoginBegin)
 		r.Post("/auth/passkey/finish", a.passkeyLoginFinish)
+		r.Post("/auth/signup/passkey/begin", a.signupPasskeyBegin)
+		r.Post("/auth/signup/passkey/finish", a.signupPasskeyFinish)
 	}
+	r.Group(func(r chi.Router) {
+		r.Use(requireUser, requireAdmin)
+		r.Post("/admin/invitations", a.createInvitation)
+		r.Get("/admin/invitations", a.listInvitations)
+		r.Delete("/admin/invitations/{id}", a.revokeInvitation)
+	})
 	r.Group(func(r chi.Router) {
 		r.Use(requireUser)
 		r.Post("/auth/signout", a.signout)
