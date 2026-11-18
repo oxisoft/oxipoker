@@ -707,3 +707,22 @@ func (h *Hand) PotTotal() int64 {
 	}
 	return t
 }
+
+// Clone returns a deep copy, safe to read while the original goes on.
+func (h *Hand) Clone() *Hand {
+	c := *h
+	d := *h.deck
+	c.deck = &d
+	c.players = make([]*Player, len(h.players))
+	for i, p := range h.players {
+		q := *p
+		q.Hole = slices.Clone(p.Hole)
+		c.players[i] = &q
+	}
+	c.dealt = slices.Clone(h.dealt)
+	c.board = slices.Clone(h.board)
+	c.events = slices.Clone(h.events)
+	c.results = slices.Clone(h.results)
+	c.shown = slices.Clone(h.shown)
+	return &c
+}
