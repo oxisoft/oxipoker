@@ -12,7 +12,7 @@ import (
 
 // setAvatar takes the raw image as the request body (any Content-Type).
 func (a *authAPI) setAvatar(w http.ResponseWriter, r *http.Request) {
-	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, a.maxUpload))
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, a.uploadCap(r.Context())))
 	var tooBig *http.MaxBytesError
 	switch {
 	case errors.As(err, &tooBig):

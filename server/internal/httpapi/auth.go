@@ -40,11 +40,10 @@ type authAPI struct {
 	ipFails    *failLimiter
 	userFails  *failLimiter
 	challenges *challengeStore // password accepted, second factor pending
-	maxUpload  int64           // byte cap for uploaded images
 }
 
 func newAuthAPI(opt Options) *authAPI {
-	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(), maxUpload: accounts.DefaultMaxUpload,
+	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(),
 		ipFails: newFailLimiter(ipFailLimit, failWindow), userFails: newFailLimiter(accountFailLimit, failWindow)}
 	if u, err := url.Parse(opt.PublicURL); err == nil && u.Host != "" {
 		a.origin = u.Scheme + "://" + u.Host
@@ -150,12 +149,25 @@ func currentSession(r *http.Request) *accounts.Session {
 
 func requireUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if currentUser(r) == nil {
+		u := currentUser(r)
+		if u == nil {
 			writeError(w, http.StatusUnauthorized, "unauthenticated")
+			return
+		}
+		// A temporary password (admin reset or admin-created account) only
+		// allows replacing it.
+		if u.MustChangePassword && !mustChangePaths[r.Method+" "+r.URL.Path] {
+			writeError(w, http.StatusForbidden, "password_change_required")
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+var mustChangePaths = map[string]bool{
+	"GET /api/v1/me":            true,
+	"POST /api/v1/me/password":  true,
+	"POST /api/v1/auth/signout": true,
 }
 
 func (a *authAPI) routes(r chi.Router) {
@@ -174,6 +186,15 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Post("/admin/invitations", a.createInvitation)
 		r.Get("/admin/invitations", a.listInvitations)
 		r.Delete("/admin/invitations/{id}", a.revokeInvitation)
+		r.Get("/admin/users", a.listUsers)
+		r.Post("/admin/users", a.createUser)
+		r.Patch("/admin/users/{id}", a.patchUser)
+		r.Delete("/admin/users/{id}", a.deleteUser)
+		r.Post("/admin/users/{id}/reset-password", a.resetUserPassword)
+		r.Post("/admin/users/{id}/reset-2fa", a.resetUser2FA)
+		r.Get("/admin/settings", a.getSettings)
+		r.Patch("/admin/settings", a.patchSettings)
+		r.Get("/admin/audit", a.listAudit)
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(requireUser)

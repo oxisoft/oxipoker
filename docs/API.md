@@ -91,3 +91,26 @@ The link is checked again inside the transaction that creates the account, so a 
 refuses. Errors of all four: 404 `invitation_invalid` (unknown or revoked), 410 `invitation_expired`, 410
 `invitation_used`, 400 `bad_username` / `bad_display_name` / `bad_password`, 409 `username_taken`, 429
 `rate_limited` after too many bad tokens from one IP.
+
+## Admin console
+
+All under `/admin`, admins only (403 `admin_only`). Every change lands in the audit log.
+
+- `GET /admin/users?q=&limit=&offset=`: `{users, total}`, `q` matches username or display name (no
+  wildcards), ordered by username, 50 per page by default (200 at most).
+- `POST /admin/users` `{username, display_name?, is_admin?}`: 201 `{user, temporary_password}`. The admin
+  never chooses the password: the new user must replace the temporary one at the first sign-in.
+- `PATCH /admin/users/{id}` `{disabled?, is_admin?}`: the updated user. Disabling signs the user out
+  everywhere. 409 `last_admin` when no other enabled admin would remain; 409 `self` for disabling or demoting
+  yourself.
+- `DELETE /admin/users/{id}`: 204; 409 `self` (use `DELETE /me`) or `last_admin`.
+- `POST /admin/users/{id}/reset-password`: `{temporary_password}`, shown once; signs the user out everywhere.
+- `POST /admin/users/{id}/reset-2fa`: 204, TOTP and recovery codes removed.
+- `GET /admin/settings`, `PATCH /admin/settings` `{table_creation?, max_upload_bytes?}`: `table_creation` is
+  `everyone` (default) or `admins`; `max_upload_bytes` 256 KiB to 20 MiB (default 5 MiB). 400 `bad_settings`.
+- `GET /admin/audit?action=&actor=&before=&limit=`: `{events: [{id, at, actor_id, actor_name, action, target,
+  ip, detail}]}`, newest first. `action` is exact or a prefix ending in a dot (`user.`); page with
+  `before=<last id>`; 100 per page by default (500 at most).
+
+A user holding a temporary password gets 403 `password_change_required` on everything except `GET /me`,
+`POST /me/password` and `POST /auth/signout`.
