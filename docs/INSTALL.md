@@ -187,9 +187,9 @@ The server writes a consistent copy of the database while it runs:
 docker compose exec oxipoker /app/oxipoker -backup /app/data/backups/oxipoker-$(date +%F).db
 ```
 
-The copy lands in `./data/backups/` on the host. Copy it and `data/server.key` off the box, for example with restic, borg or rsync. Do not copy `oxipoker.db` itself while the server runs: the file alone, without the committed pages still in `oxipoker.db-wal`, can be incomplete.
+The copy lands in `./data/backups/` on the host. Copy it and `data/server.key` off the box, for example with restic, borg or rsync run as root (`data` is readable only by uid 1000 and root). Do not copy `oxipoker.db` itself while the server runs: the file alone, without the committed pages still in `oxipoker.db-wal`, can be incomplete.
 
-A daily backup from cron on the host (`crontab -e`), keeping 14 days:
+A daily backup from root's cron on the host (`sudo crontab -e`), keeping 14 days:
 
 ```
 15 4 * * * cd /home/you/oxipoker && docker compose exec -T oxipoker /app/oxipoker -backup /app/data/backups/oxipoker-$(date +\%F).db >/dev/null && find data/backups -name 'oxipoker-*.db' -mtime +14 -delete
@@ -197,15 +197,17 @@ A daily backup from cron on the host (`crontab -e`), keeping 14 days:
 
 The backup refuses to overwrite an existing file, so a second run on the same day fails loudly instead of replacing the morning copy.
 
-With rootless Docker the files in `data/` belong to a mapped user id on the host, so `find ... -delete` from your own account fails with "permission denied". Delete old copies through a throwaway container instead: `docker run --rm -v "$PWD/data:/d" alpine find /d/backups -name 'oxipoker-*.db' -mtime +14 -delete`. The server image itself has no shell or `rm`.
+With rootless Docker the files in `data/` belong to a mapped user id on the host and the Docker daemon is your own, so use your own crontab there, and `find ... -delete` fails with "permission denied" even with the right path. Delete old copies through a throwaway container instead: `docker run --rm -v "$PWD/data:/d" alpine find /d/backups -name 'oxipoker-*.db' -mtime +14 -delete`. The server image itself has no shell or `rm`.
 
 ### Restore
 
+`data` belongs to uid 1000 with mode 700, so on the host only root (or your account, if its uid is 1000) can reach into it; that is why these commands use `sudo`.
+
 ```sh
 docker compose down
-mv data/oxipoker.db data/oxipoker.db.broken
-rm -f data/oxipoker.db-wal data/oxipoker.db-shm
-cp /path/to/oxipoker-2026-11-19.db data/oxipoker.db
+sudo mv data/oxipoker.db data/oxipoker.db.broken
+sudo rm -f data/oxipoker.db-wal data/oxipoker.db-shm
+sudo cp /path/to/oxipoker-2026-11-19.db data/oxipoker.db
 sudo chown 1000:1000 data/oxipoker.db
 docker compose up -d
 ```

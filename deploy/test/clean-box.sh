@@ -41,7 +41,7 @@ json() { python3 -c "import json,sys; d=json.load(sys.stdin); print($1)"; }
 step "Guide: What you need"
 docker compose version || fail "Compose plugin missing"
 
-step "Guide: Minimal option in five commands"
+step "Guide: Minimal option"
 rm -rf "$WORK"; mkdir -p "$WORK"; cd "$WORK"
 mkdir oxipoker && cd oxipoker
 # The guide downloads both files from main; the test takes them from the
@@ -109,9 +109,9 @@ wait_healthy
 step "Guide: Restore"
 api POST /admin/invitations '{"note":"after backup"}' >/dev/null   # a change the restore must undo
 docker compose down
-mv data/oxipoker.db data/oxipoker.db.broken
-rm -f data/oxipoker.db-wal data/oxipoker.db-shm
-cp "data/backups/oxipoker-$(date +%F).db" data/oxipoker.db
+sudo mv data/oxipoker.db data/oxipoker.db.broken
+sudo rm -f data/oxipoker.db-wal data/oxipoker.db-shm
+sudo cp "data/backups/oxipoker-$(date +%F).db" data/oxipoker.db
 sudo chown 1000:1000 data/oxipoker.db
 docker compose up -d
 wait_healthy
