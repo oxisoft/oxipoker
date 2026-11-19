@@ -1,26 +1,61 @@
-# Release: pushing a tag vX.Y.Z builds the multi-arch image (linux/amd64 +
-# linux/arm64) with the web app inside and publishes oxisoft/oxipoker:X.Y.Z,
-# :X.Y and :latest to Docker Hub. Release notes are written by hand afterwards.
+# Release: pushing a tag vX.Y.Z builds everything from this source:
+# - the multi-arch image (linux/amd64 + linux/arm64) with the web app inside,
+#   published as oxisoft/oxipoker:X.Y.Z, :X.Y and :latest on Docker Hub;
+# - the Android APK, signed with the Oxi Poker upload key;
+# - the desktop apps: Linux x64 tarball, Windows x64 zip, macOS dmg;
+# and attaches the APK, the desktop builds and SHA256SUMS to the GitHub release.
+# Release notes are written by hand afterwards.
+#
+# Running it by hand (workflow_dispatch) builds the APK and the desktop apps as
+# workflow artifacts only: nothing is published.
 #
 # Repository secrets: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (push rights to
-# oxisoft/oxipoker).
+# oxisoft/oxipoker); ANDROID_KEYSTORE_B64, ANDROID_KEY_ALIAS,
+# ANDROID_KEY_PASSWORD, ANDROID_STORE_PASSWORD (the upload key).
 name: Release
 
 on:
   push:
     tags: ['v*.*.*']
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+env:
+  FLUTTER_VERSION: 3.50.0
+  # SHA-256 of the Oxi Poker Android signing certificate (also in the README).
+  ANDROID_CERT_SHA256: 79f2920483fb1f7fb76636d9ff76abff7eccb6136eb56242006112ff239f33cd
+
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.v.outputs.name }}
+      minor: ${{ steps.v.outputs.minor }}
+      code: ${{ steps.v.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            V="${GITHUB_REF_NAME#v}"
+          else
+            V="$(sed -n 's/^version: *\([0-9.]*\).*/\1/p' app/pubspec.yaml)-dev.${GITHUB_RUN_NUMBER}"
+          fi
+          IFS=. read -r MA MI PA <<< "${V%%-*}"
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "minor=$MA.$MI" >> "$GITHUB_OUTPUT"
+          # Android versionCode grows with every release: 1.2.3 -> 1002003.
+          echo "code=$((MA * 1000000 + MI * 1000 + PA))" >> "$GITHUB_OUTPUT"
+
   web:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.50.0
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
       - working-directory: app
@@ -34,19 +69,15 @@ jobs:
           path: app/build/web
 
   image:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    needs: web
+    needs: [version, web]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           name: web
           path: app/build/web
-      - id: v
-        run: |
-          V="${GITHUB_REF_NAME#v}"
-          echo "version=$V" >> "$GITHUB_OUTPUT"
-          echo "minor=${V%.*}" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
@@ -59,17 +90,126 @@ jobs:
           build-contexts: webapp=app/build/web
           platforms: linux/amd64,linux/arm64
           push: true
-          build-args: VERSION=${{ steps.v.outputs.version }}
+          build-args: VERSION=${{ needs.version.outputs.name }}
           tags: |
-            oxisoft/oxipoker:${{ steps.v.outputs.version }}
-            oxisoft/oxipoker:${{ steps.v.outputs.minor }}
+            oxisoft/oxipoker:${{ needs.version.outputs.name }}
+            oxisoft/oxipoker:${{ needs.version.outputs.minor }}
             oxisoft/oxipoker:latest
 
-  github-release:
+  android:
     runs-on: ubuntu-latest
-    needs: image
+    needs: version
+    defaults:
+      run:
+        working-directory: app
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Upload key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "ANDROID_KEYSTORE_B64 is not set"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/upload.jks" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > "$RUNNER_TEMP/key.properties"
+          echo "ANDROID_KEY_PROPERTIES=$RUNNER_TEMP/key.properties" >> "$GITHUB_ENV"
+      - run: flutter pub get
+      - run: flutter build apk --release --build-name "${{ needs.version.outputs.name }}" --build-number "${{ needs.version.outputs.code }}"
+      - name: Signed with the Oxi Poker key
+        run: |
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          GOT="$("$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)"
+          echo "signer: $GOT"
+          test "$GOT" = "$ANDROID_CERT_SHA256"
+          mkdir -p ../dist
+          cp build/app/outputs/flutter-apk/app-release.apk "../dist/oxipoker-${{ needs.version.outputs.name }}.apk"
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks" "$RUNNER_TEMP/key.properties"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android
+          path: dist/
+
+  desktop:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: macos
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: app
+        shell: bash
+    env:
+      V: ${{ needs.version.outputs.name }}
+    steps:
+      - uses: actions/checkout@v7
+      - if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ${{ matrix.target }} --release --build-name "$V" --build-number "${{ needs.version.outputs.code }}"
+      - name: Package
+        run: |
+          mkdir -p ../dist
+          case "${{ matrix.target }}" in
+            linux)
+              tar -C build/linux/x64/release -czf "../dist/oxipoker-$V-linux-x64.tar.gz" --transform "s,^bundle,oxipoker-$V," bundle ;;
+            windows)
+              cd build/windows/x64/runner
+              mv Release "oxipoker-$V"
+              7z a -tzip "../../../../../dist/oxipoker-$V-windows-x64.zip" "oxipoker-$V" > /dev/null ;;
+            macos)
+              mkdir -p "$RUNNER_TEMP/dmg"
+              cp -R build/macos/Build/Products/Release/oxipoker.app "$RUNNER_TEMP/dmg/Oxi Poker.app"
+              ln -s /Applications "$RUNNER_TEMP/dmg/Applications"
+              hdiutil create -volname "Oxi Poker" -srcfolder "$RUNNER_TEMP/dmg" -ov -format UDZO "../dist/oxipoker-$V-macos.dmg" ;;
+          esac
+          ls -l ../dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: desktop-${{ matrix.target }}
+          path: dist/
+
+  github-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: [image, android, desktop]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+      - run: |
+          mkdir dist
+          cp artifacts/android/* artifacts/desktop-*/* dist/
+          cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Release notes follow." --verify-tag
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Release notes follow." --verify-tag dist/*
