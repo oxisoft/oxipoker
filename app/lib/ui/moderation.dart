@@ -140,7 +140,9 @@ class _BlockListState extends ConsumerState<BlockList> {
       return true;
     });
     if (ok == null || !mounted) return;
-    setState(() => _blocks = _load());
+    setState(() {
+      _blocks = _load();
+    });
   }
 
   @override
@@ -181,7 +183,9 @@ class _ReportsTabState extends ConsumerState<ReportsTab> {
 
   Future<List<ReportInfo>> _load() => ref.read(sessionProvider.notifier).api().adminReports(all: _all);
 
-  void _reload() => setState(() => _reports = _load());
+  void _reload() => setState(() {
+        _reports = _load();
+      });
 
   Future<void> _resolve(ReportInfo r) async {
     final ok = await guard(context, ref, () async {
