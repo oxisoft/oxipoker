@@ -1,6 +1,6 @@
 # Security review
 
-Status: in progress (M5). Each area lists what was checked, against which code, and the findings. A finding is fixed with a test or explained here.
+Status: complete for v1.0.0 (M5, 2026-11-19): nine findings, all fixed with tests. Each area lists what was checked, against which code, and the findings. A finding is fixed with a test or explained here.
 
 ## Findings
 
@@ -46,6 +46,18 @@ Avatars and card backs were limited to 5 MB per file and 40 megapixels per canva
 
 Fix: `server/internal/accounts/imagegate.go`. The canvas check also counts the decoded bytes (at most 160 MiB, so 16-bit pictures are limited to 20 megapixels while 8-bit photos keep the 40), and at most two uploads are decoded at the same time. Test: `TestUploadsAreRefusedByDecodedSize` (a 16-bit 30 megapixel PNG header is refused for avatars and card backs before decoding; with the old check it went on to the decoder).
 
+### F8 A sent-out user could rejoin a call with the old token (fixed)
+
+Removing a spectator from a table, or a user from its call, refused them new call tokens and sent them out of the LiveKit room. LiveKit cannot revoke a token, though, so the token they already held (valid 10 minutes) let them join the call again until it ran out.
+
+Fix: LiveKit reports every join to `POST /api/v1/media/webhook` (signed with the API key: a token whose `sha256` claim is the hash of the body). The server checks the joined identity against the table: whoever is not watching it, was removed from it or was sent out of its call is removed again at once. Unsigned webhooks and webhooks whose signature belongs to another body are refused. The Compose file sets the webhook. Test: `TestMediaWebhookRemovesJoinsFromAway`.
+
+### F9 The server could overwrite its own binary (fixed)
+
+The image ran as user 1000, but the binary also belonged to 1000, and the Compose file left the container filesystem writable with the default capabilities. Code execution in the server could have replaced the program and kept itself across restarts.
+
+Fix: the binary belongs to root; Compose runs the server `read_only` with a `/tmp` tmpfs, `cap_drop: [ALL]` and `no-new-privileges`. Test: the CI smoke test starts the image with the same flags and checks it is healthy, runs as 1000:1000 and that `/app/oxipoker` is owned by 0:0.
+
 ## Areas
 
 ### Uploads
@@ -76,9 +88,17 @@ Checked: `history.Store.Get` joins on the requesting user's own row in `hand_pla
 
 `govulncheck` runs on every push and pull request and weekly (new advisories arrive without new commits): clean on 2026-11-19. Pull requests also run GitHub's dependency review (fails at moderate severity and above).
 
-### Still to review
+### Media tokens
 
-Media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
+Checked: a call token is issued only to a signed-in user with a live connection on that table who was not removed from it or sent out of its call (`TestMediaToken`). It is a LiveKit token signed with the API secret, valid 10 minutes, for the room of that one table only, with camera and microphone but no data messages (chat stays on the game connection, where it is limited and moderated) and no admin rights; the identity is the user id, so nobody can join under another name. Moderation (mute, remove, close) uses separate admin tokens that live one minute and never leave the server. Finding F8 was fixed here.
+
+### Admin actions and audit log
+
+Checked: every `/admin` route needs a signed-in admin, behind the same origin check as the rest of the API; an admin cannot demote, disable or delete themselves, and the last admin cannot be removed. Every admin action (invitations, users created, changed, disabled, deleted, password and two-factor resets, settings, card backs) and every security event of a player (sign-ins and failures, passwords, passkeys, TOTP, sessions) is written to the audit log with actor, target and client address; details never hold secrets. The log has no route to change or delete entries. Since F1 the address is the real client: checked on the test server, where sign-ins after the fix carry the public address of the client, not the proxy.
+
+### Container
+
+Checked: the image is built `FROM scratch` (no shell, no package manager, nothing to patch but the Go binary), runs as user 1000, and the binary is owned by root, so the server cannot replace its own program (finding F9). The Compose file runs the server with a read-only filesystem (only `/app/data` and a `/tmp` tmpfs are writable), all Linux capabilities dropped and `no-new-privileges`. Ports bind to 127.0.0.1, so only the reverse proxy reaches the server. Finding F9 was fixed here.
 
 ### HTTP headers
 

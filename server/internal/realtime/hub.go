@@ -397,6 +397,19 @@ func (h *Hub) Watching(id, user string) bool {
 	return false
 }
 
+// EnforceCall removes user from table id's call when they may not be in
+// it: not watching the table any more, removed from it, or sent out of the
+// call. It reports whether a removal was started.
+func (h *Hub) EnforceCall(id, user string) bool {
+	if h.Watching(id, user) {
+		return false
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.onCallsLocked(func(ctx context.Context, c Calls) error { return c.Remove(ctx, id, user) })
+	return true
+}
+
 // callMute switches off a user's microphone or camera in the table's call.
 func (h *Hub) callMute(id, user, source string) {
 	h.mu.Lock()

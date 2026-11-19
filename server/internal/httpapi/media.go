@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"io"
 	"net/http"
 	"time"
 
@@ -41,4 +42,31 @@ func (g *gameAPI) mediaToken(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, MediaToken{URL: g.media.URL, Token: tok, Room: media.Room(id), ExpiresAt: exp.UTC()})
+}
+
+// mediaWebhook receives LiveKit's webhooks. A call token stays valid for
+// its lifetime and LiveKit cannot revoke it, so whoever joins a table's
+// call is checked here: a user who is no longer at the table, or was sent
+// out of the call, is removed again at once (finding F8).
+func (g *gameAPI) mediaWebhook(w http.ResponseWriter, r *http.Request) {
+	if !g.media.Enabled() {
+		writeError(w, http.StatusNotFound, "media_off")
+		return
+	}
+	body, err := io.ReadAll(io.LimitReader(r.Body, 64<<10))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "bad_request")
+		return
+	}
+	ev, err := g.media.VerifyWebhook(r.Header.Get("Authorization"), body, time.Now())
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "bad_signature")
+		return
+	}
+	if ev.Event == "participant_joined" {
+		if id, ok := media.TableOf(ev.Room.Name); ok && ev.Participant.Identity != "" {
+			g.hub.EnforceCall(id, ev.Participant.Identity)
+		}
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

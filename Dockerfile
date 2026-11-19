@@ -43,7 +43,8 @@ LABEL org.opencontainers.image.title="Oxi Poker" \
 COPY --from=builder /out/passwd /etc/passwd
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
-COPY --from=builder --chown=1000:1000 /out/oxipoker /app/oxipoker
+# The binary belongs to root: the server runs as 1000 and cannot replace it.
+COPY --from=builder /out/oxipoker /app/oxipoker
 COPY --from=builder --chown=1000:1000 /out/empty /app/data
 COPY --from=builder --chown=1000:1000 /out/empty /tmp
 USER 1000:1000

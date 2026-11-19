@@ -163,6 +163,8 @@ Then sign in as admin, open **Admin**, tab **Settings**, and press **Run the che
 
 The check runs from the server, so it proves the names, ports and keys, not the network of each player. Media ports (UDP) are covered in [VOICE-VIDEO.md](VOICE-VIDEO.md).
 
+LiveKit reports every join to `http://oxipoker:8080/api/v1/media/webhook` (set in the Compose file, signed with the API key). Oxi Poker sends out of the call anyone who is no longer at the table, for example a removed spectator who still holds an unexpired call token. If you run LiveKit outside this Compose file, point its `webhook.urls` at that path of your server.
+
 ## Operations
 
 All state lives in `./data`: the database `oxipoker.db` (accounts, avatars, tables, hand history) with its `-wal` and `-shm` files, and `server.key` (the root key; among other things it encrypts the two-factor secrets of players who use an authenticator app). `.env` holds your settings, `./certs` the TURN certificate in the full option.

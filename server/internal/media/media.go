@@ -7,6 +7,7 @@ import (
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -80,6 +81,8 @@ type Claims struct {
 	Expires   int64  `json:"exp"`
 	ID        string `json:"jti"`
 	Video     Grant  `json:"video"`
+	// Sha256 is set on LiveKit webhooks: the base64 SHA-256 of the body.
+	Sha256 string `json:"sha256,omitempty"`
 }
 
 // Room is the LiveKit room name of a table's call.
@@ -158,4 +161,53 @@ func (c Config) Verify(tok string, now time.Time) (Claims, error) {
 		return cl, errors.New("media: token expired or not yet valid")
 	}
 	return cl, nil
+}
+
+// Webhook is the part of a LiveKit webhook event the server reads.
+type Webhook struct {
+	Event string `json:"event"`
+	Room  struct {
+		Name string `json:"name"`
+	} `json:"room"`
+	Participant struct {
+		Identity string `json:"identity"`
+	} `json:"participant"`
+}
+
+// ErrWebhook reports a webhook that was not signed by our LiveKit.
+var ErrWebhook = errors.New("media: webhook not signed by this server's LiveKit key")
+
+// VerifyWebhook checks a LiveKit webhook: the Authorization header is a
+// token signed with c's secret whose sha256 claim is the hash of body.
+func (c Config) VerifyWebhook(auth string, body []byte, now time.Time) (Webhook, error) {
+	var ev Webhook
+	if !c.Enabled() {
+		return ev, ErrConfig
+	}
+	cl, err := c.Verify(strings.TrimPrefix(auth, "Bearer "), now)
+	if err != nil || cl.Sha256 == "" {
+		return ev, ErrWebhook
+	}
+	sum := sha256.Sum256(body)
+	if subtle.ConstantTimeCompare([]byte(cl.Sha256), []byte(base64.StdEncoding.EncodeToString(sum[:]))) != 1 {
+		return ev, ErrWebhook
+	}
+	if err := json.Unmarshal(body, &ev); err != nil {
+		return ev, ErrWebhook
+	}
+	return ev, nil
+}
+
+// TableOf returns the table id of a call room name, or false for rooms
+// that are not table calls.
+func TableOf(room string) (string, bool) {
+	id, ok := strings.CutPrefix(room, "table-")
+	return id, ok && id != ""
+}
+
+// SignWebhook signs body the way LiveKit does (tests use it).
+func (c Config) SignWebhook(body []byte, now time.Time) (string, error) {
+	sum := sha256.Sum256(body)
+	return c.sign(Claims{Issuer: c.Key, NotBefore: now.Add(-10 * time.Second).Unix(), Expires: now.Add(5 * time.Minute).Unix(),
+		Sha256: base64.StdEncoding.EncodeToString(sum[:])})
 }

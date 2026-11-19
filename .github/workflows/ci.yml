@@ -76,13 +76,17 @@ jobs:
           build-args: VERSION=ci-${{ github.sha }}
       - name: Smoke test
         run: |
-          docker run -d --name smoke -p 8080:8080 oxipoker:ci
+          docker run -d --name smoke -p 8080:8080 --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges:true oxipoker:ci
           for i in $(seq 1 20); do
             if curl -fsS http://127.0.0.1:8080/api/v1/health; then break; fi
             sleep 1
           done
           curl -fsS http://127.0.0.1:8080/api/v1/health | grep -q '"webapp":true'
           curl -fsS http://127.0.0.1:8080/ | grep -q flutter_bootstrap.js
+          # Runs as 1000, and the binary is root's: the server cannot replace it.
+          test "$(docker inspect -f '{{.Config.User}}' oxipoker:ci)" = 1000:1000
+          docker export smoke | tar --numeric-owner -tvf - app/oxipoker | grep -q ' 0/0 '
 
   # Every green main commit becomes ghcr.io/oxisoft/oxipoker:edge (amd64 +
   # arm64), which the test server follows. Releases go to Docker Hub.

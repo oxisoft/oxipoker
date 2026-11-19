@@ -100,6 +100,8 @@ func NewRouter(opt Options) http.Handler {
 			})
 			if game != nil {
 				api.With(a.authenticate, requireUser).Get("/ws", game.ws)
+				// Signed by LiveKit, not sent by a browser: outside the origin check.
+				api.With(middleware.Timeout(30*time.Second)).Post("/media/webhook", game.mediaWebhook)
 			}
 		}
 	})
