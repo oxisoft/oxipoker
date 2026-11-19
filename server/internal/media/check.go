@@ -73,6 +73,11 @@ func (c Checker) Run(ctx context.Context) Report {
 	switch {
 	case err != nil:
 		sig.Status, sig.Detail = CheckFailed, explainNetErr(err, "LIVEKIT_URL", "Check that the name resolves to this box, that the reverse proxy forwards it to LiveKit (LIVEKIT_HTTP_PORT) and that the livekit container runs (docker compose ps).")
+	case code == http.StatusNotAcceptable && strings.HasPrefix(strings.TrimSpace(body), "Not Ready"):
+		// LiveKit's health answer while its node stats are stale: the first
+		// seconds after start, or a box too busy to update them.
+		sig.Status = CheckFailed
+		sig.Detail = "LiveKit answers at LIVEKIT_URL but says it is not ready yet. That is normal for a few seconds after it starts; run the check again in a minute. If it stays, the box is overloaded or LiveKit is stuck: see docker compose logs livekit."
 	case code != http.StatusOK || strings.TrimSpace(body) != "OK":
 		sig.Status = CheckFailed
 		sig.Detail = fmt.Sprintf("Something answers at LIVEKIT_URL, but it is not LiveKit (HTTP %d). The reverse proxy probably sends this name to another service: forward it to LiveKit (LIVEKIT_HTTP_PORT) with WebSocket upgrade.", code)

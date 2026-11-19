@@ -153,7 +153,7 @@ curl -s http://127.0.0.1:8080/api/v1/health    # "media":true
 
 Back to minimal at any time: `docker compose --profile full down`, empty `LIVEKIT_URL` in `.env`, `docker compose up -d`.
 
-Then sign in as admin, open **Admin**, tab **Settings**, and press **Run the check** under "Voice and video connection check". The server tries three things and explains every failure in plain words:
+Then sign in as admin, open **Admin**, tab **Settings**, and press **Run the check** under "Voice and video connection check". Give LiveKit a minute after it starts: until then it reports "not ready" and the check says so. The server tries three things and explains every failure in plain words:
 
 - **LiveKit signalling:** LiveKit answers at `LIVEKIT_URL` (DNS, proxy, container).
 - **Call token round trip:** LiveKit accepts a token signed with `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` (the same pair in both services, clocks in sync).

@@ -136,7 +136,13 @@ docker compose --profile full up -d
 wait_healthy
 H=$(curl -s http://127.0.0.1:8080/api/v1/health); echo "$H"
 echo "$H" | json "d['media'] or sys.exit('media false')"
-MC=$(api GET /admin/media-check); echo "$MC"
+MC=''
+for _ in $(seq 1 30); do   # the guide: LiveKit needs a few seconds after start
+  MC=$(api GET /admin/media-check)
+  echo "$MC" | json "all(c['status']=='ok' for c in d['checks'] if c['name'] in ('signalling','token')) or sys.exit(1)" >/dev/null 2>&1 && break
+  sleep 2
+done
+echo "$MC"
 echo "$MC" | json "all(c['status']=='ok' for c in d['checks'] if c['name'] in ('signalling','token')) or sys.exit('media check')"
 
 step "Guide: back to minimal"

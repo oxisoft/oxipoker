@@ -86,6 +86,21 @@ func TestCheckWrongSecret(t *testing.T) {
 	}
 }
 
+func TestCheckLiveKitNotReady(t *testing.T) {
+	lk := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotAcceptable)
+		_, _ = w.Write([]byte("Not Ready\nNode Updated At 0001-01-01 00:00:00 +0000 UTC"))
+	}))
+	defer lk.Close()
+	m := byName(Checker{Config: Config{URL: lk.URL, Key: "k", Secret: "s"}}.Run(context.Background()))
+	if m["signalling"].Status != CheckFailed || !strings.Contains(m["signalling"].Detail, "not ready yet") {
+		t.Fatalf("signalling: %+v", m["signalling"])
+	}
+	if m["token"].Status != CheckSkipped {
+		t.Fatalf("token must be skipped: %+v", m["token"])
+	}
+}
+
 func TestCheckNotLiveKit(t *testing.T) {
 	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "<html>welcome to nginx</html>", http.StatusBadGateway)
