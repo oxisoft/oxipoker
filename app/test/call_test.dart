@@ -40,6 +40,14 @@ class FakeCallRoom implements CallRoom {
   @override
   bool get cameraOn => camera;
   @override
+  bool speaking = false;
+  @override
+  Widget? video(String identity) {
+    final on = identity == 'u1' ? camera : others.any((p) => p.identity == identity && p.camera);
+    return on ? ColoredBox(key: Key('fake-video-$identity'), color: Colors.blue) : null;
+  }
+
+  @override
   List<CallPeer> get peers => others;
 }
 
@@ -87,14 +95,14 @@ void main() {
     expect(room.log, ['connect wss://media.example.com lk-u1']);
     expect(room.mic, isFalse);
     expect(room.camera, isFalse);
-    expect(find.byIcon(Icons.mic_off), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('call-bar')), matching: find.byIcon(Icons.mic_off)), findsOneWidget);
     expect(find.byIcon(Icons.videocam_off), findsOneWidget);
     expect(find.text('In the call: 1'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('call-mic')));
     await tester.pumpAndSettle();
     expect(room.mic, isTrue);
-    expect(find.byIcon(Icons.mic), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('call-bar')), matching: find.byIcon(Icons.mic)), findsOneWidget);
     expect(find.byKey(const Key('call-switch')), findsNothing);
     await tester.tap(find.byKey(const Key('call-camera')));
     await tester.pumpAndSettle();
@@ -168,5 +176,59 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('You were taken out of the call.'), findsOneWidget);
     expect(find.byKey(const Key('call-join')), findsOneWidget);
+  });
+
+  testWidgets('seats show camera tiles, a speaking ring and muted microphones; spectators get a strip', (tester) async {
+    final (_, _, rooms) = await _pump(tester);
+    // Outside a call: plain avatars, no strip.
+    expect(find.byKey(const Key('call-tile-u1')), findsNothing);
+    expect(find.byKey(const Key('spectator-strip')), findsNothing);
+    await tester.tap(find.byKey(const Key('call-join')));
+    await tester.pumpAndSettle();
+    final room = rooms.single;
+    // In the call alone: my seat has a tile with a crossed microphone, no video.
+    expect(find.byKey(const Key('call-tile-u1')), findsOneWidget);
+    expect(find.byKey(const Key('call-muted-u1')), findsOneWidget);
+    expect(find.byKey(const Key('call-video-u1')), findsNothing);
+    expect(find.byKey(const Key('call-tile-u2')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('call-camera')));
+    await tester.tap(find.byKey(const Key('call-mic')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fake-video-u1')), findsOneWidget);
+    expect(find.byKey(const Key('call-muted-u1')), findsNothing);
+
+    // bob (seat) speaks with his camera on; dave watches with only his microphone.
+    room.others = [
+      const CallPeer(identity: 'u2', name: 'bob', mic: true, camera: true, speaking: true),
+      const CallPeer(identity: 'u9', name: 'dave'),
+    ];
+    room.speaking = true;
+    room.emit(CallEvent.changed);
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('seat-1')), matching: find.byKey(const Key('fake-video-u2'))), findsOneWidget);
+    expect(find.byKey(const Key('call-speaking-u2')), findsOneWidget);
+    expect(find.byKey(const Key('call-speaking-u1')), findsOneWidget);
+    expect(find.byKey(const Key('call-tile-u3')), findsNothing);
+    final strip = find.byKey(const Key('spectator-strip'));
+    expect(find.descendant(of: strip, matching: find.byKey(const Key('spectator-u9'))), findsOneWidget);
+    expect(find.descendant(of: strip, matching: find.text('dave')), findsOneWidget);
+    expect(find.descendant(of: strip, matching: find.byKey(const Key('call-muted-u9'))), findsOneWidget);
+    expect(find.descendant(of: strip, matching: find.byKey(const Key('spectator-u2'))), findsNothing);
+
+    // bob's camera goes off: his avatar is back.
+    room.others = [const CallPeer(identity: 'u2', name: 'bob', mic: true)];
+    room.speaking = false;
+    room.emit(CallEvent.changed);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fake-video-u2')), findsNothing);
+    expect(find.byKey(const Key('call-tile-u2')), findsOneWidget);
+    expect(find.byKey(const Key('call-speaking-u1')), findsNothing);
+    expect(find.byKey(const Key('spectator-strip')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('call-leave')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('call-tile-u1')), findsNothing);
+    expect(find.byKey(const Key('call-tile-u2')), findsNothing);
   });
 }

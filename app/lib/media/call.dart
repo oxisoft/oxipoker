@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart' show Widget;
 
 import '../api/api.dart';
 import '../api/models.dart';
@@ -45,6 +46,13 @@ abstract class CallRoom {
   bool get micOn;
   bool get cameraOn;
 
+  /// True while our own microphone carries speech.
+  bool get speaking;
+
+  /// The camera picture of [identity] (us or someone else), or null while
+  /// that camera is off or its video has not arrived yet.
+  Widget? video(String identity);
+
   /// Everyone else in the call.
   List<CallPeer> get peers;
   Stream<CallEvent> get events;
@@ -72,6 +80,7 @@ class CallState {
     this.mic = false,
     this.camera = false,
     this.speaker = true,
+    this.speaking = false,
     this.peers = const [],
     this.error,
     this.removed = false,
@@ -82,6 +91,9 @@ class CallState {
   final bool mic;
   final bool camera;
   final bool speaker;
+
+  /// We are speaking (the speaking ring on our own seat).
+  final bool speaking;
   final List<CallPeer> peers;
 
   /// Why joining failed: an [ApiException] or any other error.
@@ -92,12 +104,22 @@ class CallState {
 
   bool get active => status == CallStatus.connecting || status == CallStatus.connected;
 
-  CallState copyWith({CallStatus? status, bool? mic, bool? camera, bool? speaker, List<CallPeer>? peers}) => CallState(
+  bool get connected => status == CallStatus.connected;
+
+  CallState copyWith({
+    CallStatus? status,
+    bool? mic,
+    bool? camera,
+    bool? speaker,
+    bool? speaking,
+    List<CallPeer>? peers,
+  }) => CallState(
     table: table,
     status: status ?? this.status,
     mic: mic ?? this.mic,
     camera: camera ?? this.camera,
     speaker: speaker ?? this.speaker,
+    speaking: speaking ?? this.speaking,
     peers: peers ?? this.peers,
     error: error,
     removed: removed,
@@ -141,7 +163,13 @@ class CallController extends Notifier<CallState> {
       await room.connect(t.url, t.token);
       if (gen != _gen) return;
       _schedule(gen, table, t.expiresAt);
-      state = state.copyWith(status: CallStatus.connected, mic: room.micOn, camera: room.cameraOn, peers: room.peers);
+      state = state.copyWith(
+        status: CallStatus.connected,
+        mic: room.micOn,
+        camera: room.cameraOn,
+        speaking: room.speaking,
+        peers: room.peers,
+      );
     } catch (e) {
       if (gen != _gen || !ref.mounted) return;
       await _teardown();
@@ -174,6 +202,9 @@ class CallController extends Notifier<CallState> {
 
   Future<void> switchCamera() async => _room?.switchCamera();
 
+  /// The camera picture of [identity] in the connected call, else null.
+  Widget? video(String identity) => state.connected ? _room?.video(identity) : null;
+
   Future<void> _toggle(Future<void> Function(CallRoom) f) async {
     final r = _room;
     if (r == null || state.status != CallStatus.connected) return;
@@ -189,7 +220,7 @@ class CallController extends Notifier<CallState> {
     if (gen != _gen || r == null) return;
     switch (e) {
       case CallEvent.changed:
-        state = state.copyWith(mic: r.micOn, camera: r.cameraOn, peers: r.peers);
+        state = state.copyWith(mic: r.micOn, camera: r.cameraOn, speaking: r.speaking, peers: r.peers);
       case CallEvent.removed:
         _end(removed: true);
       case CallEvent.lost:

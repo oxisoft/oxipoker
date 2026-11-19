@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:livekit_client/livekit_client.dart' as lk;
+import 'package:material_ui/material_ui.dart' show ValueKey, Widget;
 
 import 'call.dart';
 
@@ -79,6 +80,19 @@ class LiveKitCallRoom implements CallRoom {
     _position = _position == lk.CameraPosition.front ? lk.CameraPosition.back : lk.CameraPosition.front;
     final track = _room.localParticipant?.videoTrackPublications.firstOrNull?.track;
     if (track is lk.LocalVideoTrack) await track.setCameraPosition(_position);
+  }
+
+  @override
+  bool get speaking => _room.localParticipant?.isSpeaking ?? false;
+
+  @override
+  Widget? video(String identity) {
+    final local = _room.localParticipant;
+    final lk.Participant? p = local != null && local.identity == identity ? local : _room.remoteParticipants[identity];
+    final pub = p?.getTrackPublicationBySource(lk.TrackSource.camera);
+    final track = pub?.track;
+    if (pub == null || pub.muted || track is! lk.VideoTrack) return null;
+    return lk.VideoTrackRenderer(track, fit: lk.VideoViewFit.cover, key: ValueKey(pub.sid));
   }
 
   @override

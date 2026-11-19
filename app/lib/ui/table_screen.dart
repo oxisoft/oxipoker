@@ -154,6 +154,7 @@ class _TableScreenState extends ConsumerState<TableScreen> {
               )
             else ...[
               CallBar(tableId: widget.tableId),
+              SpectatorStrip(view: v),
               if (v.sng != null) SngBar(view: v, onStart: () => _do(_rt.startSng)),
               if (!v.seated && !(v.sng?.finished ?? false))
                 Container(
@@ -581,7 +582,7 @@ class SeatBox extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _Avatar(user: p.user, name: p.name),
+                  SeatMedia(user: p.user, child: UserAvatar(user: p.user, name: p.name)),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Column(
@@ -639,8 +640,8 @@ class SeatBox extends StatelessWidget {
   }
 }
 
-class _Avatar extends ConsumerWidget {
-  const _Avatar({required this.user, required this.name});
+class UserAvatar extends ConsumerWidget {
+  const UserAvatar({super.key, required this.user, required this.name});
 
   final String user;
   final String name;
