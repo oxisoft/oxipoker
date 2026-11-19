@@ -164,7 +164,18 @@ class CreateTableDialog extends StatefulWidget {
 }
 
 class _CreateTableDialogState extends State<CreateTableDialog> {
-  final _name = TextEditingController(text: 'Friday game');
+  final _name = TextEditingController();
+  var _named = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_named) {
+      _named = true;
+      _name.text = context.l.defaultTableName;
+    }
+  }
+
   final _sb = TextEditingController(text: '5');
   final _bb = TextEditingController(text: '10');
   final _stack = TextEditingController(text: '1000');

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../api/models.dart';
 import '../passkey/passkey.dart';
+import '../state/locale.dart';
 import '../state/session.dart';
 import 'common.dart';
 import 'history_screens.dart';
@@ -166,6 +167,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _saveName, child: Text(l.save))),
             ]),
             section(l.appearance, [const AppearancePicker()]),
+            section(l.language, [const LanguagePicker()]),
             section(l.blockedUsers, [const BlockList()]),
             section(l.changePassword, [
               TextField(controller: _current, obscureText: true, decoration: InputDecoration(labelText: l.currentPassword)),
@@ -359,5 +361,27 @@ class AppearancePicker extends ConsumerWidget {
           for (final b in backs.backs) choice(b.id, b.name, selected: user.cardBack == b.id, value: b.id),
         ]),
     ]);
+  }
+}
+
+/// Language of the app on this device; "device language" follows the system.
+class LanguagePicker extends ConsumerWidget {
+  const LanguagePicker({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l;
+    final current = ref.watch(localeProvider)?.languageCode;
+    return DropdownButton<String>(
+      key: const Key('language-picker'),
+      isExpanded: true,
+      value: current ?? '',
+      items: [
+        DropdownMenuItem(key: const Key('language-device'), value: '', child: Text(l.languageDevice)),
+        for (final e in appLanguages.entries)
+          DropdownMenuItem(key: Key('language-${e.key}'), value: e.key, child: Text(e.value)),
+      ],
+      onChanged: (v) => ref.read(localeProvider.notifier).set(v == null || v.isEmpty ? null : v),
+    );
   }
 }

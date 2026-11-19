@@ -5,7 +5,18 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
+import 'app_localizations_it.dart';
+import 'app_localizations_ja.dart';
+import 'app_localizations_pl.dart';
+import 'app_localizations_pt.dart';
+import 'app_localizations_ru.dart';
+import 'app_localizations_tr.dart';
+import 'app_localizations_uk.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +103,20 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('it'),
+    Locale('ja'),
+    Locale('pl'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('tr'),
+    Locale('uk'),
+    Locale('zh'),
+  ];
 
   /// No description provided for @appTitle.
   ///
@@ -1731,6 +1755,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Players cannot be removed; only spectators.'**
   String get wsIsPlayer;
+
+  /// No description provided for @errBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'The server is busy. Try again in a moment.'**
+  String get errBusy;
+
+  /// No description provided for @errBadName.
+  ///
+  /// In en, this message translates to:
+  /// **'Names have 1 to 64 characters.'**
+  String get errBadName;
+
+  /// No description provided for @errBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in card backs cannot be deleted.'**
+  String get errBuiltIn;
+
+  /// No description provided for @errTotpEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is already on.'**
+  String get errTotpEnabled;
+
+  /// No description provided for @errTotpNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the two-factor setup again.'**
+  String get errTotpNotStarted;
+
+  /// No description provided for @errTotpNotEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Two-factor sign-in is not on.'**
+  String get errTotpNotEnabled;
+
+  /// No description provided for @errPasswordChangeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Change your password first.'**
+  String get errPasswordChangeRequired;
+
+  /// No description provided for @errTooManyTables.
+  ///
+  /// In en, this message translates to:
+  /// **'The server has too many open tables. Try again later.'**
+  String get errTooManyTables;
+
+  /// No description provided for @errTooManyPasskeys.
+  ///
+  /// In en, this message translates to:
+  /// **'You have too many passkeys. Delete one first.'**
+  String get errTooManyPasskeys;
+
+  /// No description provided for @errTooManyBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Your block list is full. Unblock someone first.'**
+  String get errTooManyBlocks;
+
+  /// No description provided for @errTooManyReports.
+  ///
+  /// In en, this message translates to:
+  /// **'You have sent too many reports. Try again later.'**
+  String get errTooManyReports;
+
+  /// No description provided for @errReportSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot report yourself.'**
+  String get errReportSelf;
+
+  /// No description provided for @errBlockSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot block yourself.'**
+  String get errBlockSelf;
+
+  /// No description provided for @errBadReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a reason; the note has up to 500 characters.'**
+  String get errBadReport;
+
+  /// No description provided for @errAdminOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an admin can do that.'**
+  String get errAdminOnly;
+
+  /// No description provided for @errNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That no longer exists.'**
+  String get errNotFound;
+
+  /// No description provided for @errUnauthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again.'**
+  String get errUnauthenticated;
+
+  /// No description provided for @errBadRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not understand the request. Update the app.'**
+  String get errBadRequest;
+
+  /// No description provided for @errInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'The server hit an error. Try again.'**
+  String get errInternal;
+
+  /// No description provided for @wsNotSeated.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no seat at this table.'**
+  String get wsNotSeated;
+
+  /// No description provided for @wsNotInHand.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not in this hand.'**
+  String get wsNotInHand;
+
+  /// No description provided for @wsNoTable.
+  ///
+  /// In en, this message translates to:
+  /// **'This table is closed.'**
+  String get wsNoTable;
+
+  /// No description provided for @wsNotSng.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a sit-and-go can be started.'**
+  String get wsNotSng;
+
+  /// No description provided for @wsBadChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat lines have 1 to 300 characters.'**
+  String get wsBadChat;
+
+  /// No description provided for @wsBadSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'That seat does not exist.'**
+  String get wsBadSeat;
+
+  /// No description provided for @imagesFileType.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get imagesFileType;
+
+  /// No description provided for @defaultTableName.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday game'**
+  String get defaultTableName;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @languageDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Device language'**
+  String get languageDevice;
 }
 
 class _AppLocalizationsDelegate
@@ -1743,8 +1941,20 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'es',
+    'fr',
+    'it',
+    'ja',
+    'pl',
+    'pt',
+    'ru',
+    'tr',
+    'uk',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -1753,8 +1963,30 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
+    case 'fr':
+      return AppLocalizationsFr();
+    case 'it':
+      return AppLocalizationsIt();
+    case 'ja':
+      return AppLocalizationsJa();
+    case 'pl':
+      return AppLocalizationsPl();
+    case 'pt':
+      return AppLocalizationsPt();
+    case 'ru':
+      return AppLocalizationsRu();
+    case 'tr':
+      return AppLocalizationsTr();
+    case 'uk':
+      return AppLocalizationsUk();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

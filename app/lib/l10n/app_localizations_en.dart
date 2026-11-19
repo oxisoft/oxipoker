@@ -950,4 +950,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wsIsPlayer => 'Players cannot be removed; only spectators.';
+
+  @override
+  String get errBusy => 'The server is busy. Try again in a moment.';
+
+  @override
+  String get errBadName => 'Names have 1 to 64 characters.';
+
+  @override
+  String get errBuiltIn => 'Built-in card backs cannot be deleted.';
+
+  @override
+  String get errTotpEnabled => 'Two-factor sign-in is already on.';
+
+  @override
+  String get errTotpNotStarted => 'Start the two-factor setup again.';
+
+  @override
+  String get errTotpNotEnabled => 'Two-factor sign-in is not on.';
+
+  @override
+  String get errPasswordChangeRequired => 'Change your password first.';
+
+  @override
+  String get errTooManyTables =>
+      'The server has too many open tables. Try again later.';
+
+  @override
+  String get errTooManyPasskeys =>
+      'You have too many passkeys. Delete one first.';
+
+  @override
+  String get errTooManyBlocks =>
+      'Your block list is full. Unblock someone first.';
+
+  @override
+  String get errTooManyReports =>
+      'You have sent too many reports. Try again later.';
+
+  @override
+  String get errReportSelf => 'You cannot report yourself.';
+
+  @override
+  String get errBlockSelf => 'You cannot block yourself.';
+
+  @override
+  String get errBadReport =>
+      'Pick a reason; the note has up to 500 characters.';
+
+  @override
+  String get errAdminOnly => 'Only an admin can do that.';
+
+  @override
+  String get errNotFound => 'That no longer exists.';
+
+  @override
+  String get errUnauthenticated => 'Sign in again.';
+
+  @override
+  String get errBadRequest =>
+      'The server did not understand the request. Update the app.';
+
+  @override
+  String get errInternal => 'The server hit an error. Try again.';
+
+  @override
+  String get wsNotSeated => 'You have no seat at this table.';
+
+  @override
+  String get wsNotInHand => 'You are not in this hand.';
+
+  @override
+  String get wsNoTable => 'This table is closed.';
+
+  @override
+  String get wsNotSng => 'Only a sit-and-go can be started.';
+
+  @override
+  String get wsBadChat => 'Chat lines have 1 to 300 characters.';
+
+  @override
+  String get wsBadSeat => 'That seat does not exist.';
+
+  @override
+  String get imagesFileType => 'Images';
+
+  @override
+  String get defaultTableName => 'Friday game';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get languageDevice => 'Device language';
 }

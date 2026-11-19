@@ -1,10 +1,10 @@
-import 'package:flutter_localizations/flutter_localizations.dart' show GlobalWidgetsLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'l10n/app_localizations.dart';
 import 'router.dart';
+import 'state/locale.dart';
 import 'state/session.dart';
 import 'ui/appearance.dart';
 
@@ -20,6 +20,13 @@ void main() {
   ));
 }
 
+/// The app's strings plus the Material, Cupertino and widget texts of
+/// material_ui for every language of the app.
+final appLocalizationsDelegates = <LocalizationsDelegate<dynamic>>[
+  AppLocalizations.delegate,
+  ...GlobalMaterialLocalizations.delegates,
+];
+
 class OxiPokerApp extends ConsumerWidget {
   const OxiPokerApp({super.key});
 
@@ -29,12 +36,9 @@ class OxiPokerApp extends ConsumerWidget {
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: themeFor(ref.watch(sessionProvider.select((s) => s.user?.theme))),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      locale: ref.watch(localeProvider),
       routerConfig: ref.watch(routerProvider),
     );
   }

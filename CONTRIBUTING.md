@@ -26,7 +26,11 @@ Every contributor signs the [CLA](CLA.md) once. A bot comments on your first pul
 
 ## Translations
 
-Translations will move to Hosted Weblate once the texts settle. Until then, open an issue if you want to help with a language.
+The app speaks English, German, Spanish, French, Italian, Polish, Brazilian Portuguese, Russian, Turkish, Ukrainian, Japanese and Simplified Chinese. Everything except English was machine-translated first, so native speakers can make a real difference.
+
+The strings live in `app/lib/l10n/app_<language>.arb`; `app_en.arb` is the source. To fix a translation, edit the line in your language's file and open a pull request. To add a language, copy `app_en.arb` to `app_<code>.arb`, set `@@locale`, translate the values (leave the `{placeholders}` as they are) and add the language to `appLanguages` in `app/lib/state/locale.dart`. The test `app/test/l10n_test.dart` checks that every file has every string.
+
+The server sends error codes, never sentences; the app turns each code into a sentence in the player's language.
 
 ## Conduct
 

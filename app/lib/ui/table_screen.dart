@@ -32,6 +32,16 @@ String intentError(AppLocalizations l, String code) => switch (code) {
   'muted' => l.wsMuted,
   'removed' => l.wsRemoved,
   'is_player' => l.wsIsPlayer,
+  'not_seated' => l.wsNotSeated,
+  'not_in_hand' => l.wsNotInHand,
+  'no_table' => l.wsNoTable,
+  'not_sng' => l.wsNotSng,
+  'bad_chat' => l.wsBadChat,
+  'bad_seat' => l.wsBadSeat,
+  'not_watching' => l.reconnecting,
+  'bad_intent' => l.errBadRequest,
+  'bad_settings' => l.errBadRequest,
+  'internal' => l.errInternal,
   _ => l.errGeneric(code),
 };
 

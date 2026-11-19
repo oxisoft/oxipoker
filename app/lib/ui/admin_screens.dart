@@ -397,8 +397,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   Future<void> _uploadBack() async {
     final l = context.l;
-    final file = await openFile(acceptedTypeGroups: const [
-      XTypeGroup(label: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'], mimeTypes: ['image/png', 'image/jpeg', 'image/webp']),
+    final file = await openFile(acceptedTypeGroups: [
+      XTypeGroup(label: l.imagesFileType, extensions: ['png', 'jpg', 'jpeg', 'webp'], mimeTypes: ['image/png', 'image/jpeg', 'image/webp']),
     ]);
     if (file == null || !mounted) return;
     final bytes = await file.readAsBytes();
