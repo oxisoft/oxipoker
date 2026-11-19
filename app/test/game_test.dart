@@ -565,7 +565,7 @@ void main() {
     expect(find.text('No reports.'), findsOneWidget);
 
     // Account screen: the block list, unblock.
-    GoRouter.of(ctx).go('/account');
+    GoRouter.of(tester.element(find.byType(Scaffold).first)).go('/account');
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.byKey(Key('unblock-$seatedUser')), 300, scrollable: find.byType(Scrollable).first);
     await tester.tap(find.byKey(Key('unblock-$seatedUser')));
