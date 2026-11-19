@@ -368,6 +368,11 @@
   "callConnecting": "Connecting the call…",
   "callLost": "The call dropped. The game goes on; join again when you like.",
   "callRemoved": "You were taken out of the call.",
+  "callMicRefused": "Oxi Poker may not use your microphone. Allow it in your system or browser settings and try again.",
+  "callCameraRefused": "Oxi Poker may not use your camera. Allow it in your system or browser settings and try again.",
+  "callHttpsHint": "Browsers allow the camera and microphone only on pages opened over HTTPS.",
+  "callBackgroundTitle": "Oxi Poker call",
+  "callBackgroundText": "Your microphone stays on while the app is in the background.",
   "callInCall": "In the call: {count}",
   "@callInCall": {"placeholders": {"count": {"type": "int"}}}
 }

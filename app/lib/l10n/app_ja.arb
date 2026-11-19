@@ -318,5 +318,10 @@
   "callConnecting": "通話に接続中…",
   "callLost": "通話が切断されました。ゲームは続きます。いつでも再参加できます。",
   "callRemoved": "通話から外されました。",
+  "callMicRefused": "Oxi Poker はマイクを使えません。システムまたはブラウザの設定で許可してから、もう一度お試しください。",
+  "callCameraRefused": "Oxi Poker はカメラを使えません。システムまたはブラウザの設定で許可してから、もう一度お試しください。",
+  "callHttpsHint": "ブラウザは HTTPS で開いたページでのみカメラとマイクを許可します。",
+  "callBackgroundTitle": "Oxi Poker 通話",
+  "callBackgroundText": "アプリがバックグラウンドの間もマイクはオンのままです。",
   "callInCall": "通話中: {count}"
 }

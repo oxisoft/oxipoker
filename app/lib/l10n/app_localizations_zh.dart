@@ -1064,6 +1064,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callRemoved => '你已被移出通话。';
 
   @override
+  String get callMicRefused => 'Oxi Poker 无法使用你的麦克风。请在系统或浏览器设置中允许后重试。';
+
+  @override
+  String get callCameraRefused => 'Oxi Poker 无法使用你的摄像头。请在系统或浏览器设置中允许后重试。';
+
+  @override
+  String get callHttpsHint => '浏览器只允许通过 HTTPS 打开的页面使用摄像头和麦克风。';
+
+  @override
+  String get callBackgroundTitle => 'Oxi Poker 通话';
+
+  @override
+  String get callBackgroundText => '应用在后台时，你的麦克风仍保持开启。';
+
+  @override
   String callInCall(int count) {
     return '通话中：$count';
   }

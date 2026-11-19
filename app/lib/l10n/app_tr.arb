@@ -318,5 +318,10 @@
   "callConnecting": "Aramaya bağlanılıyor…",
   "callLost": "Arama koptu. Oyun devam ediyor; istediğinde yeniden katıl.",
   "callRemoved": "Aramadan çıkarıldın.",
+  "callMicRefused": "Oxi Poker mikrofonunu kullanamıyor. Sistem veya tarayıcı ayarlarından izin ver ve tekrar dene.",
+  "callCameraRefused": "Oxi Poker kameranı kullanamıyor. Sistem veya tarayıcı ayarlarından izin ver ve tekrar dene.",
+  "callHttpsHint": "Tarayıcılar kamera ve mikrofonu yalnızca HTTPS ile açılan sayfalara verir.",
+  "callBackgroundTitle": "Oxi Poker araması",
+  "callBackgroundText": "Uygulama arka plandayken mikrofonun açık kalır.",
   "callInCall": "Aramada: {count}"
 }

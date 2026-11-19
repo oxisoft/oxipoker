@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../api/api.dart';
 import '../api/poker.dart';
 import '../l10n/app_localizations.dart';
+import '../media/background.dart';
 import '../media/call.dart';
 import '../state/realtime.dart';
 import '../state/session.dart';
@@ -19,6 +20,13 @@ bool get _mobile =>
 String callErrorText(AppLocalizations l, Object e) =>
     e is ApiException && e.code == 'call_lost' ? l.callLost : errorText(l, e);
 
+/// What to tell the player when the system or the browser refused a device.
+/// Browsers give the camera and microphone only to pages served over HTTPS.
+String callRefusedText(AppLocalizations l, CallDevice d) {
+  final text = d == CallDevice.camera ? l.callCameraRefused : l.callMicRefused;
+  return kIsWeb ? '$text ${l.callHttpsHint}' : text;
+}
+
 /// The strip with the player's own call controls. Hidden when the server has
 /// no voice and video. Everyone controls only their own microphone and camera.
 class CallBar extends ConsumerWidget {
@@ -30,6 +38,8 @@ class CallBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(mediaAvailableProvider)) return const SizedBox.shrink();
     final l = context.l;
+    CallBackground.title = l.callBackgroundTitle;
+    CallBackground.text = l.callBackgroundText;
     final c = ref.watch(callProvider);
     final call = ref.read(callProvider.notifier);
     ref.listen(callProvider, (prev, next) {
@@ -38,6 +48,8 @@ class CallBar extends ConsumerWidget {
         toast(context, callErrorText(l, next.error!));
       } else if (next.removed && !(prev?.removed ?? false)) {
         toast(context, l.callRemoved);
+      } else if (next.refused != null && next.refusals != (prev?.refusals ?? 0)) {
+        toast(context, callRefusedText(l, next.refused!));
       }
     });
     final mine = c.table == tableId;

@@ -318,5 +318,10 @@
   "callConnecting": "Connexion à l'appel…",
   "callLost": "L'appel a été coupé. La partie continue ; rejoignez-le quand vous voulez.",
   "callRemoved": "Vous avez été retiré de l'appel.",
+  "callMicRefused": "Oxi Poker n'a pas accès à votre microphone. Autorisez-le dans les réglages du système ou du navigateur, puis réessayez.",
+  "callCameraRefused": "Oxi Poker n'a pas accès à votre caméra. Autorisez-la dans les réglages du système ou du navigateur, puis réessayez.",
+  "callHttpsHint": "Les navigateurs n'autorisent la caméra et le microphone que sur les pages ouvertes en HTTPS.",
+  "callBackgroundTitle": "Appel Oxi Poker",
+  "callBackgroundText": "Votre microphone reste actif pendant que l'application est en arrière-plan.",
   "callInCall": "Dans l'appel : {count}"
 }

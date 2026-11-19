@@ -14,6 +14,7 @@ class FakeCallRoom implements CallRoom {
   final _events = StreamController<CallEvent>.broadcast();
   bool mic = false, camera = false, speaker = true;
   bool failConnect = false;
+  bool refuseMic = false, refuseCamera = false;
   var others = <CallPeer>[];
 
   void emit(CallEvent e) => _events.add(e);
@@ -29,9 +30,16 @@ class FakeCallRoom implements CallRoom {
   @override
   Future<void> disconnect() async => log.add('disconnect');
   @override
-  Future<void> setMicrophone(bool on) async => mic = on;
+  Future<void> setMicrophone(bool on) async {
+    if (on && refuseMic) throw StateError('NotAllowedError');
+    mic = on;
+  }
+
   @override
-  Future<void> setCamera(bool on) async => camera = on;
+  Future<void> setCamera(bool on) async {
+    if (on && refuseCamera) throw StateError('NotAllowedError');
+    camera = on;
+  }
   @override
   Future<void> setSpeaker(bool on) async => speaker = on;
   @override
@@ -173,6 +181,45 @@ void main() {
     expect(tokens(), 3);
     expect(rooms.single.log.last, 'disconnect');
     expect(find.byKey(const Key('call-join')), findsOneWidget);
+  });
+
+  testWidgets('a refused microphone or camera says what to allow; the call goes on', (tester) async {
+    final (_, _, rooms) = await _pump(tester);
+    await tester.tap(find.byKey(const Key('call-join')));
+    await tester.pumpAndSettle();
+    final room = rooms.single
+      ..refuseMic = true
+      ..refuseCamera = true;
+    await tester.tap(find.byKey(const Key('call-mic')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('may not use your microphone'), findsOneWidget);
+    expect(room.mic, isFalse);
+    expect(find.descendant(of: find.byKey(const Key('call-bar')), matching: find.byIcon(Icons.mic_off)), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    // The same refusal again still shows its message.
+    await tester.tap(find.byKey(const Key('call-mic')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('may not use your microphone'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('call-camera')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('may not use your camera'), findsOneWidget);
+    expect(room.camera, isFalse);
+    expect(room.log, isNot(contains('disconnect')));
+    expect(find.byKey(const Key('call-leave')), findsOneWidget);
+    expect(find.byKey(const Key('action-bar')), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    room.refuseMic = false;
+    await tester.tap(find.byKey(const Key('call-mic')));
+    await tester.pumpAndSettle();
+    expect(room.mic, isTrue);
+    expect(find.textContaining('may not use'), findsNothing);
   });
 
   testWidgets('a host taking us out of the call says so', (tester) async {

@@ -318,5 +318,10 @@
   "callConnecting": "Conectando a chamada…",
   "callLost": "A chamada caiu. O jogo continua; entre de novo quando quiser.",
   "callRemoved": "Você foi removido da chamada.",
+  "callMicRefused": "O Oxi Poker não pode usar o seu microfone. Permita nas configurações do sistema ou do navegador e tente de novo.",
+  "callCameraRefused": "O Oxi Poker não pode usar a sua câmera. Permita nas configurações do sistema ou do navegador e tente de novo.",
+  "callHttpsHint": "Os navegadores só liberam câmera e microfone em páginas abertas por HTTPS.",
+  "callBackgroundTitle": "Chamada do Oxi Poker",
+  "callBackgroundText": "Seu microfone continua ligado enquanto o app está em segundo plano.",
   "callInCall": "Na chamada: {count}"
 }

@@ -1098,6 +1098,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get callRemoved => 'Aramadan çıkarıldın.';
 
   @override
+  String get callMicRefused =>
+      'Oxi Poker mikrofonunu kullanamıyor. Sistem veya tarayıcı ayarlarından izin ver ve tekrar dene.';
+
+  @override
+  String get callCameraRefused =>
+      'Oxi Poker kameranı kullanamıyor. Sistem veya tarayıcı ayarlarından izin ver ve tekrar dene.';
+
+  @override
+  String get callHttpsHint =>
+      'Tarayıcılar kamera ve mikrofonu yalnızca HTTPS ile açılan sayfalara verir.';
+
+  @override
+  String get callBackgroundTitle => 'Oxi Poker araması';
+
+  @override
+  String get callBackgroundText =>
+      'Uygulama arka plandayken mikrofonun açık kalır.';
+
+  @override
   String callInCall(int count) {
     return 'Aramada: $count';
   }

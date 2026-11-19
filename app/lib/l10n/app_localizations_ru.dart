@@ -1096,6 +1096,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callRemoved => 'Вас удалили из звонка.';
 
   @override
+  String get callMicRefused =>
+      'У Oxi Poker нет доступа к микрофону. Разрешите его в настройках системы или браузера и попробуйте снова.';
+
+  @override
+  String get callCameraRefused =>
+      'У Oxi Poker нет доступа к камере. Разрешите её в настройках системы или браузера и попробуйте снова.';
+
+  @override
+  String get callHttpsHint =>
+      'Браузеры дают доступ к камере и микрофону только страницам, открытым по HTTPS.';
+
+  @override
+  String get callBackgroundTitle => 'Звонок Oxi Poker';
+
+  @override
+  String get callBackgroundText =>
+      'Микрофон остаётся включённым, пока приложение в фоне.';
+
+  @override
   String callInCall(int count) {
     return 'В звонке: $count';
   }

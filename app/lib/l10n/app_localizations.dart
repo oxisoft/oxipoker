@@ -2026,6 +2026,36 @@ abstract class AppLocalizations {
   /// **'You were taken out of the call.'**
   String get callRemoved;
 
+  /// No description provided for @callMicRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxi Poker may not use your microphone. Allow it in your system or browser settings and try again.'**
+  String get callMicRefused;
+
+  /// No description provided for @callCameraRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxi Poker may not use your camera. Allow it in your system or browser settings and try again.'**
+  String get callCameraRefused;
+
+  /// No description provided for @callHttpsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsers allow the camera and microphone only on pages opened over HTTPS.'**
+  String get callHttpsHint;
+
+  /// No description provided for @callBackgroundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxi Poker call'**
+  String get callBackgroundTitle;
+
+  /// No description provided for @callBackgroundText.
+  ///
+  /// In en, this message translates to:
+  /// **'Your microphone stays on while the app is in the background.'**
+  String get callBackgroundText;
+
   /// No description provided for @callInCall.
   ///
   /// In en, this message translates to:

@@ -1105,6 +1105,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get callRemoved => 'Sei stato rimosso dalla chiamata.';
 
   @override
+  String get callMicRefused =>
+      'Oxi Poker non può usare il microfono. Consentilo nelle impostazioni del sistema o del browser e riprova.';
+
+  @override
+  String get callCameraRefused =>
+      'Oxi Poker non può usare la fotocamera. Consentila nelle impostazioni del sistema o del browser e riprova.';
+
+  @override
+  String get callHttpsHint =>
+      'I browser consentono fotocamera e microfono solo nelle pagine aperte via HTTPS.';
+
+  @override
+  String get callBackgroundTitle => 'Chiamata Oxi Poker';
+
+  @override
+  String get callBackgroundText =>
+      'Il microfono resta attivo mentre l\'app è in background.';
+
+  @override
   String callInCall(int count) {
     return 'Nella chiamata: $count';
   }

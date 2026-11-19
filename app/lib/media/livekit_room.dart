@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, Tar
 import 'package:livekit_client/livekit_client.dart' as lk;
 import 'package:material_ui/material_ui.dart' show ValueKey, Widget;
 
+import 'background.dart';
 import 'call.dart';
 
 /// [CallRoom] on top of livekit_client. Connecting publishes nothing: the
@@ -49,6 +50,7 @@ class LiveKitCallRoom implements CallRoom {
   @override
   Future<void> disconnect() async {
     _leaving = true;
+    await CallBackground.stop();
     await _listener?.dispose();
     _listener = null;
     await _room.disconnect();
@@ -63,7 +65,10 @@ class LiveKitCallRoom implements CallRoom {
   bool get cameraOn => _room.localParticipant?.isCameraEnabled() ?? false;
 
   @override
-  Future<void> setMicrophone(bool on) async => _room.localParticipant?.setMicrophoneEnabled(on);
+  Future<void> setMicrophone(bool on) async {
+    await _room.localParticipant?.setMicrophoneEnabled(on);
+    if (on && micOn) await CallBackground.start();
+  }
 
   @override
   Future<void> setCamera(bool on) async => _room.localParticipant?.setCameraEnabled(

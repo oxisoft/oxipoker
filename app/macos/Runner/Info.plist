@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Oxi Poker shows your camera to the players at your table when you turn it on.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Oxi Poker lets the players at your table hear you when you turn the microphone on.</string>
 </dict>
 </plist>

@@ -77,6 +77,9 @@ final mediaAvailableProvider = Provider<bool>((ref) => ref.watch(serverInfoProvi
 
 enum CallStatus { idle, connecting, connected, failed }
 
+/// A device the player turns on or off in a call.
+enum CallDevice { microphone, camera }
+
 class CallState {
   const CallState({
     this.table,
@@ -88,6 +91,8 @@ class CallState {
     this.peers = const [],
     this.error,
     this.removed = false,
+    this.refused,
+    this.refusals = 0,
   });
 
   final String? table;
@@ -106,6 +111,13 @@ class CallState {
   /// The call ended because a host or admin removed us.
   final bool removed;
 
+  /// The device the system or browser last refused to start (no permission,
+  /// no device, or a page served without HTTPS).
+  final CallDevice? refused;
+
+  /// Counts refusals, so the same refusal twice still shows its message.
+  final int refusals;
+
   bool get active => status == CallStatus.connecting || status == CallStatus.connected;
 
   bool get connected => status == CallStatus.connected;
@@ -117,6 +129,8 @@ class CallState {
     bool? speaker,
     bool? speaking,
     List<CallPeer>? peers,
+    CallDevice? refused,
+    int? refusals,
   }) => CallState(
     table: table,
     status: status ?? this.status,
@@ -127,6 +141,8 @@ class CallState {
     peers: peers ?? this.peers,
     error: error,
     removed: removed,
+    refused: refused ?? this.refused,
+    refusals: refusals ?? this.refusals,
   );
 }
 
@@ -205,8 +221,8 @@ class CallController extends Notifier<CallState> {
     if (ref.mounted && state.table == table) await leave();
   }
 
-  Future<void> setMic(bool on) => _toggle((r) => r.setMicrophone(on));
-  Future<void> setCamera(bool on) => _toggle((r) => r.setCamera(on));
+  Future<void> setMic(bool on) => _toggle(CallDevice.microphone, (r) => r.setMicrophone(on));
+  Future<void> setCamera(bool on) => _toggle(CallDevice.camera, (r) => r.setCamera(on));
 
   Future<void> setSpeaker(bool on) async {
     state = state.copyWith(speaker: on);
@@ -238,14 +254,21 @@ class CallController extends Notifier<CallState> {
       if (!_hidden.contains(p.identity)) p,
   ];
 
-  Future<void> _toggle(Future<void> Function(CallRoom) f) async {
+  Future<void> _toggle(CallDevice device, Future<void> Function(CallRoom) f) async {
     final r = _room;
     if (r == null || state.status != CallStatus.connected) return;
+    var refused = false;
     try {
       await f(r);
-    } finally {
-      if (identical(r, _room)) state = state.copyWith(mic: r.micOn, camera: r.cameraOn);
+    } catch (_) {
+      // Permission refused, no such device, or no HTTPS in the browser. The
+      // call and the game go on; the bar tells the player what to change.
+      refused = true;
     }
+    if (!ref.mounted || !identical(r, _room)) return;
+    state = refused
+        ? state.copyWith(mic: r.micOn, camera: r.cameraOn, refused: device, refusals: state.refusals + 1)
+        : state.copyWith(mic: r.micOn, camera: r.cameraOn);
   }
 
   void _onEvent(int gen, CallEvent e) {
