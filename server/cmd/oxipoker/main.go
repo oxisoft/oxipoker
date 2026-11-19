@@ -107,6 +107,15 @@ func main() {
 	}
 
 	hub := realtime.NewHub()
+	if mediaOn {
+		rooms, err := media.NewRooms(livekit)
+		if err != nil {
+			log.Error("livekit", "err", err)
+			os.Exit(2)
+		}
+		hub.CallErr = func(err error) { log.Warn("call moderation", "err", err) }
+		hub.SetCalls(rooms)
+	}
 	// The history and table writers outlive the signal context: on shutdown
 	// they are closed in order after the tables have stopped.
 	hist := history.New(context.Background(), st.DB(), log)

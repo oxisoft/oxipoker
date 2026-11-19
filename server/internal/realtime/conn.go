@@ -186,7 +186,8 @@ type Intent struct {
 	Action string `json:"action,omitempty"` // act: fold, check, call, bet, raise
 	To     int64  `json:"to,omitempty"`     // act: bet/raise total for the street
 	Text   string `json:"text,omitempty"`   // chat
-	User   string `json:"user,omitempty"`   // mute, unmute, remove
+	User   string `json:"user,omitempty"`   // mute, unmute, remove, call_mute, call_remove
+	Source string `json:"source,omitempty"` // call_mute: microphone or camera
 }
 
 // Errors of intents, sent as reply codes.
@@ -200,6 +201,7 @@ var (
 	errMuted       = errors.New("muted")
 	errRemoved     = errors.New("removed")
 	errIsPlayer    = errors.New("is_player")
+	errMediaOff    = errors.New("media_off")
 )
 
 func errorCode(err error) string {
@@ -230,7 +232,7 @@ func errorCode(err error) string {
 		return "too_few_players"
 	case errors.Is(err, errBadIntent), errors.Is(err, errNotWatching), errors.Is(err, errNoSpectator),
 		errors.Is(err, errBadChat), errors.Is(err, errRateLimited), errors.Is(err, errHostOnly),
-		errors.Is(err, errMuted), errors.Is(err, errRemoved), errors.Is(err, errIsPlayer):
+		errors.Is(err, errMuted), errors.Is(err, errRemoved), errors.Is(err, errIsPlayer), errors.Is(err, errMediaOff):
 		return err.Error()
 	}
 	return "internal"
@@ -464,17 +466,26 @@ func (c *conn) handle(in Intent) error {
 			return errHostOnly
 		}
 		return t.Start()
-	case "mute", "unmute", "remove":
+	case "mute", "unmute", "remove", "call_mute", "call_remove":
 		return c.moderate(t, in)
 	}
 	return errBadIntent
 }
 
-// moderate runs the host's chat moderation: mute or unmute anyone at the
-// table, remove a spectator (players leave by the game's rules).
+// moderate runs the host's moderation: mute or unmute anyone's chat at the
+// table, remove a spectator (players leave by the game's rules), switch off
+// someone's microphone or camera in the call, or send them out of the call.
 func (c *conn) moderate(t *table.Table, in Intent) error {
 	if in.User == "" || in.User == c.user.ID {
 		return errBadIntent
+	}
+	if strings.HasPrefix(in.Type, "call_") {
+		if !c.srv.Hub.HasCalls() {
+			return errMediaOff
+		}
+		if in.Type == "call_mute" && in.Source != "microphone" && in.Source != "camera" {
+			return errBadIntent
+		}
 	}
 	st, ok := c.srv.Hub.State(t.ID())
 	if !ok {
@@ -486,6 +497,10 @@ func (c *conn) moderate(t *table.Table, in Intent) error {
 	switch in.Type {
 	case "mute", "unmute":
 		c.srv.Hub.mute(t.ID(), in.User, in.Type == "mute")
+	case "call_mute":
+		c.srv.Hub.callMute(t.ID(), in.User, in.Source)
+	case "call_remove":
+		c.srv.Hub.callRemove(t.ID(), in.User)
 	case "remove":
 		if st.ViewFor(in.User).YourSeat >= 0 {
 			return errIsPlayer

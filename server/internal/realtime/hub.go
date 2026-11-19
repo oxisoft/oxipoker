@@ -5,6 +5,7 @@
 package realtime
 
 import (
+	"context"
 	"slices"
 	"sync"
 	"time"
@@ -32,7 +33,62 @@ type Hub struct {
 	chatLog map[string][]ChatLine
 	muted   map[string]map[string]bool // table -> muted users
 	removed map[string]map[string]bool // table -> removed spectators
+	// Users sent out of a table's call; they get no new call token while
+	// the table is open (they may still play or watch).
+	callRemoved map[string]map[string]bool
+
+	calls   Calls
+	callsWG sync.WaitGroup
+	// CallErr receives failed moderation requests (logging); nil = dropped.
+	CallErr func(error)
 }
+
+// Calls moderates the table calls on the media server (LiveKit). Methods
+// run outside the hub lock, in their own goroutine.
+type Calls interface {
+	Mute(ctx context.Context, tableID, user, source string) error
+	Remove(ctx context.Context, tableID, user string) error
+	Close(ctx context.Context, tableID string) error
+}
+
+// SetCalls turns call moderation on; call it before serving.
+func (h *Hub) SetCalls(c Calls) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.calls = c
+}
+
+// HasCalls reports whether call moderation is on.
+func (h *Hub) HasCalls() bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.calls != nil
+}
+
+// callTimeout bounds one moderation request to the media server.
+const callTimeout = 10 * time.Second
+
+// onCallsLocked runs f against the media server in the background: the
+// game never waits for media. A removed user is also refused new tokens,
+// so a lost request only delays the effect until their token expires.
+func (h *Hub) onCallsLocked(f func(ctx context.Context, c Calls) error) {
+	c, report := h.calls, h.CallErr
+	if c == nil {
+		return
+	}
+	h.callsWG.Add(1)
+	go func() {
+		defer h.callsWG.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), callTimeout)
+		defer cancel()
+		if err := f(ctx, c); err != nil && report != nil {
+			report(err)
+		}
+	}()
+}
+
+// WaitCalls waits for running moderation requests (tests, shutdown).
+func (h *Hub) WaitCalls() { h.callsWG.Wait() }
 
 // ChatLog is how many recent chat lines a table keeps for reports.
 const ChatLog = 20
@@ -50,7 +106,8 @@ func NewHub() *Hub {
 	return &Hub{states: map[string]table.State{}, subs: map[string]map[*conn]struct{}{},
 		lobby: map[*conn]struct{}{}, users: map[string]int{},
 		conns: map[*conn]struct{}{}, chatLog: map[string][]ChatLine{},
-		muted: map[string]map[string]bool{}, removed: map[string]map[string]bool{}}
+		muted: map[string]map[string]bool{}, removed: map[string]map[string]bool{},
+		callRemoved: map[string]map[string]bool{}}
 }
 
 // TableOptions are the table options that feed the hub; pass it to
@@ -83,6 +140,9 @@ func (h *Hub) Publish(s table.State) {
 		delete(h.chatLog, s.ID)
 		delete(h.muted, s.ID)
 		delete(h.removed, s.ID)
+		delete(h.callRemoved, s.ID)
+		id := s.ID
+		h.onCallsLocked(func(ctx context.Context, c Calls) error { return c.Close(ctx, id) })
 	} else {
 		h.states[s.ID] = s
 		for c := range h.subs[s.ID] {
@@ -312,6 +372,7 @@ func (h *Hub) remove(id, user string) {
 		h.removed[id] = map[string]bool{}
 	}
 	h.removed[id][user] = true
+	h.onCallsLocked(func(ctx context.Context, c Calls) error { return c.Remove(ctx, id, user) })
 	for c := range h.subs[id] {
 		if c.user.ID == user {
 			delete(h.subs[id], c)
@@ -325,7 +386,7 @@ func (h *Hub) remove(id, user string) {
 func (h *Hub) Watching(id, user string) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if h.removed[id][user] {
+	if h.removed[id][user] || h.callRemoved[id][user] {
 		return false
 	}
 	for c := range h.subs[id] {
@@ -334,6 +395,25 @@ func (h *Hub) Watching(id, user string) bool {
 		}
 	}
 	return false
+}
+
+// callMute switches off a user's microphone or camera in the table's call.
+func (h *Hub) callMute(id, user, source string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.onCallsLocked(func(ctx context.Context, c Calls) error { return c.Mute(ctx, id, user, source) })
+}
+
+// callRemove sends a user out of the table's call until the table closes;
+// they keep their seat or their place as a spectator.
+func (h *Hub) callRemove(id, user string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.callRemoved[id] == nil {
+		h.callRemoved[id] = map[string]bool{}
+	}
+	h.callRemoved[id][user] = true
+	h.onCallsLocked(func(ctx context.Context, c Calls) error { return c.Remove(ctx, id, user) })
 }
 
 // watchAllowed reports whether user may watch table id (not removed).
