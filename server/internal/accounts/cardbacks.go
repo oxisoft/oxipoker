@@ -73,11 +73,10 @@ func ProcessCardBack(data []byte) ([]byte, error) {
 	default:
 		return nil, ErrBadImage
 	}
-	if cfg.Width < 1 || cfg.Height < 1 || cfg.Width > maxAvatarSide || cfg.Height > maxAvatarSide ||
-		cfg.Width*cfg.Height > maxAvatarPixels {
-		return nil, ErrImageLarge
+	if err := checkCanvas(cfg); err != nil {
+		return nil, err
 	}
-	src, _, err := image.Decode(bytes.NewReader(data))
+	src, err := decodeImage(data)
 	if err != nil {
 		return nil, ErrBadImage
 	}

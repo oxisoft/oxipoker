@@ -40,7 +40,17 @@ The sign-in handler checked the per-address and per-account limits first and cou
 
 Fix: `server/internal/httpapi/ratelimit.go` `take` checks and counts in one step; the attempt is given back when the password was right (address) or cleared (account). The same applies to changing the password and deleting the own account. Tests: `TestParallelSigninsRespectTheAddressLimit` (fails with the old handler: 60 tried, 0 limited), `TestTakeCountsAtOnceAndUndoGivesBack`, `TestSuccessfulSigninsDoNotCountAgainstTheAddress`.
 
+### F7 Picture uploads could decode to hundreds of megabytes (fixed)
+
+Avatars and card backs were limited to 5 MB per file and 40 megapixels per canvas, checked before decoding. Decoded pixels live in memory raw, though: a 16-bit PNG of 40 megapixels takes 320 MiB, from a file of a few kilobytes, and several parallel uploads multiplied that.
+
+Fix: `server/internal/accounts/imagegate.go`. The canvas check also counts the decoded bytes (at most 160 MiB, so 16-bit pictures are limited to 20 megapixels while 8-bit photos keep the 40), and at most two uploads are decoded at the same time. Test: `TestUploadsAreRefusedByDecodedSize` (a 16-bit 30 megapixel PNG header is refused for avatars and card backs before decoding; with the old check it went on to the decoder).
+
 ## Areas
+
+### Uploads
+
+Checked: avatars (every signed-in user) and card backs (admins) are read with a size cap (5 MB by default, a server setting), accepted only when a raster decoder recognises them (PNG, JPEG, GIF for avatars, WebP; never SVG), size-checked from the header before decoding (F7), then cropped, scaled and re-encoded as a fresh PNG, so EXIF, GPS data and anything that is not pixels is dropped and a file that is also valid HTML or script cannot survive. They are stored in the database, never on disk under a user-chosen name, and served as `image/png` with `nosniff` and their own `default-src 'none'` policy. Card backs are limited to 50.
 
 ### Authentication
 
@@ -68,7 +78,7 @@ Checked: `history.Store.Get` joins on the requesting user's own row in `hand_pla
 
 ### Still to review
 
-Uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
+Media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
 
 ### HTTP headers
 
