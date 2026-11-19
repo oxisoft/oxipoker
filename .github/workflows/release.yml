@@ -11,7 +11,10 @@
 #
 # Repository secrets: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (push rights to
 # oxisoft/oxipoker); ANDROID_KEYSTORE_B64, ANDROID_KEY_ALIAS,
-# ANDROID_KEY_PASSWORD, ANDROID_STORE_PASSWORD (the upload key).
+# ANDROID_KEY_PASSWORD, ANDROID_STORE_PASSWORD (the upload key);
+# optional for macOS signing and notarisation (see app/macos/release-sign.sh):
+# MACOS_CERT_P12_B64, MACOS_CERT_PASSWORD, APPLE_API_KEY_B64, APPLE_API_KEY_ID,
+# APPLE_API_ISSUER.
 name: Release
 
 on:
@@ -177,6 +180,12 @@ jobs:
       - run: flutter pub get
       - run: flutter build ${{ matrix.target }} --release --build-name "$V" --build-number "${{ needs.version.outputs.code }}" --dart-define=APP_VERSION=${{ needs.version.outputs.name }}
       - name: Package
+        env:
+          MACOS_CERT_P12_B64: ${{ secrets.MACOS_CERT_P12_B64 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          APPLE_API_KEY_B64: ${{ secrets.APPLE_API_KEY_B64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           mkdir -p ../dist
           case "${{ matrix.target }}" in
@@ -188,8 +197,12 @@ jobs:
             macos)
               mkdir -p "$RUNNER_TEMP/dmg"
               cp -R build/macos/Build/Products/Release/oxipoker.app "$RUNNER_TEMP/dmg/Oxi Poker.app"
+              # Developer ID signing with hardened runtime, then notarisation of the dmg;
+              # skipped with a warning when the secrets are not set.
+              macos/release-sign.sh app "$RUNNER_TEMP/dmg/Oxi Poker.app"
               ln -s /Applications "$RUNNER_TEMP/dmg/Applications"
-              hdiutil create -volname "Oxi Poker" -srcfolder "$RUNNER_TEMP/dmg" -ov -format UDZO "../dist/oxipoker-$V-macos.dmg" ;;
+              hdiutil create -volname "Oxi Poker" -srcfolder "$RUNNER_TEMP/dmg" -ov -format UDZO "../dist/oxipoker-$V-macos.dmg"
+              macos/release-sign.sh dmg "../dist/oxipoker-$V-macos.dmg" ;;
           esac
           ls -l ../dist
       - uses: actions/upload-artifact@v7
