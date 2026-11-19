@@ -13,21 +13,26 @@ There are two options in one Compose file:
 - A DNS name pointing at the server, for example `poker.example.com`.
 - Ports 80 and 443 open for the HTTPS proxy.
 
-## Minimal option in five commands
+## Minimal option
+
+The `docker` commands in this guide assume your user may run Docker (member of the `docker` group, or rootless Docker). Otherwise put `sudo` in front of them.
 
 ```sh
 mkdir oxipoker && cd oxipoker
 curl -LO https://raw.githubusercontent.com/oxisoft/oxipoker/main/deploy/compose.yaml
 curl -L https://raw.githubusercontent.com/oxisoft/oxipoker/main/deploy/.env.example -o .env
+nano .env
 mkdir -m 700 data && sudo chown 1000:1000 data
 docker compose up -d
 ```
 
-Before the last command, open `.env` and set three values:
+In `.env` (any editor will do) set three values before the first start:
 
 - `PUBLIC_URL`: the address players will use, `https://poker.example.com`. Passkeys and invitation links are bound to it.
 - `ADMIN_USERNAME` and `ADMIN_PASSWORD`: the first admin, created on the first start (password 10 characters or more).
 - `OXIPOKER_VERSION`: `latest`, or a release such as `1.0.0` if you want to choose when to upgrade.
+
+The image comes from Docker Hub. Every release is also on `ghcr.io/oxisoft/oxipoker` with the same tags: set `OXIPOKER_IMAGE=ghcr.io/oxisoft/oxipoker` if Docker Hub limits your pulls.
 
 The container runs as user 1000, not root, which is why `data` is handed to uid 1000. With rootless Docker, uid 1000 inside the container maps to another uid on the host; give the folder to it through a container instead:
 

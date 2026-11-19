@@ -13,7 +13,7 @@
 
 services:
   oxipoker:
-    image: oxisoft/oxipoker:${OXIPOKER_VERSION:-latest}
+    image: ${OXIPOKER_IMAGE:-oxisoft/oxipoker}:${OXIPOKER_VERSION:-latest}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${OXIPOKER_PORT:-8080}:8080"

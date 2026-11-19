@@ -1,0 +1,37 @@
+# Clean-box test: a fresh runner VM follows docs/INSTALL.md (minimal option,
+# HTTPS through Caddy, first admin, invitation, WebSocket, backup, upgrade,
+# restore, full option with LiveKit, back to minimal). Runs when the guide or
+# the deploy files change, weekly against the newest edge image, and by hand.
+name: clean-box
+
+on:
+  pull_request:
+    paths: ['deploy/**', 'docs/INSTALL.md', 'docs/VOICE-VIDEO.md', '.github/workflows/clean-box.yml']
+  push:
+    branches: [main]
+    paths: ['deploy/**', 'docs/INSTALL.md', 'docs/VOICE-VIDEO.md', '.github/workflows/clean-box.yml']
+  schedule:
+    - cron: '30 5 * * 1'
+  workflow_dispatch:
+    inputs:
+      image:
+        description: 'Image without tag'
+        default: 'ghcr.io/oxisoft/oxipoker'
+      version:
+        description: 'Tag'
+        default: 'edge'
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Follow the install guide
+        env:
+          OXIPOKER_IMAGE: ${{ inputs.image || 'ghcr.io/oxisoft/oxipoker' }}
+          OXIPOKER_VERSION: ${{ inputs.version || 'edge' }}
+        run: bash deploy/test/clean-box.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/box"
