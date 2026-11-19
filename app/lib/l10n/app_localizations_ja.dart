@@ -833,6 +833,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get uploadCardBack => 'カード裏面をアップロード';
 
   @override
+  String get connectionCheck => '音声・ビデオ接続チェック';
+
+  @override
+  String get runConnectionCheck => 'チェックを実行';
+
+  @override
+  String get checkSignalling => 'LiveKit シグナリング';
+
+  @override
+  String get checkToken => '通話トークンの往復確認';
+
+  @override
+  String get checkTurn => 'TLS 経由の TURN';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => '失敗';
+
+  @override
+  String get checkSkipped => 'スキップ';
+
+  @override
   String get cardBackName => 'カード裏面の名前';
 
   @override

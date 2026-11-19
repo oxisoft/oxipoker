@@ -860,6 +860,30 @@ class AppLocalizationsPt extends AppLocalizations {
   String get uploadCardBack => 'Enviar um verso de carta';
 
   @override
+  String get connectionCheck => 'Teste de ligação de voz e vídeo';
+
+  @override
+  String get runConnectionCheck => 'Executar o teste';
+
+  @override
+  String get checkSignalling => 'Sinalização do LiveKit';
+
+  @override
+  String get checkToken => 'Ida e volta do token de chamada';
+
+  @override
+  String get checkTurn => 'TURN sobre TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Falhou';
+
+  @override
+  String get checkSkipped => 'Ignorado';
+
+  @override
   String get cardBackName => 'Nome do verso de carta';
 
   @override

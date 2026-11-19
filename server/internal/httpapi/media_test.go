@@ -2,6 +2,9 @@ package httpapi
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -97,5 +100,46 @@ func TestMediaToken(t *testing.T) {
 	send(aws, `{"id":1,"type":"remove","user":"`+bobID+`"}`)
 	if out := waitFor(403); out["error"] != "not_at_table" {
 		t.Fatalf("removed: %v", out)
+	}
+}
+
+func TestAdminMediaCheck(t *testing.T) {
+	plain := newGameServer(t)
+	admin := signinAs(t, plain, "alex", "long enough pw")
+	if res, out := plain.do(t, nil, req{method: "GET", path: "/api/v1/admin/media-check", token: admin}); res.StatusCode != 200 || out["enabled"] != false {
+		t.Fatalf("media off: %d %v", res.StatusCode, out)
+	}
+
+	lk := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cfg := media.Config{URL: "ws://x", Key: "APItest", Secret: "test-secret-test-secret-test-secret-0123"}
+		if r.URL.Path == "/rtc/validate" {
+			if _, err := cfg.Verify(r.URL.Query().Get("access_token"), time.Now()); err != nil {
+				http.Error(w, "invalid", http.StatusUnauthorized)
+				return
+			}
+			_, _ = w.Write([]byte("success"))
+			return
+		}
+		_, _ = w.Write([]byte("OK"))
+	}))
+	defer lk.Close()
+	cfg := media.Config{URL: "ws" + strings.TrimPrefix(lk.URL, "http"), Key: "APItest", Secret: "test-secret-test-secret-test-secret-0123"}
+	ts := newGameServer(t, func(o *Options) { o.Media, o.LiveKit = true, cfg })
+	admin = signinAs(t, ts, "alex", "long enough pw")
+	bob := signinAs(t, ts, "bob", "bob long password")
+	if res, _ := ts.do(t, nil, req{method: "GET", path: "/api/v1/admin/media-check", token: bob}); res.StatusCode != 403 {
+		t.Fatalf("player runs the check: %d", res.StatusCode)
+	}
+	res, out := ts.do(t, nil, req{method: "GET", path: "/api/v1/admin/media-check", token: admin})
+	if res.StatusCode != 200 || out["enabled"] != true || res.Header.Get("Cache-Control") != "no-store" {
+		t.Fatalf("check: %d %v", res.StatusCode, out)
+	}
+	got := map[string]string{}
+	for _, c := range out["checks"].([]any) {
+		m := c.(map[string]any)
+		got[m["name"].(string)] = m["status"].(string)
+	}
+	if got["signalling"] != "ok" || got["token"] != "ok" || got["turn_tls"] != "skipped" {
+		t.Fatalf("checks: %v", got)
 	}
 }

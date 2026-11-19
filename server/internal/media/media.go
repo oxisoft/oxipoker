@@ -24,6 +24,10 @@ type Config struct {
 	URL    string // LiveKit signalling address the apps connect to (wss://...)
 	Key    string // API key
 	Secret string // API secret
+	// TURN over TLS, for the admin console's connection check only (LiveKit
+	// itself reads its TURN settings). Empty domain or port 0 = TURN off.
+	TURNDomain  string
+	TURNTLSPort int
 }
 
 // ErrConfig reports incomplete or invalid LiveKit settings.

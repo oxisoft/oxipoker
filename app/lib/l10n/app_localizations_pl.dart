@@ -855,6 +855,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get uploadCardBack => 'Wgraj rewers kart';
 
   @override
+  String get connectionCheck => 'Test połączenia głosu i wideo';
+
+  @override
+  String get runConnectionCheck => 'Uruchom test';
+
+  @override
+  String get checkSignalling => 'Sygnalizacja LiveKit';
+
+  @override
+  String get checkToken => 'Weryfikacja tokenu połączenia';
+
+  @override
+  String get checkTurn => 'TURN przez TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Błąd';
+
+  @override
+  String get checkSkipped => 'Pominięto';
+
+  @override
   String get cardBackName => 'Nazwa rewersu kart';
 
   @override

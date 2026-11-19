@@ -32,6 +32,10 @@ services:
       LIVEKIT_URL: ${LIVEKIT_URL:-}
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-}
+      # Read only by the connection check in the admin console.
+      LIVEKIT_TURN_ENABLED: ${LIVEKIT_TURN_ENABLED:-false}
+      LIVEKIT_TURN_DOMAIN: ${LIVEKIT_TURN_DOMAIN:-}
+      LIVEKIT_TURN_TLS_PORT: ${LIVEKIT_TURN_TLS_PORT:-5349}
     healthcheck:
       test: ["CMD", "/app/oxipoker", "-healthcheck"]
       interval: 30s

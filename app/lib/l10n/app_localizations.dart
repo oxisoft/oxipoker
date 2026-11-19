@@ -1576,6 +1576,54 @@ abstract class AppLocalizations {
   /// **'Upload a card back'**
   String get uploadCardBack;
 
+  /// No description provided for @connectionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice and video connection check'**
+  String get connectionCheck;
+
+  /// No description provided for @runConnectionCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Run the check'**
+  String get runConnectionCheck;
+
+  /// No description provided for @checkSignalling.
+  ///
+  /// In en, this message translates to:
+  /// **'LiveKit signalling'**
+  String get checkSignalling;
+
+  /// No description provided for @checkToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Call token round trip'**
+  String get checkToken;
+
+  /// No description provided for @checkTurn.
+  ///
+  /// In en, this message translates to:
+  /// **'TURN over TLS'**
+  String get checkTurn;
+
+  /// No description provided for @checkOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get checkOk;
+
+  /// No description provided for @checkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get checkFailed;
+
+  /// No description provided for @checkSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get checkSkipped;
+
   /// No description provided for @cardBackName.
   ///
   /// In en, this message translates to:

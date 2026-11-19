@@ -240,6 +240,29 @@ class ServerSettings {
       j['max_upload_bytes'] as int? ?? 0, j['card_back_default'] as String? ?? 'classic-red');
 }
 
+/// One line of the admin console's voice and video connection check.
+class MediaCheck {
+  const MediaCheck(this.name, this.status, this.target, this.detail);
+
+  final String name; // signalling, token, turn_tls
+  final String status; // ok, failed, skipped
+  final String target;
+  final String detail;
+
+  factory MediaCheck.fromJson(dynamic j) => MediaCheck(j['name'] as String? ?? '', j['status'] as String? ?? '',
+      j['target'] as String? ?? '', j['detail'] as String? ?? '');
+}
+
+class MediaCheckReport {
+  const MediaCheckReport(this.enabled, this.checks);
+
+  final bool enabled;
+  final List<MediaCheck> checks;
+
+  factory MediaCheckReport.fromJson(dynamic j) => MediaCheckReport(
+      j['enabled'] as bool? ?? false, [for (final c in (j['checks'] as List? ?? const [])) MediaCheck.fromJson(c)]);
+}
+
 class CardBackInfo {
   const CardBackInfo(this.id, this.name, {this.theme = '', this.builtIn = false});
 

@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
+	"github.com/oxisoft/oxipoker/server/internal/media"
 	"github.com/oxisoft/oxipoker/server/internal/store"
 )
 
@@ -40,11 +41,15 @@ type authAPI struct {
 	ipFails    *failLimiter
 	userFails  *failLimiter
 	challenges *challengeStore // password accepted, second factor pending
+	mediaCheck media.Checker
 }
 
 func newAuthAPI(opt Options) *authAPI {
 	a := &authAPI{acc: opt.Accounts, pk: opt.Passkeys, st: opt.Store, challenges: newChallengeStore(),
 		ipFails: newFailLimiter(ipFailLimit, failWindow), userFails: newFailLimiter(accountFailLimit, failWindow)}
+	if opt.Media {
+		a.mediaCheck.Config = opt.LiveKit
+	}
 	if u, err := url.Parse(opt.PublicURL); err == nil && u.Host != "" {
 		a.origin = u.Scheme + "://" + u.Host
 		a.secure = u.Scheme == "https"
@@ -195,6 +200,7 @@ func (a *authAPI) routes(r chi.Router) {
 		r.Get("/admin/settings", a.getSettings)
 		r.Patch("/admin/settings", a.patchSettings)
 		r.Get("/admin/audit", a.listAudit)
+		r.Get("/admin/media-check", a.runMediaCheck)
 		r.Post("/admin/card-backs", a.addCardBack)
 		r.Delete("/admin/card-backs/{id}", a.deleteCardBack)
 	})

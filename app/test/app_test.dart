@@ -253,6 +253,21 @@ void main() {
       await tester.pumpAndSettle();
       expect(fake.deletedBacks, ['u-mine']);
     });
+    testWidgets('runs the voice and video connection check', (tester) async {
+      await pumpApp(tester);
+      await signIn(tester, 'alice', 'correct horse');
+      await tester.tap(find.byKey(const Key('open-admin')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('tab-settings')));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byKey(const Key('run-media-check')), 200, scrollable: find.byType(Scrollable).last);
+      await tester.tap(find.byKey(const Key('run-media-check')));
+      await tester.pumpAndSettle();
+      expect(find.text('LiveKit signalling: OK'), findsOneWidget);
+      expect(find.text('Call token round trip: Failed'), findsOneWidget);
+      expect(find.textContaining('LIVEKIT_API_SECRET differs.'), findsOneWidget);
+      expect(find.text('TURN over TLS: Skipped'), findsOneWidget);
+    });
     testWidgets('lists users and shows a temporary password once', (tester) async {
       await pumpApp(tester);
       await signIn(tester, 'alice', 'correct horse');

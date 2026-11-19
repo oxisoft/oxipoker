@@ -858,6 +858,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get uploadCardBack => 'Envoyer un dos de carte';
 
   @override
+  String get connectionCheck => 'Test de connexion voix et vidéo';
+
+  @override
+  String get runConnectionCheck => 'Lancer le test';
+
+  @override
+  String get checkSignalling => 'Signalisation LiveKit';
+
+  @override
+  String get checkToken => 'Aller-retour du jeton d\'appel';
+
+  @override
+  String get checkTurn => 'TURN sur TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Échec';
+
+  @override
+  String get checkSkipped => 'Ignoré';
+
+  @override
   String get cardBackName => 'Nom du dos de carte';
 
   @override

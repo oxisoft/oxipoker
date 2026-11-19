@@ -831,6 +831,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get uploadCardBack => '上传牌背';
 
   @override
+  String get connectionCheck => '语音和视频连接检查';
+
+  @override
+  String get runConnectionCheck => '运行检查';
+
+  @override
+  String get checkSignalling => 'LiveKit 信令';
+
+  @override
+  String get checkToken => '通话令牌往返';
+
+  @override
+  String get checkTurn => '基于 TLS 的 TURN';
+
+  @override
+  String get checkOk => '正常';
+
+  @override
+  String get checkFailed => '失败';
+
+  @override
+  String get checkSkipped => '已跳过';
+
+  @override
   String get cardBackName => '牌背名称';
 
   @override

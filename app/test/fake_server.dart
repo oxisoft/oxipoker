@@ -160,6 +160,16 @@ class FakeServer {
       case 'DELETE /admin/card-backs/u-mine':
         deletedBacks.add('u-mine');
         return _json(204, null);
+      case 'GET /admin/media-check':
+        if (me?['is_admin'] != true) return _err(403, 'admin_only');
+        return _json(200, {
+          'enabled': true,
+          'checks': [
+            {'name': 'signalling', 'status': 'ok', 'target': 'wss://rtc.example.com', 'detail': 'LiveKit answers at LIVEKIT_URL.'},
+            {'name': 'token', 'status': 'failed', 'target': 'wss://rtc.example.com', 'detail': 'LIVEKIT_API_SECRET differs.'},
+            {'name': 'turn_tls', 'status': 'skipped', 'target': '', 'detail': 'TURN is off.'},
+          ],
+        });
       case 'GET /admin/settings':
         return _json(200, {'table_creation': 'everyone', 'max_upload_bytes': 5242880, 'card_back_default': 'classic-blue'});
       case 'POST /me/password':

@@ -853,6 +853,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get uploadCardBack => 'Kart arkası yükle';
 
   @override
+  String get connectionCheck => 'Ses ve görüntü bağlantı testi';
+
+  @override
+  String get runConnectionCheck => 'Testi başlat';
+
+  @override
+  String get checkSignalling => 'LiveKit sinyalleşmesi';
+
+  @override
+  String get checkToken => 'Arama jetonu gidiş dönüş';
+
+  @override
+  String get checkTurn => 'TLS üzerinden TURN';
+
+  @override
+  String get checkOk => 'Tamam';
+
+  @override
+  String get checkFailed => 'Başarısız';
+
+  @override
+  String get checkSkipped => 'Atlandı';
+
+  @override
   String get cardBackName => 'Kart arkası adı';
 
   @override

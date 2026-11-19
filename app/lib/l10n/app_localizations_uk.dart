@@ -854,6 +854,30 @@ class AppLocalizationsUk extends AppLocalizations {
   String get uploadCardBack => 'Завантажити сорочку карт';
 
   @override
+  String get connectionCheck => 'Перевірка зв\'язку для голосу й відео';
+
+  @override
+  String get runConnectionCheck => 'Запустити перевірку';
+
+  @override
+  String get checkSignalling => 'Сигналізація LiveKit';
+
+  @override
+  String get checkToken => 'Перевірка токена дзвінка';
+
+  @override
+  String get checkTurn => 'TURN через TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Помилка';
+
+  @override
+  String get checkSkipped => 'Пропущено';
+
+  @override
   String get cardBackName => 'Назва сорочки';
 
   @override

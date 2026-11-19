@@ -114,6 +114,13 @@ func (a *authAPI) patchSettings(w http.ResponseWriter, r *http.Request) {
 	a.getSettings(w, r)
 }
 
+// runMediaCheck tests, from the server's side, what a call needs: LiveKit
+// signalling, a token round trip and the TURN TLS port.
+func (a *authAPI) runMediaCheck(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, http.StatusOK, a.mediaCheck.Run(r.Context()))
+}
+
 func queryInt(r *http.Request, key string) int {
 	n, _ := strconv.Atoi(r.URL.Query().Get(key))
 	return n

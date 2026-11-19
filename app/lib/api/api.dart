@@ -239,6 +239,8 @@ class Api {
         'card_back_default': ?cardBackDefault,
       }));
 
+  Future<MediaCheckReport> mediaCheck() async => MediaCheckReport.fromJson(await _send('GET', '/admin/media-check'));
+
   Future<List<AuditEvent>> audit({String action = '', int? before}) async =>
       ((await _send('GET', '/admin/audit', query: {
         if (action.isNotEmpty) 'action': action,

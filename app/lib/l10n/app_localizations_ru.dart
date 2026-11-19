@@ -852,6 +852,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get uploadCardBack => 'Загрузить рубашку';
 
   @override
+  String get connectionCheck => 'Проверка связи для голоса и видео';
+
+  @override
+  String get runConnectionCheck => 'Запустить проверку';
+
+  @override
+  String get checkSignalling => 'Сигнализация LiveKit';
+
+  @override
+  String get checkToken => 'Проверка токена звонка';
+
+  @override
+  String get checkTurn => 'TURN через TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Ошибка';
+
+  @override
+  String get checkSkipped => 'Пропущено';
+
+  @override
   String get cardBackName => 'Название рубашки';
 
   @override

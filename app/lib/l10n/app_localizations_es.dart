@@ -861,6 +861,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get uploadCardBack => 'Subir un reverso';
 
   @override
+  String get connectionCheck => 'Prueba de conexión de voz y vídeo';
+
+  @override
+  String get runConnectionCheck => 'Ejecutar la prueba';
+
+  @override
+  String get checkSignalling => 'Señalización de LiveKit';
+
+  @override
+  String get checkToken => 'Ida y vuelta del token de llamada';
+
+  @override
+  String get checkTurn => 'TURN sobre TLS';
+
+  @override
+  String get checkOk => 'Correcto';
+
+  @override
+  String get checkFailed => 'Fallido';
+
+  @override
+  String get checkSkipped => 'Omitido';
+
+  @override
   String get cardBackName => 'Nombre del reverso';
 
   @override

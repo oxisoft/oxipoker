@@ -859,6 +859,30 @@ class AppLocalizationsIt extends AppLocalizations {
   String get uploadCardBack => 'Carica un dorso';
 
   @override
+  String get connectionCheck => 'Verifica della connessione voce e video';
+
+  @override
+  String get runConnectionCheck => 'Avvia la verifica';
+
+  @override
+  String get checkSignalling => 'Segnalazione LiveKit';
+
+  @override
+  String get checkToken => 'Andata e ritorno del token di chiamata';
+
+  @override
+  String get checkTurn => 'TURN su TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Non riuscito';
+
+  @override
+  String get checkSkipped => 'Saltato';
+
+  @override
   String get cardBackName => 'Nome del dorso';
 
   @override

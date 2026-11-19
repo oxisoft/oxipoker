@@ -850,6 +850,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadCardBack => 'Upload a card back';
 
   @override
+  String get connectionCheck => 'Voice and video connection check';
+
+  @override
+  String get runConnectionCheck => 'Run the check';
+
+  @override
+  String get checkSignalling => 'LiveKit signalling';
+
+  @override
+  String get checkToken => 'Call token round trip';
+
+  @override
+  String get checkTurn => 'TURN over TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Failed';
+
+  @override
+  String get checkSkipped => 'Skipped';
+
+  @override
   String get cardBackName => 'Card back name';
 
   @override

@@ -860,6 +860,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get uploadCardBack => 'Kartenrücken hochladen';
 
   @override
+  String get connectionCheck => 'Verbindungstest für Sprache und Video';
+
+  @override
+  String get runConnectionCheck => 'Test starten';
+
+  @override
+  String get checkSignalling => 'LiveKit-Signalisierung';
+
+  @override
+  String get checkToken => 'Anruf-Token Hin und Zurück';
+
+  @override
+  String get checkTurn => 'TURN über TLS';
+
+  @override
+  String get checkOk => 'OK';
+
+  @override
+  String get checkFailed => 'Fehlgeschlagen';
+
+  @override
+  String get checkSkipped => 'Übersprungen';
+
+  @override
   String get cardBackName => 'Name des Kartenrückens';
 
   @override

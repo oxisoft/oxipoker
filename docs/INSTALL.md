@@ -148,6 +148,14 @@ curl -s http://127.0.0.1:8080/api/v1/health    # "media":true
 
 Back to minimal at any time: `docker compose --profile full down`, empty `LIVEKIT_URL` in `.env`, `docker compose up -d`.
 
+Then sign in as admin, open **Admin**, tab **Settings**, and press **Run the check** under "Voice and video connection check". The server tries three things and explains every failure in plain words:
+
+- **LiveKit signalling:** LiveKit answers at `LIVEKIT_URL` (DNS, proxy, container).
+- **Call token round trip:** LiveKit accepts a token signed with `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` (the same pair in both services, clocks in sync).
+- **TURN over TLS:** the TURN TLS port answers with a valid certificate for `LIVEKIT_TURN_DOMAIN`.
+
+The check runs from the server, so it proves the names, ports and keys, not the network of each player. Media ports (UDP) are covered in [VOICE-VIDEO.md](VOICE-VIDEO.md).
+
 ## Operations
 
 All state lives in `./data`: the database `oxipoker.db` (accounts, avatars, tables, hand history) with its `-wal` and `-shm` files, and `server.key` (the root key; among other things it encrypts the two-factor secrets of players who use an authenticator app). `.env` holds your settings, `./certs` the TURN certificate in the full option.
@@ -183,6 +191,8 @@ A daily backup from cron on the host (`crontab -e`), keeping 14 days:
 ```
 
 The backup refuses to overwrite an existing file, so a second run on the same day fails loudly instead of replacing the morning copy.
+
+With rootless Docker the files in `data/` belong to a mapped user id on the host, so `find ... -delete` from your own account fails with "permission denied". Delete old copies through a throwaway container instead: `docker run --rm -v "$PWD/data:/d" alpine find /d/backups -name 'oxipoker-*.db' -mtime +14 -delete`. The server image itself has no shell or `rm`.
 
 ### Restore
 

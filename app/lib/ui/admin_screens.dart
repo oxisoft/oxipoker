@@ -392,7 +392,59 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         alignment: Alignment.centerRight,
         child: OutlinedButton.icon(key: const Key('upload-back'), onPressed: _uploadBack, icon: const Icon(Icons.upload), label: Text(l.uploadCardBack)),
       ),
+      const SizedBox(height: 24),
+      Text(l.connectionCheck, style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 8),
+      for (final c in _check?.checks ?? const <MediaCheck>[]) _checkTile(context, c),
+      Align(
+        alignment: Alignment.centerRight,
+        child: OutlinedButton.icon(
+          key: const Key('run-media-check'),
+          onPressed: _checking ? null : _runCheck,
+          icon: _checking
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.network_check),
+          label: Text(l.runConnectionCheck),
+        ),
+      ),
     ]);
+  }
+
+  MediaCheckReport? _check;
+  bool _checking = false;
+
+  Future<void> _runCheck() async {
+    setState(() => _checking = true);
+    final rep = await guard(context, ref, () => _s.api().mediaCheck());
+    if (!mounted) return;
+    setState(() {
+      _checking = false;
+      if (rep != null) _check = rep;
+    });
+  }
+
+  Widget _checkTile(BuildContext context, MediaCheck c) {
+    final l = context.l;
+    final scheme = Theme.of(context).colorScheme;
+    final (icon, color, status) = switch (c.status) {
+      'ok' => (Icons.check_circle, Colors.green, l.checkOk),
+      'failed' => (Icons.error, scheme.error, l.checkFailed),
+      _ => (Icons.remove_circle_outline, scheme.outline, l.checkSkipped),
+    };
+    final title = switch (c.name) {
+      'signalling' => l.checkSignalling,
+      'token' => l.checkToken,
+      'turn_tls' => l.checkTurn,
+      _ => c.name,
+    };
+    return ListTile(
+      key: Key('media-check-${c.name}'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: color),
+      title: Text('$title: $status'),
+      subtitle: Text(c.target.isEmpty ? c.detail : '${c.target}\n${c.detail}'),
+      isThreeLine: c.target.isNotEmpty,
+    );
   }
 
   Future<void> _uploadBack() async {

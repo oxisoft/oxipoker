@@ -54,6 +54,10 @@ func main() {
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	livekit := media.Config{URL: os.Getenv("LIVEKIT_URL"), Key: os.Getenv("LIVEKIT_API_KEY"), Secret: os.Getenv("LIVEKIT_API_SECRET")}
+	if os.Getenv("LIVEKIT_TURN_ENABLED") == "true" {
+		livekit.TURNDomain = os.Getenv("LIVEKIT_TURN_DOMAIN")
+		livekit.TURNTLSPort, _ = strconv.Atoi(env("LIVEKIT_TURN_TLS_PORT", "5349"))
+	}
 	if err := livekit.Check(); err != nil {
 		log.Error("livekit", "err", err)
 		os.Exit(2)
