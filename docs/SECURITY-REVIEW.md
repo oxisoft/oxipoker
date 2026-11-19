@@ -28,7 +28,27 @@ Chat was limited (5 messages per 10 seconds), message size too (4 KB), and one a
 
 Fix: `server/internal/realtime/conn.go`. Each connection has a token bucket of 40 messages refilled at 20 per second, far above a person at a table. A connection that runs dry is closed with policy violation "too many messages" instead of getting error replies, which would only add work. Tests: `TestFloodingClientIsClosed` (fails without the limit: the connection stays open or ends for another reason) and `TestSteadyClientBelowTheRateStaysOpen` (80 intents at 10 per second). The full-table leak test lifts the limit for its machine-speed bots.
 
+### F5 Unbounded parallel password hashing (fixed)
+
+Each argon2id run takes about 19 MiB. Every sign-in, sign-up, password change and account deletion ran its hash at once, with no bound, so a burst of a few thousand parallel requests could allocate tens of gigabytes and take the server down before any rate limit counted them.
+
+Fix: `server/internal/accounts/hashgate.go`. At most as many hashes as CPU cores (2 to 8) run at the same time; the rest wait for a slot. Hashing is CPU bound, so the wait costs nothing in throughput, and memory stays below 160 MiB. Test: `TestPasswordHashesRunWithBoundedParallelism` (40 parallel checks, the peak never exceeds the bound).
+
+### F6 Parallel sign-ins passed the failure limits (fixed)
+
+The sign-in handler checked the per-address and per-account limits first and counted a failure only after the slow password hash. Requests sent in parallel all passed the check before the first failure was recorded: 60 parallel wrong sign-ins from one address were all tried, against a limit of 20.
+
+Fix: `server/internal/httpapi/ratelimit.go` `take` checks and counts in one step; the attempt is given back when the password was right (address) or cleared (account). The same applies to changing the password and deleting the own account. Tests: `TestParallelSigninsRespectTheAddressLimit` (fails with the old handler: 60 tried, 0 limited), `TestTakeCountsAtOnceAndUndoGivesBack`, `TestSuccessfulSigninsDoNotCountAgainstTheAddress`.
+
 ## Areas
+
+### Authentication
+
+Checked: passwords are hashed with argon2id (19 MiB, 2 passes, 16 byte random salt, PHC format; parameters read from the hash so they can be raised later) and compared in constant time; an unknown user name is checked against a dummy hash, so it costs the same time and gets the same answer as a wrong password (`TestSigninFailuresAndRateLimit`). Passwords are 10 to 256 characters. Sessions are 32 random bytes, only their SHA-256 is stored, they expire 30 days after last use and are deleted on sign-out, on a disabled account and, except the current one, on a password change; an admin password reset signs the user out everywhere and the temporary password (80 bits) must be changed at the next sign-in. Web sessions are `HttpOnly`, `SameSite=Lax` cookies, `Secure` when `PUBLIC_URL` is https, and a request that changes state must carry a matching `Origin` or a bearer token. TOTP secrets are sealed with AES-GCM under a key kept outside the database, a code is accepted once (the last used time step is stored), recovery codes are stored hashed and spent on use, and a second-factor challenge lives 5 minutes with 5 tries. Passkeys use the WebAuthn library with the relying party taken from `PUBLIC_URL`. Limits: 20 failures per address and 10 per account in 15 minutes for passwords, TOTP codes and passkey attempts; findings F1, F5 and F6 were fixed here.
+
+### Invitations
+
+Checked: an invitation link carries 32 random bytes, only its hash is stored; expiry is 1 hour to 30 days and uses 1 to 100. The use is counted in the same transaction that creates the account (`UPDATE ... WHERE uses < max_uses AND expires_at > now AND revoked_at IS NULL`), so a link cannot be used more often than allowed by parallel sign-ups, and a revoked or used-up link refuses even when it was valid at the check. Checking a link and signing up count wrong tokens against the address limit, so a scan for valid links is cut off after 20 wrong tries. Covered by `invitations_test.go`.
 
 ### WebSocket origin and limits
 
@@ -48,7 +68,7 @@ Checked: `history.Store.Get` joins on the requesting user's own row in `hand_pla
 
 ### Still to review
 
-Authentication (password hashing, passkeys, TOTP, sessions, account limits), invitations, uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
+Uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
 
 ### HTTP headers
 

@@ -253,23 +253,32 @@ func (a *authAPI) signin(w http.ResponseWriter, r *http.Request) {
 	kind := sessionKind(req.Client)
 	ip := clientIP(r)
 	userKey := strings.ToLower(req.Username)
-	if wait := max(a.ipFails.blocked(ip), a.userFails.blocked(userKey)); wait > 0 {
+	// Both attempts are counted before the password is checked, so parallel
+	// requests cannot all pass the limits while the hashes run (F6).
+	wait := a.ipFails.take(ip)
+	if wait == 0 {
+		if wait = a.userFails.take(userKey); wait > 0 {
+			a.ipFails.undo(ip)
+		}
+	}
+	if wait > 0 {
 		w.Header().Set("Retry-After", strconv.Itoa(int(math.Ceil(wait.Seconds()))))
 		writeError(w, http.StatusTooManyRequests, "rate_limited")
 		return
 	}
 	u, err := a.acc.Authenticate(r.Context(), req.Username, req.Password)
 	if errors.Is(err, accounts.ErrInvalidCredentials) {
-		a.ipFails.fail(ip)
-		a.userFails.fail(userKey)
 		a.audit(r, nil, "auth.signin_failed", "", map[string]any{"username": truncate(req.Username, 64)})
 		writeError(w, http.StatusUnauthorized, "invalid_credentials")
 		return
 	}
 	if err != nil {
+		a.ipFails.undo(ip)
+		a.userFails.undo(userKey)
 		writeError(w, http.StatusInternalServerError, "internal")
 		return
 	}
+	a.ipFails.undo(ip)
 	a.userFails.clear(userKey)
 	st, err := a.acc.TOTPStatus(r.Context(), u.ID)
 	if err != nil {

@@ -63,9 +63,11 @@ func (a *authAPI) changePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err := a.acc.ChangePassword(r.Context(), u, req.Current, req.New, currentSession(r).ID)
+	if !errors.Is(err, accounts.ErrWrongPassword) {
+		a.userFails.undo("id:" + u.ID)
+	}
 	switch {
 	case errors.Is(err, accounts.ErrWrongPassword):
-		a.userFails.fail("id:" + u.ID)
 		writeError(w, http.StatusForbidden, "wrong_password")
 	case errors.Is(err, accounts.ErrWeakPassword):
 		writeError(w, http.StatusBadRequest, "bad_password")
@@ -89,9 +91,11 @@ func (a *authAPI) deleteMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err := a.acc.DeleteOwnAccount(r.Context(), u, req.Password)
+	if !errors.Is(err, accounts.ErrWrongPassword) {
+		a.userFails.undo("id:" + u.ID)
+	}
 	switch {
 	case errors.Is(err, accounts.ErrWrongPassword):
-		a.userFails.fail("id:" + u.ID)
 		writeError(w, http.StatusForbidden, "wrong_password")
 	case errors.Is(err, accounts.ErrLastAdmin):
 		writeError(w, http.StatusConflict, "last_admin")
@@ -105,7 +109,7 @@ func (a *authAPI) deleteMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *authAPI) userBlocked(w http.ResponseWriter, u *accounts.User) bool {
-	if a.userFails.blocked("id:"+u.ID) > 0 {
+	if a.userFails.take("id:"+u.ID) > 0 {
 		writeError(w, http.StatusTooManyRequests, "rate_limited")
 		return true
 	}

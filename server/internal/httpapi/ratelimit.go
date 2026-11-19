@@ -43,6 +43,35 @@ func (l *failLimiter) blocked(key string) time.Duration {
 func (l *failLimiter) fail(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	l.failLocked(key)
+}
+
+// take checks and counts one attempt in a single step: when the key may try,
+// the attempt is counted as a failure at once and take returns 0. Callers
+// give it back with undo when the attempt turns out not to be a failure.
+// Checking with blocked and counting with fail after the slow password hash
+// let many parallel attempts pass the check before the first was counted.
+func (l *failLimiter) take(key string) time.Duration {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	now := l.now()
+	if e := l.seen[key]; e != nil && now.Before(e.reset) && e.count >= l.max {
+		return e.reset.Sub(now)
+	}
+	l.failLocked(key)
+	return 0
+}
+
+// undo gives back one attempt counted by take.
+func (l *failLimiter) undo(key string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if e := l.seen[key]; e != nil && e.count > 0 {
+		e.count--
+	}
+}
+
+func (l *failLimiter) failLocked(key string) {
 	now := l.now()
 	if now.After(l.sweep) {
 		for k, e := range l.seen {
