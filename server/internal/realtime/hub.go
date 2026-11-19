@@ -320,6 +320,22 @@ func (h *Hub) remove(id, user string) {
 	}
 }
 
+// Watching reports whether user has a live connection on table id and
+// was not removed from it: the condition for joining the table's call.
+func (h *Hub) Watching(id, user string) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.removed[id][user] {
+		return false
+	}
+	for c := range h.subs[id] {
+		if c.user.ID == user {
+			return true
+		}
+	}
+	return false
+}
+
 // watchAllowed reports whether user may watch table id (not removed).
 func (h *Hub) watchAllowed(id, user string) bool {
 	h.mu.Lock()

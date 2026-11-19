@@ -1047,4 +1047,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get languageDevice => 'Cihaz dili';
+
+  @override
+  String get errMediaOff => 'Bu sunucuda ses ve görüntü ayarlanmamış.';
+
+  @override
+  String get errNotAtTable => 'Ses ve görüntü için önce masaya katılın.';
 }

@@ -301,5 +301,7 @@
   "imagesFileType": "Obrazy",
   "defaultTableName": "Piątkowa gra",
   "language": "Język",
-  "languageDevice": "Język urządzenia"
+  "languageDevice": "Język urządzenia",
+  "errMediaOff": "Głos i wideo nie są skonfigurowane na tym serwerze.",
+  "errNotAtTable": "Najpierw dołącz do stołu, aby używać głosu i wideo."
 }

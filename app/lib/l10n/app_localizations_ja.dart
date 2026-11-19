@@ -1017,4 +1017,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get languageDevice => 'デバイスの言語';
+
+  @override
+  String get errMediaOff => 'このサーバーでは音声とビデオが設定されていません。';
+
+  @override
+  String get errNotAtTable => '音声とビデオを使うには、先にテーブルに参加してください。';
 }

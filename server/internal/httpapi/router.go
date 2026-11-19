@@ -13,6 +13,7 @@ import (
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/applinks"
 	"github.com/oxisoft/oxipoker/server/internal/history"
+	"github.com/oxisoft/oxipoker/server/internal/media"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
@@ -25,6 +26,8 @@ import (
 type Options struct {
 	// Media reports whether the full deployment (LiveKit) is configured.
 	Media bool
+	// LiveKit signs call tokens; used when Media is true.
+	LiveKit media.Config
 	// Store is the database; nil only in tests of the static routes.
 	Store *store.Store
 	// Secret is the server's root secret.

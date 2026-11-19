@@ -1043,4 +1043,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageDevice => 'Device language';
+
+  @override
+  String get errMediaOff => 'Voice and video are not set up on this server.';
+
+  @override
+  String get errNotAtTable => 'Join the table first to use voice and video.';
 }

@@ -1044,4 +1044,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get languageDevice => 'Язык устройства';
+
+  @override
+  String get errMediaOff => 'Голос и видео на этом сервере не настроены.';
+
+  @override
+  String get errNotAtTable =>
+      'Сначала присоединитесь к столу, чтобы пользоваться голосом и видео.';
 }

@@ -301,5 +301,7 @@
   "imagesFileType": "Images",
   "defaultTableName": "Partie du vendredi",
   "language": "Langue",
-  "languageDevice": "Langue de l'appareil"
+  "languageDevice": "Langue de l'appareil",
+  "errMediaOff": "La voix et la vidéo ne sont pas configurées sur ce serveur.",
+  "errNotAtTable": "Rejoignez d'abord la table pour utiliser la voix et la vidéo."
 }

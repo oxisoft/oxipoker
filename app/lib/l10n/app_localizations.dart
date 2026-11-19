@@ -1929,6 +1929,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Device language'**
   String get languageDevice;
+
+  /// No description provided for @errMediaOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice and video are not set up on this server.'**
+  String get errMediaOff;
+
+  /// No description provided for @errNotAtTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the table first to use voice and video.'**
+  String get errNotAtTable;
 }
 
 class _AppLocalizationsDelegate

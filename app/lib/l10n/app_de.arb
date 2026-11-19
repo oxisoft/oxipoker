@@ -301,5 +301,7 @@
   "imagesFileType": "Bilder",
   "defaultTableName": "Freitagsrunde",
   "language": "Sprache",
-  "languageDevice": "Gerätesprache"
+  "languageDevice": "Gerätesprache",
+  "errMediaOff": "Sprache und Video sind auf diesem Server nicht eingerichtet.",
+  "errNotAtTable": "Setz dich zuerst an den Tisch, um Sprache und Video zu nutzen."
 }

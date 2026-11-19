@@ -1014,4 +1014,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get languageDevice => '设备语言';
+
+  @override
+  String get errMediaOff => '此服务器未设置语音和视频。';
+
+  @override
+  String get errNotAtTable => '请先加入牌桌再使用语音和视频。';
 }

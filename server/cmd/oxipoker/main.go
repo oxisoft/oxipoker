@@ -20,6 +20,7 @@ import (
 	"github.com/oxisoft/oxipoker/server/internal/applinks"
 	"github.com/oxisoft/oxipoker/server/internal/history"
 	"github.com/oxisoft/oxipoker/server/internal/httpapi"
+	"github.com/oxisoft/oxipoker/server/internal/media"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/secret"
 	"github.com/oxisoft/oxipoker/server/internal/store"
@@ -48,7 +49,12 @@ func main() {
 	}
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
-	media := os.Getenv("LIVEKIT_URL") != ""
+	livekit := media.Config{URL: os.Getenv("LIVEKIT_URL"), Key: os.Getenv("LIVEKIT_API_KEY"), Secret: os.Getenv("LIVEKIT_API_SECRET")}
+	if err := livekit.Check(); err != nil {
+		log.Error("livekit", "err", err)
+		os.Exit(2)
+	}
+	mediaOn := livekit.Enabled()
 	dataDir := env("DATA_DIR", "data")
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -125,7 +131,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr: net.JoinHostPort("", port),
-		Handler: httpapi.NewRouter(httpapi.Options{Media: media, Store: st, Secret: sec,
+		Handler: httpapi.NewRouter(httpapi.Options{Media: mediaOn, LiveKit: livekit, Store: st, Secret: sec,
 			Accounts: acc, Passkeys: passkeys, PublicURL: publicURL, AndroidApps: apps,
 			Tables: tables, Hub: hub, History: hist}),
 		ReadHeaderTimeout: 10 * time.Second,
@@ -133,7 +139,7 @@ func main() {
 	}
 
 	go func() {
-		log.Info("oxipoker listening", "version", version.Version, "port", port, "media", media)
+		log.Info("oxipoker listening", "version", version.Version, "port", port, "media", mediaOn)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error("server stopped", "err", err)
 			os.Exit(1)

@@ -351,5 +351,7 @@
   "imagesFileType": "Images",
   "defaultTableName": "Friday game",
   "language": "Language",
-  "languageDevice": "Device language"
+  "languageDevice": "Device language",
+  "errMediaOff": "Voice and video are not set up on this server.",
+  "errNotAtTable": "Join the table first to use voice and video."
 }

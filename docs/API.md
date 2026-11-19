@@ -155,6 +155,12 @@ Signed in. Settings in JSON use whole seconds for `turn_time`.
 
 Empty tables close by themselves after 30 minutes.
 
+### Voice and video (full option)
+
+`GET /api/v1/health` reports `"media": true` when the server has LiveKit settings (`LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, all three or none; a partial set stops the server at start).
+
+- `POST /api/v1/tables/{id}/media-token` returns `{"url","token","room","expires_at"}`: a LiveKit token for the table's call, valid 10 minutes, for the caller as identity (user id) and name. Only users who watch the table on a live WebSocket (players and spectators) and were not removed by the host get one; the app asks again before `expires_at`. Errors: `media_off` (404, minimal option), `not_found` (no such table), `not_at_table` (403).
+
 ## Realtime (WebSocket)
 
 `GET /api/v1/ws` upgrades to a WebSocket. One connection per tab or app carries the lobby, the watched table and its chat.

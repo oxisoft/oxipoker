@@ -301,5 +301,7 @@
   "imagesFileType": "Зображення",
   "defaultTableName": "П'ятнична гра",
   "language": "Мова",
-  "languageDevice": "Мова пристрою"
+  "languageDevice": "Мова пристрою",
+  "errMediaOff": "Голос і відео на цьому сервері не налаштовані.",
+  "errNotAtTable": "Спершу приєднайтеся до столу, щоб користуватися голосом і відео."
 }

@@ -301,5 +301,7 @@
   "imagesFileType": "图片",
   "defaultTableName": "周五牌局",
   "language": "语言",
-  "languageDevice": "设备语言"
+  "languageDevice": "设备语言",
+  "errMediaOff": "此服务器未设置语音和视频。",
+  "errNotAtTable": "请先加入牌桌再使用语音和视频。"
 }

@@ -301,5 +301,7 @@
   "imagesFileType": "Imagens",
   "defaultTableName": "Jogo de sexta",
   "language": "Idioma",
-  "languageDevice": "Idioma do dispositivo"
+  "languageDevice": "Idioma do dispositivo",
+  "errMediaOff": "Voz e vídeo não estão configurados neste servidor.",
+  "errNotAtTable": "Entre na mesa primeiro para usar voz e vídeo."
 }

@@ -1055,4 +1055,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get languageDevice => 'Idioma do dispositivo';
+
+  @override
+  String get errMediaOff =>
+      'Voz e vídeo não estão configurados neste servidor.';
+
+  @override
+  String get errNotAtTable => 'Entre na mesa primeiro para usar voz e vídeo.';
 }

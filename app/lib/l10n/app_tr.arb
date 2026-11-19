@@ -301,5 +301,7 @@
   "imagesFileType": "Resimler",
   "defaultTableName": "Cuma oyunu",
   "language": "Dil",
-  "languageDevice": "Cihaz dili"
+  "languageDevice": "Cihaz dili",
+  "errMediaOff": "Bu sunucuda ses ve görüntü ayarlanmamış.",
+  "errNotAtTable": "Ses ve görüntü için önce masaya katılın."
 }

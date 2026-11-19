@@ -62,6 +62,8 @@ String errorText(AppLocalizations l, Object e) {
     'admin_only' || 'admins_only' => l.errAdminOnly,
     'host_or_admin_only' => l.wsHostOnly,
     'not_found' => l.errNotFound,
+    'media_off' => l.errMediaOff,
+    'not_at_table' => l.errNotAtTable,
     'unauthenticated' => l.errUnauthenticated,
     'bad_request' || 'bad_origin' => l.errBadRequest,
     'internal' => l.errInternal,

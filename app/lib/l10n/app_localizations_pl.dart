@@ -1047,4 +1047,12 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get languageDevice => 'Język urządzenia';
+
+  @override
+  String get errMediaOff =>
+      'Głos i wideo nie są skonfigurowane na tym serwerze.';
+
+  @override
+  String get errNotAtTable =>
+      'Najpierw dołącz do stołu, aby używać głosu i wideo.';
 }

@@ -301,5 +301,7 @@
   "imagesFileType": "画像",
   "defaultTableName": "金曜ゲーム",
   "language": "言語",
-  "languageDevice": "デバイスの言語"
+  "languageDevice": "デバイスの言語",
+  "errMediaOff": "このサーバーでは音声とビデオが設定されていません。",
+  "errNotAtTable": "音声とビデオを使うには、先にテーブルに参加してください。"
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/history"
+	"github.com/oxisoft/oxipoker/server/internal/media"
 	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/table"
 )
@@ -28,10 +29,14 @@ type gameAPI struct {
 	hub    *realtime.Hub
 	hist   *history.Store
 	rt     *realtime.Server
+	media  media.Config
 }
 
 func newGameAPI(a *authAPI, opt Options) *gameAPI {
 	g := &gameAPI{authAPI: a, tables: opt.Tables, hub: opt.Hub, hist: opt.History}
+	if opt.Media {
+		g.media = opt.LiveKit
+	}
 	g.rt = &realtime.Server{Hub: opt.Hub, Tables: opt.Tables, PingEvery: opt.PingEvery, Blocks: a.acc.BlockedIDs}
 	return g
 }
@@ -47,6 +52,7 @@ func (g *gameAPI) routes(r chi.Router) {
 	r.Get("/tables", g.listTables)
 	r.Post("/tables", g.createTable)
 	r.Delete("/tables/{id}", g.closeTable)
+	r.Post("/tables/{id}/media-token", g.mediaToken)
 	g.moderationRoutes(r)
 	if g.hist != nil {
 		r.Get("/me/hands", g.listHands)

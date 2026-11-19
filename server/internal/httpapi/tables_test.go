@@ -19,7 +19,7 @@ import (
 	"github.com/oxisoft/oxipoker/server/internal/table"
 )
 
-func newGameServer(t *testing.T) *testServer {
+func newGameServer(t *testing.T, mod ...func(*Options)) *testServer {
 	t.Helper()
 	st, err := store.Open(context.Background(), t.TempDir())
 	if err != nil {
@@ -36,7 +36,11 @@ func newGameServer(t *testing.T) *testServer {
 	hub := realtime.NewHub()
 	hist := history.New(t.Context(), st.DB(), nil)
 	mgr := table.NewManager(time.Hour, hub.TableOptions)
-	srv := httptest.NewServer(NewRouter(Options{Store: st, Accounts: acc, Tables: mgr, Hub: hub, History: hist, PingEvery: 50 * time.Millisecond}))
+	opt := Options{Store: st, Accounts: acc, Tables: mgr, Hub: hub, History: hist, PingEvery: 50 * time.Millisecond}
+	for _, m := range mod {
+		m(&opt)
+	}
+	srv := httptest.NewServer(NewRouter(opt))
 	t.Cleanup(func() { srv.Close(); mgr.Shutdown(); st.Close() })
 	return &testServer{Server: srv, acc: acc, st: st}
 }

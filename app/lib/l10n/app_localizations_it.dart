@@ -1052,4 +1052,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get languageDevice => 'Lingua del dispositivo';
+
+  @override
+  String get errMediaOff =>
+      'Voce e video non sono configurati su questo server.';
+
+  @override
+  String get errNotAtTable =>
+      'Unisciti prima al tavolo per usare voce e video.';
 }
