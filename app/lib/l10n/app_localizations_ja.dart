@@ -1087,4 +1087,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String callInCall(int count) {
     return '通話中: $count';
   }
+
+  @override
+  String get about => 'このアプリについて';
+
+  @override
+  String appVersion(String version) {
+    return 'アプリ $version';
+  }
+
+  @override
+  String get serverTooOld =>
+      'このサーバーの Oxi Poker はこのアプリが必要とするバージョンより古いです。ホストがサーバーを更新するまで一部の機能が動かない場合があります。';
 }

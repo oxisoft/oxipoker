@@ -5,14 +5,28 @@ DateTime? _time(Object? v) => v is String ? DateTime.tryParse(v)?.toLocal() : nu
 
 /// Server health as reported by GET /api/v1/health.
 class ServerInfo {
-  const ServerInfo({required this.version, required this.media});
+  const ServerInfo({required this.version, required this.media, this.api = 0});
 
   final String version;
   final bool media;
 
-  factory ServerInfo.fromJson(Map<String, dynamic> j) =>
-      ServerInfo(version: j['version'] as String? ?? '?', media: j['media'] as bool? ?? false);
+  /// API level of the server; 0 for servers older than 1.0, which did not send it.
+  final int api;
+
+  /// True when the server speaks an older API than this app needs.
+  bool get tooOld => api < requiredServerApi;
+
+  factory ServerInfo.fromJson(Map<String, dynamic> j) => ServerInfo(
+      version: j['version'] as String? ?? '?',
+      media: j['media'] as bool? ?? false,
+      api: (j['api'] as num?)?.toInt() ?? 0);
 }
+
+/// The app's version, set by release builds with --dart-define=APP_VERSION=1.2.3.
+const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
+
+/// The lowest server API level this app works with (see /api/v1/health `api`).
+const requiredServerApi = 1;
 
 /// A short-lived LiveKit token for one table's call (POST /tables/{id}/media-token).
 class MediaToken {

@@ -323,5 +323,8 @@
   "callHttpsHint": "Les navigateurs n'autorisent la caméra et le microphone que sur les pages ouvertes en HTTPS.",
   "callBackgroundTitle": "Appel Oxi Poker",
   "callBackgroundText": "Votre microphone reste actif pendant que l'application est en arrière-plan.",
-  "callInCall": "Dans l'appel : {count}"
+  "callInCall": "Dans l'appel : {count}",
+  "about": "À propos",
+  "appVersion": "Appli {version}",
+  "serverTooOld": "Ce serveur utilise un Oxi Poker plus ancien que ce dont l'appli a besoin. Certaines fonctions peuvent échouer tant que l'hôte n'a pas mis le serveur à jour."
 }

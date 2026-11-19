@@ -53,6 +53,7 @@ type Options struct {
 type Health struct {
 	Status   string `json:"status"`
 	Version  string `json:"version"`
+	API      int    `json:"api"`
 	WebApp   bool   `json:"webapp"`
 	Media    bool   `json:"media"`
 	Database string `json:"database"`
@@ -68,7 +69,7 @@ func NewRouter(opt Options) http.Handler {
 	r.Route("/api/v1", func(api chi.Router) {
 		// No timeout on the whole tree: the WebSocket outlives any request.
 		api.With(middleware.Timeout(30*time.Second)).Get("/health", func(w http.ResponseWriter, r *http.Request) {
-			h := Health{Status: "ok", Version: version.Version, WebApp: webapp.Bundled(), Media: opt.Media, Database: "none"}
+			h := Health{Status: "ok", Version: version.Version, API: version.API, WebApp: webapp.Bundled(), Media: opt.Media, Database: "none"}
 			code := http.StatusOK
 			if opt.Store != nil {
 				h.Database = "ok"

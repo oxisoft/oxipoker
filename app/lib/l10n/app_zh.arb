@@ -323,5 +323,8 @@
   "callHttpsHint": "浏览器只允许通过 HTTPS 打开的页面使用摄像头和麦克风。",
   "callBackgroundTitle": "Oxi Poker 通话",
   "callBackgroundText": "应用在后台时，你的麦克风仍保持开启。",
-  "callInCall": "通话中：{count}"
+  "callInCall": "通话中：{count}",
+  "about": "关于",
+  "appVersion": "应用 {version}",
+  "serverTooOld": "此服务器运行的 Oxi Poker 版本低于本应用所需。在主机更新服务器之前，部分功能可能无法使用。"
 }

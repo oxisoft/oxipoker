@@ -323,5 +323,8 @@
   "callHttpsHint": "Tarayıcılar kamera ve mikrofonu yalnızca HTTPS ile açılan sayfalara verir.",
   "callBackgroundTitle": "Oxi Poker araması",
   "callBackgroundText": "Uygulama arka plandayken mikrofonun açık kalır.",
-  "callInCall": "Aramada: {count}"
+  "callInCall": "Aramada: {count}",
+  "about": "Hakkında",
+  "appVersion": "Uygulama {version}",
+  "serverTooOld": "Bu sunucu, uygulamanın gerektirdiğinden daha eski bir Oxi Poker çalıştırıyor. Ev sahibi sunucuyu güncelleyene kadar bazı özellikler çalışmayabilir."
 }

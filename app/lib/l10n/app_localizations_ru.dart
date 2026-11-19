@@ -1118,4 +1118,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String callInCall(int count) {
     return 'В звонке: $count';
   }
+
+  @override
+  String get about => 'О приложении';
+
+  @override
+  String appVersion(String version) {
+    return 'Приложение $version';
+  }
+
+  @override
+  String get serverTooOld =>
+      'На этом сервере работает более старая версия Oxi Poker, чем нужна приложению. Некоторые функции могут не работать, пока хост не обновит сервер.';
 }

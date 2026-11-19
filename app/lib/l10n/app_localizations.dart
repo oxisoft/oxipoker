@@ -2061,6 +2061,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In the call: {count}'**
   String callInCall(int count);
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'App {version}'**
+  String appVersion(String version);
+
+  /// No description provided for @serverTooOld.
+  ///
+  /// In en, this message translates to:
+  /// **'This server runs an older Oxi Poker than this app needs. Some features may not work until the host updates the server.'**
+  String get serverTooOld;
 }
 
 class _AppLocalizationsDelegate

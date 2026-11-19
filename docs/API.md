@@ -10,7 +10,7 @@ This file grows with each milestone. Status: M1 in progress.
 
 ## Health
 
-- `GET /health`: `{status, version, webapp, media, database}`; 503 when the database is not reachable.
+- `GET /health`: `{status, version, api, webapp, media, database}` (`api` = API level, 1 for Oxi Poker 1.0); 503 when the database is not reachable.
 
 ## Sign-in
 

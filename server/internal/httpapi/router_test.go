@@ -27,7 +27,7 @@ func TestHealth(t *testing.T) {
 	if err := json.NewDecoder(res.Body).Decode(&h); err != nil {
 		t.Fatal(err)
 	}
-	if h.Status != "ok" || h.Version == "" {
+	if h.Status != "ok" || h.Version == "" || h.API < 1 {
 		t.Fatalf("unexpected health %+v", h)
 	}
 }

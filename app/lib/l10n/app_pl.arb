@@ -323,5 +323,8 @@
   "callHttpsHint": "Przeglądarki udostępniają kamerę i mikrofon tylko stronom otwartym przez HTTPS.",
   "callBackgroundTitle": "Rozmowa Oxi Poker",
   "callBackgroundText": "Mikrofon pozostaje włączony, gdy aplikacja działa w tle.",
-  "callInCall": "W rozmowie: {count}"
+  "callInCall": "W rozmowie: {count}",
+  "about": "O aplikacji",
+  "appVersion": "Aplikacja {version}",
+  "serverTooOld": "Ten serwer działa na starszej wersji Oxi Poker, niż wymaga ta aplikacja. Niektóre funkcje mogą nie działać, dopóki gospodarz nie zaktualizuje serwera."
 }

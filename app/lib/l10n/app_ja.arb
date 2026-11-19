@@ -323,5 +323,8 @@
   "callHttpsHint": "ブラウザは HTTPS で開いたページでのみカメラとマイクを許可します。",
   "callBackgroundTitle": "Oxi Poker 通話",
   "callBackgroundText": "アプリがバックグラウンドの間もマイクはオンのままです。",
-  "callInCall": "通話中: {count}"
+  "callInCall": "通話中: {count}",
+  "about": "このアプリについて",
+  "appVersion": "アプリ {version}",
+  "serverTooOld": "このサーバーの Oxi Poker はこのアプリが必要とするバージョンより古いです。ホストがサーバーを更新するまで一部の機能が動かない場合があります。"
 }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../api/models.dart';
+import '../media/call.dart';
 import '../passkey/passkey.dart';
 import '../state/locale.dart';
 import '../state/session.dart';
@@ -286,6 +287,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
                 },
               ),
             ]),
+            section(l.about, [const AboutInfo()]),
             section(l.dangerZone, [
               Text(l.deleteAccountHelp),
               const SizedBox(height: 8),
@@ -383,5 +385,26 @@ class LanguagePicker extends ConsumerWidget {
       ],
       onChanged: (v) => ref.read(localeProvider.notifier).set(v == null || v.isEmpty ? null : v),
     );
+  }
+}
+
+/// App and server versions, with a warning when the server is too old for this app.
+class AboutInfo extends ConsumerWidget {
+  const AboutInfo({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.l;
+    final info = ref.watch(serverInfoProvider).value;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(l.appVersion(appVersion), key: const Key('about-app')),
+      if (info != null) Text(l.serverVersion(info.version), key: const Key('about-server')),
+      if (info != null && info.tooOld)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(l.serverTooOld,
+              key: const Key('server-too-old'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        ),
+    ]);
   }
 }

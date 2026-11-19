@@ -1120,4 +1120,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String callInCall(int count) {
     return 'Aramada: $count';
   }
+
+  @override
+  String get about => 'Hakkında';
+
+  @override
+  String appVersion(String version) {
+    return 'Uygulama $version';
+  }
+
+  @override
+  String get serverTooOld =>
+      'Bu sunucu, uygulamanın gerektirdiğinden daha eski bir Oxi Poker çalıştırıyor. Ev sahibi sunucuyu güncelleyene kadar bazı özellikler çalışmayabilir.';
 }

@@ -374,5 +374,9 @@
   "callBackgroundTitle": "Oxi Poker call",
   "callBackgroundText": "Your microphone stays on while the app is in the background.",
   "callInCall": "In the call: {count}",
-  "@callInCall": {"placeholders": {"count": {"type": "int"}}}
+  "@callInCall": {"placeholders": {"count": {"type": "int"}}},
+  "about": "About",
+  "appVersion": "App {version}",
+  "@appVersion": {"placeholders": {"version": {"type": "String"}}},
+  "serverTooOld": "This server runs an older Oxi Poker than this app needs. Some features may not work until the host updates the server."
 }

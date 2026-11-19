@@ -1082,4 +1082,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String callInCall(int count) {
     return '通话中：$count';
   }
+
+  @override
+  String get about => '关于';
+
+  @override
+  String appVersion(String version) {
+    return '应用 $version';
+  }
+
+  @override
+  String get serverTooOld =>
+      '此服务器运行的 Oxi Poker 版本低于本应用所需。在主机更新服务器之前，部分功能可能无法使用。';
 }
