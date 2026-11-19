@@ -2,9 +2,14 @@
 
 Self-hosted No-Limit Texas Hold'em for you and your friends. Run one container, send invitation links, play in the browser, on Android or on the desktop. Text chat at every table, and in the full option voice and video too. No real money, no accounts on anyone else's server, no tracking.
 
-> **Status: early development.** The plan and milestones are in [docs/ROADMAP.md](docs/ROADMAP.md). Nothing is playable yet.
+<p>
+  <img src="docs/screenshots/table-phone.png" alt="A nine-seat table on Android" width="280">
+  <img src="docs/screenshots/lobby-phone.png" alt="The lobby" width="280">
+</p>
 
-## What it will do
+> **Status: 1.0 release candidate.** All six milestones of version 1 are built and running on our test server; see [CHANGELOG.md](CHANGELOG.md) and [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## What it does
 
 - **Cash games and sit-and-go** tournaments, 2 to 9 seats, starting stack and blinds set by the table host
 - **Invite-only accounts:** the admin creates users or sends invitation links; sign in with a passkey or a password, optional two-factor codes
@@ -78,7 +83,7 @@ docker build --build-context webapp=app/build/web -t oxipoker:dev .
 - `server/`: Go server (game engine, API, realtime, embedded web app)
 - `app/`: Flutter client for web, Android, Windows, macOS and Linux
 - `deploy/`: Compose file and settings template
-- `docs/`: roadmap and design notes
+- `docs/`: [install guide](docs/INSTALL.md), [voice and video](docs/VOICE-VIDEO.md), [API](docs/API.md), [security review](docs/SECURITY-REVIEW.md), roadmap and milestone specs
 
 ## Contributing
 
