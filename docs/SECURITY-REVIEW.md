@@ -1,0 +1,37 @@
+# Security review
+
+Status: in progress (M5). Each area lists what was checked, against which code, and the findings. A finding is fixed with a test or explained here.
+
+## Findings
+
+### F1 Client address could be forged (fixed)
+
+The server used a generic middleware that took the client address from `True-Client-IP`, `X-Real-IP` or the left end of `X-Forwarded-For`, from any sender. Caddy and nginx pass `X-Real-IP` on unchanged and nginx appends to `X-Forwarded-For`, so a client could send a fresh address with every request and never reach the per-address limit on failed sign-ins, TOTP codes, passkey attempts and invitation codes. The per-account limit still held, so one account could not be brute forced, but many accounts could be tried from one machine.
+
+Fix: `server/internal/httpapi/realip.go`. Forwarding headers count only when the request comes from a loopback, private or link-local address (the reverse proxy), and only `X-Forwarded-For`, read from the right. Tests: `TestRealIPTrustsOnlyTheProxyHop` (direct clients, Caddy, nginx with a forged left entry, two proxies, garbage, IPv6) and `TestSigninLimitIgnoresForgedAddresses` (fails with the old middleware). The install guide says how the address is found.
+
+### F2 No Content Security Policy on the web app (open)
+
+The web app gets `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options`, but no `Content-Security-Policy`. Avatars and card backs already have `default-src 'none'`. To do: a policy for the Flutter web build (`script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` plus the LiveKit URL when media is on, `img-src 'self' data: blob:`, `worker-src 'self' blob:`), checked in a real browser with voice and video.
+
+### F3 No HSTS (open)
+
+When `PUBLIC_URL` is https the server can send `Strict-Transport-Security` itself, so it does not depend on the proxy configuration.
+
+## Areas
+
+### Per-seat view filtering
+
+Checked: `table.State.ViewFor` drops every `hole` event of another seat and fills `cards` only for the viewer's own seat and for seats that showed at showdown; `legal` goes only to the player to act. Showdown values (`value`) appear only on `show` and `win` events, which come after the cards are shown. Tests: `TestViewsNeverLeakHiddenCards` (200 hands, every snapshot, every viewer), `TestPlayersOnlyEverGetTheirOwnHoleCards` (WebSocket) and `TestNoHiddenCardsAcrossAFullTable`: six players and a spectator play 120 hands over the real HTTP and WebSocket API with random bets, raises, all-ins and folds; every WebSocket message and every history list and hand response is searched for another player's hole cards that the message itself does not show. Two deliberate leaks (hole events to everyone, hole events kept in history) both make it fail. It runs in the `Security` workflow on every push.
+
+### History privacy
+
+Checked: `history.Store.Get` joins on the requesting user's own row in `hand_players`, so a hand id of a hand the user did not play gives 404; stored events go through `PublicEvents` (no `hole` events); the list carries only the user's own cards. Covered by the full-table test above.
+
+### Dependencies
+
+`govulncheck` runs on every push and pull request and weekly (new advisories arrive without new commits): clean on 2026-11-19. Pull requests also run GitHub's dependency review (fails at moderate severity and above).
+
+### Still to review
+
+Authentication (password hashing, passkeys, TOTP, sessions, account limits), invitations, WebSocket origin and size limits, uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).

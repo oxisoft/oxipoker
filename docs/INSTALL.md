@@ -104,6 +104,8 @@ sudo certbot --nginx -d poker.example.com
 
 certbot adds the `listen 443 ssl` part and renews the certificate on its own. `proxy_read_timeout` keeps quiet tables connected; without it nginx closes the WebSocket after 60 seconds and the apps reconnect every minute. `client_max_body_size` lets avatars and card backs through up to the largest upload limit the admin console allows.
 
+The server counts failed sign-ins per client address. It takes that address from `X-Forwarded-For` only when the request comes from a loopback or private address, which is the proxy on the same box or network as in both examples above, and it reads the header from the right, so a client cannot set its own. Other headers such as `X-Real-IP` are ignored.
+
 Open `https://poker.example.com`: the sign-in page of the web app appears.
 
 ## First admin

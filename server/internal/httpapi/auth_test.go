@@ -42,6 +42,7 @@ type req struct {
 	body         any
 	origin       string
 	token        string
+	header       map[string]string
 }
 
 func (ts *testServer) do(t *testing.T, c *http.Client, r req) (*http.Response, map[string]any) {
@@ -56,6 +57,9 @@ func (ts *testServer) do(t *testing.T, c *http.Client, r req) (*http.Response, m
 	}
 	if r.token != "" {
 		hr.Header.Set("Authorization", "Bearer "+r.token)
+	}
+	for k, v := range r.header {
+		hr.Header.Set(k, v)
 	}
 	if c == nil {
 		c = http.DefaultClient

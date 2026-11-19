@@ -62,7 +62,7 @@ type Health struct {
 // NewRouter returns the server's root handler.
 func NewRouter(opt Options) http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RealIP)
+	r.Use(realIP)
 	r.Use(middleware.Recoverer)
 	r.Use(securityHeaders)
 
