@@ -41,6 +41,9 @@ type Server struct {
 	// Check is called with every keepalive; an error (session revoked,
 	// account disabled) closes the connection.
 	Check func(ctx context.Context) error
+	// Blocks loads the users the connection's user blocked; their chat is
+	// not delivered. nil = no blocks.
+	Blocks func(ctx context.Context, user string) (map[string]bool, error)
 }
 
 type dirty uint8
@@ -61,6 +64,7 @@ type conn struct {
 	out   []any  // queued messages, sent before the next view
 	gone  bool
 	chat  []time.Time
+	block map[string]bool
 
 	wakeCh chan struct{}
 	kill   context.CancelFunc
@@ -99,6 +103,35 @@ func (c *conn) queued() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return len(c.out) > 0 && !c.gone
+}
+
+func (c *conn) blocks(user string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.block[user]
+}
+
+func (c *conn) setBlocks(set map[string]bool) {
+	c.mu.Lock()
+	c.block = set
+	c.mu.Unlock()
+}
+
+// removedFrom is called by the hub (under its lock) when the host removed
+// this user from the watched table.
+func (c *conn) removedFrom(id string) {
+	c.mu.Lock()
+	if c.table == id {
+		c.table = ""
+		c.flags &^= dirtyTable
+	}
+	c.mu.Unlock()
+	c.send(removedMsg{Type: "removed", Table: id})
+}
+
+type removedMsg struct {
+	Type  string `json:"type"` // "removed"
+	Table string `json:"table"`
 }
 
 // closedView is called by the hub (under its lock) when the watched table
@@ -153,6 +186,7 @@ type Intent struct {
 	Action string `json:"action,omitempty"` // act: fold, check, call, bet, raise
 	To     int64  `json:"to,omitempty"`     // act: bet/raise total for the street
 	Text   string `json:"text,omitempty"`   // chat
+	User   string `json:"user,omitempty"`   // mute, unmute, remove
 }
 
 // Errors of intents, sent as reply codes.
@@ -163,6 +197,9 @@ var (
 	errBadChat     = errors.New("bad_chat")
 	errRateLimited = errors.New("rate_limited")
 	errHostOnly    = errors.New("host_or_admin_only")
+	errMuted       = errors.New("muted")
+	errRemoved     = errors.New("removed")
+	errIsPlayer    = errors.New("is_player")
 )
 
 func errorCode(err error) string {
@@ -192,7 +229,8 @@ func errorCode(err error) string {
 	case errors.Is(err, table.ErrFewPlayers):
 		return "too_few_players"
 	case errors.Is(err, errBadIntent), errors.Is(err, errNotWatching), errors.Is(err, errNoSpectator),
-		errors.Is(err, errBadChat), errors.Is(err, errRateLimited), errors.Is(err, errHostOnly):
+		errors.Is(err, errBadChat), errors.Is(err, errRateLimited), errors.Is(err, errHostOnly),
+		errors.Is(err, errMuted), errors.Is(err, errRemoved), errors.Is(err, errIsPlayer):
 		return err.Error()
 	}
 	return "internal"
@@ -225,6 +263,14 @@ func (s *Server) Serve(ctx context.Context, ws *websocket.Conn, u User) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	c := &conn{user: u, srv: s, ws: ws, wakeCh: make(chan struct{}, 1), kill: cancel}
+	if s.Blocks != nil {
+		set, err := s.Blocks(ctx, u.ID)
+		if err != nil {
+			ws.Close(websocket.StatusInternalError, "")
+			return err
+		}
+		c.block = set
+	}
 	if !s.Hub.register(c) {
 		ws.Close(websocket.StatusPolicyViolation, "too many connections")
 		return ErrTooManyConns
@@ -361,6 +407,9 @@ func (c *conn) handle(in Intent) error {
 		if err != nil {
 			return err
 		}
+		if !c.srv.Hub.watchAllowed(t.ID(), c.user.ID) {
+			return errRemoved
+		}
 		if _, ok := c.srv.Hub.State(t.ID()); !ok {
 			// No change since the table was created: publish a first snapshot.
 			st, err := t.Snapshot()
@@ -373,6 +422,7 @@ func (c *conn) handle(in Intent) error {
 		c.table = t.ID()
 		c.mu.Unlock()
 		c.srv.Hub.watch(c, t.ID())
+		c.send(c.srv.Hub.moderation(t.ID()))
 		return nil
 	case "unwatch":
 		c.mu.Lock()
@@ -414,8 +464,35 @@ func (c *conn) handle(in Intent) error {
 			return errHostOnly
 		}
 		return t.Start()
+	case "mute", "unmute", "remove":
+		return c.moderate(t, in)
 	}
 	return errBadIntent
+}
+
+// moderate runs the host's chat moderation: mute or unmute anyone at the
+// table, remove a spectator (players leave by the game's rules).
+func (c *conn) moderate(t *table.Table, in Intent) error {
+	if in.User == "" || in.User == c.user.ID {
+		return errBadIntent
+	}
+	st, ok := c.srv.Hub.State(t.ID())
+	if !ok {
+		return table.ErrNoTable
+	}
+	if st.Host != c.user.ID && !c.user.Admin {
+		return errHostOnly
+	}
+	switch in.Type {
+	case "mute", "unmute":
+		c.srv.Hub.mute(t.ID(), in.User, in.Type == "mute")
+	case "remove":
+		if st.ViewFor(in.User).YourSeat >= 0 {
+			return errIsPlayer
+		}
+		c.srv.Hub.remove(t.ID(), in.User)
+	}
+	return nil
 }
 
 func (c *conn) chatTo(t *table.Table, text string) error {
@@ -447,6 +524,5 @@ func (c *conn) chatTo(t *table.Table, text string) error {
 	}
 	c.chat = append(c.chat, now)
 	c.mu.Unlock()
-	c.srv.Hub.broadcast(t.ID(), chatMsg{Type: "chat", Table: t.ID(), User: c.user.ID, Name: c.user.Name, Text: text, At: now.UTC()})
-	return nil
+	return c.srv.Hub.chat(t.ID(), chatMsg{Type: "chat", Table: t.ID(), User: c.user.ID, Name: c.user.Name, Text: text, At: now.UTC()})
 }

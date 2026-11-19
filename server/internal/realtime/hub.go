@@ -26,13 +26,31 @@ type Hub struct {
 	lobby  map[*conn]struct{}
 	users  map[string]int // open connections per user
 	conns  map[*conn]struct{}
+
+	// Per open table, dropped when it closes. Chat is never stored: the
+	// recent lines live here only for reports.
+	chatLog map[string][]ChatLine
+	muted   map[string]map[string]bool // table -> muted users
+	removed map[string]map[string]bool // table -> removed spectators
+}
+
+// ChatLog is how many recent chat lines a table keeps for reports.
+const ChatLog = 20
+
+// ChatLine is one table chat line.
+type ChatLine struct {
+	User string    `json:"user"`
+	Name string    `json:"name"`
+	Text string    `json:"text"`
+	At   time.Time `json:"at"`
 }
 
 // NewHub returns an empty hub.
 func NewHub() *Hub {
 	return &Hub{states: map[string]table.State{}, subs: map[string]map[*conn]struct{}{},
 		lobby: map[*conn]struct{}{}, users: map[string]int{},
-		conns: map[*conn]struct{}{}}
+		conns: map[*conn]struct{}{}, chatLog: map[string][]ChatLine{},
+		muted: map[string]map[string]bool{}, removed: map[string]map[string]bool{}}
 }
 
 // TableOptions are the table options that feed the hub; pass it to
@@ -62,6 +80,9 @@ func (h *Hub) Publish(s table.State) {
 			c.closedView(s)
 		}
 		delete(h.subs, s.ID)
+		delete(h.chatLog, s.ID)
+		delete(h.muted, s.ID)
+		delete(h.removed, s.ID)
 	} else {
 		h.states[s.ID] = s
 		for c := range h.subs[s.ID] {
@@ -200,11 +221,108 @@ type restartMsg struct {
 	Type string `json:"type"`
 }
 
-// broadcast sends a message to every watcher of a table.
-func (h *Hub) broadcast(id string, msg any) {
+// chat logs a line and sends it to every watcher who has not blocked its
+// author. A muted author is refused.
+func (h *Hub) chat(id string, m chatMsg) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	for c := range h.subs[id] {
-		c.send(msg)
+	if h.muted[id][m.User] {
+		return errMuted
 	}
+	if _, ok := h.states[id]; !ok {
+		return table.ErrNoTable
+	}
+	log := append(h.chatLog[id], ChatLine{User: m.User, Name: m.Name, Text: m.Text, At: m.At})
+	if len(log) > ChatLog {
+		log = slices.Clone(log[len(log)-ChatLog:])
+	}
+	h.chatLog[id] = log
+	for c := range h.subs[id] {
+		if !c.blocks(m.User) {
+			c.send(m)
+		}
+	}
+	return nil
+}
+
+// RecentChat returns the last chat lines of an open table, for a report.
+func (h *Hub) RecentChat(id string) []ChatLine {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return slices.Clone(h.chatLog[id])
+}
+
+// SetBlocks replaces the block list of every connection of user.
+func (h *Hub) SetBlocks(user string, set map[string]bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for c := range h.conns {
+		if c.user.ID == user {
+			c.setBlocks(set)
+		}
+	}
+}
+
+// moderationMsg is a table's chat moderation state, sent to its watchers.
+type moderationMsg struct {
+	Type  string   `json:"type"` // "moderation"
+	Table string   `json:"table"`
+	Muted []string `json:"muted"`
+}
+
+func (h *Hub) moderationLocked(id string) moderationMsg {
+	m := moderationMsg{Type: "moderation", Table: id, Muted: []string{}}
+	for u := range h.muted[id] {
+		m.Muted = append(m.Muted, u)
+	}
+	slices.Sort(m.Muted)
+	return m
+}
+
+// moderation returns the table's current moderation message.
+func (h *Hub) moderation(id string) moderationMsg {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.moderationLocked(id)
+}
+
+// mute switches a user's table chat off or on and tells the watchers.
+func (h *Hub) mute(id, user string, on bool) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if on {
+		if h.muted[id] == nil {
+			h.muted[id] = map[string]bool{}
+		}
+		h.muted[id][user] = true
+	} else {
+		delete(h.muted[id], user)
+	}
+	m := h.moderationLocked(id)
+	for c := range h.subs[id] {
+		c.send(m)
+	}
+}
+
+// remove sends a spectator away from a table for as long as it is open.
+func (h *Hub) remove(id, user string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.removed[id] == nil {
+		h.removed[id] = map[string]bool{}
+	}
+	h.removed[id][user] = true
+	for c := range h.subs[id] {
+		if c.user.ID == user {
+			delete(h.subs[id], c)
+			c.removedFrom(id)
+		}
+	}
+}
+
+// watchAllowed reports whether user may watch table id (not removed).
+func (h *Hub) watchAllowed(id, user string) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return !h.removed[id][user]
 }

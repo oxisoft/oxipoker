@@ -32,7 +32,7 @@ type gameAPI struct {
 
 func newGameAPI(a *authAPI, opt Options) *gameAPI {
 	g := &gameAPI{authAPI: a, tables: opt.Tables, hub: opt.Hub, hist: opt.History}
-	g.rt = &realtime.Server{Hub: opt.Hub, Tables: opt.Tables, PingEvery: opt.PingEvery}
+	g.rt = &realtime.Server{Hub: opt.Hub, Tables: opt.Tables, PingEvery: opt.PingEvery, Blocks: a.acc.BlockedIDs}
 	return g
 }
 
@@ -47,6 +47,7 @@ func (g *gameAPI) routes(r chi.Router) {
 	r.Get("/tables", g.listTables)
 	r.Post("/tables", g.createTable)
 	r.Delete("/tables/{id}", g.closeTable)
+	g.moderationRoutes(r)
 	if g.hist != nil {
 		r.Get("/me/hands", g.listHands)
 		r.Get("/me/hands/{id}", g.getHand)

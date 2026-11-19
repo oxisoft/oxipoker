@@ -127,9 +127,23 @@ All under `/admin`, admins only (403 `admin_only`). Every change lands in the au
 - `GET /admin/audit?action=&actor=&before=&limit=`: `{events: [{id, at, actor_id, actor_name, action, target,
   ip, detail}]}`, newest first. `action` is exact or a prefix ending in a dot (`user.`); page with
   `before=<last id>`; 100 per page by default (500 at most).
+- `GET /admin/reports?all=1&limit=`: `{reports: [{id, reporter_id?, reported_id?, reporter, reported, table_id?,
+  table_name?, reason, note, chat: [{user, name, text, at}], created_at, resolved_at?, resolved_by?}]}`, newest
+  first; open ones only without `all=1`. `chat` is the table's last 20 lines at report time.
+- `POST /admin/reports/{id}/resolve`: 204; 404 if unknown or already resolved.
 
 A user holding a temporary password gets 403 `password_change_required` on everything except `GET /me`,
 `POST /me/password` and `POST /auth/signout`.
+
+## Block and report
+
+- `GET /me/blocks`: `{blocks: [{id, username, display_name, created_at}]}`, newest first.
+- `PUT /me/blocks/{user id}`: 204 (again is fine). The blocked user's table chat is no longer delivered to you,
+  on open connections at once. 400 `block_self`, 404, 409 `too_many_blocks` (500).
+- `DELETE /me/blocks/{user id}`: 204.
+- `POST /reports` `{user, table?, reason: chat|behaviour|other, note?}`: 201 `{id}`. With an open `table` the
+  server attaches that table's last 20 chat lines itself; the note is up to 500 characters. 400 `bad_report` or
+  `report_self`, 404, 429 `too_many_reports` (20 open per reporter).
 
 ## Tables (lobby)
 
@@ -153,6 +167,7 @@ Client messages (`id` is optional; when set, the server answers `{"type":"ok","i
 - `{"type":"lobby","on":true}` / `false`: receive `lobby` messages whenever a table opens, closes or changes.
 - `{"type":"watch","table":"<id>"}`: watch one table (replaces the previous one); the current view is sent at once, so a client that reconnects (a phone that slept) sends `watch` again and is back where it was. `{"type":"unwatch"}`.
 - On the watched table: `{"type":"sit","seat":n}` (buy in with the starting stack), `{"type":"sitout"}`, `{"type":"comeback"}` (a player with no chips buys in again), `{"type":"leave"}` (folds if in a hand), `{"type":"act","action":"fold|check|call|bet|raise","to":n}` (`to` = the player's total for the street, for bet and raise), `{"type":"chat","text":"..."}`, `{"type":"ping"}`, `{"type":"start"}` (host or admin starts a sit-and-go with the players seated; it also starts by itself when every seat is taken).
+- Host or admin only: `{"type":"mute","user":"<id>"}` and `{"type":"unmute","user":"<id>"}` switch anyone's table chat off and on while the table is open; `{"type":"remove","user":"<id>"}` sends a spectator away (`is_player` for a seated player), and that user cannot watch the table again until it closes.
 
 Sit-and-go tables carry `sng` in the view: `{phase: registering|running|finished, level, small_blind, big_blind, next_small_blind?, next_big_blind?, level_ends?, places: [{place, user, name}], started?}`. Blinds rise between hands once `level_ends` has passed; places list the finished players, best first, and the winner as place 1 when the phase is `finished`. During registration players take and leave seats freely; once it runs nobody joins, nobody rebuys, and a player who leaves keeps the seat sitting out: blinds are posted and the hand folded until the chips are gone. Busted players leave the table with their place. Errors: `not_sng`, `sng_started`, `too_few_players`, `host_or_admin_only`.
 
@@ -161,9 +176,11 @@ Server messages:
 - `{"type":"hello","user","name"}` first.
 - `{"type":"view","view":{...}}` after every change of the watched table. The view is built for this viewer: own hole cards, cards shown at showdown, and `hand.legal` only for the player to act (`fold`, `check`, `call` = chips to call, `bet_kind` = `bet` or `raise`, `min_to`, `max_to`). Spectators see no hole cards. On a table without spectators, someone who is not seated sees the seats but no hand. A closed table sends a last view with `"closed":true`.
 - `{"type":"lobby","tables":[...]}`, same entries as `GET /api/v1/tables`.
-- `{"type":"chat","table","user","name","text","at"}`. Chat is for players and spectators of the table, 1 to 300 characters, 5 messages per 10 s per connection, and is never stored.
+- `{"type":"chat","table","user","name","text","at"}`. Chat is for players and spectators of the table, 1 to 300 characters, 5 messages per 10 s per connection, and is never stored (the last 20 lines stay in memory for reports). Lines of users you blocked are not sent to you.
+- `{"type":"moderation","table","muted":["<user id>"]}` after `watch` and after every mute change.
+- `{"type":"removed","table"}`: the host removed you; you watch nothing now.
 
-Error codes: `bad_intent`, `not_watching`, `no_table`, `seat_taken`, `bad_seat`, `already_seated`, `not_seated`, `not_in_hand`, `not_your_turn`, `illegal_action`, `bad_amount`, `bad_chat`, `rate_limited`, `spectators_off`. An error never changes the table.
+Error codes: `bad_intent`, `not_watching`, `no_table`, `seat_taken`, `bad_seat`, `already_seated`, `not_seated`, `not_in_hand`, `not_your_turn`, `illegal_action`, `bad_amount`, `bad_chat`, `rate_limited`, `spectators_off`, `muted`, `removed`, `is_player`, `host_or_admin_only`. An error never changes the table.
 
 ## Hand history and stats
 
