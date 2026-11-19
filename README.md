@@ -36,6 +36,10 @@ poker.example.com {
 }
 ```
 
+The game uses a WebSocket (`/api/v1/ws`); Caddy passes it through as is, nginx needs the `Upgrade` and `Connection` headers (example in [docs/VOICE-VIDEO.md](docs/VOICE-VIDEO.md#3-reverse-proxy-for-signalling)).
+
+**Voice and video** need a second DNS name for LiveKit signalling, a few open media ports and, for players behind strict networks, TURN over TLS with its own certificate. [docs/VOICE-VIDEO.md](docs/VOICE-VIDEO.md) walks through it: ports, keys, proxy, certificate, checks.
+
 All data (database, uploads, keys) lives in `./data`. Back up that folder and you have backed up the server.
 
 Images: [`oxisoft/oxipoker`](https://hub.docker.com/r/oxisoft/oxipoker) on Docker Hub, `linux/amd64` and `linux/arm64`.

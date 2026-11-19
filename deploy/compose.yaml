@@ -41,25 +41,34 @@ services:
 
   livekit:
     profiles: ["full"]
-    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.13}
+    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.13.11}
     restart: unless-stopped
+    # Media ports keep the same number inside and outside the container,
+    # because LiveKit tells the apps which ports to use.
     environment:
       # livekit-server reads its keys and its config from these two variables.
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-}: ${LIVEKIT_API_SECRET:-}"
       LIVEKIT_CONFIG: |
         port: 7880
         rtc:
-          tcp_port: 7881
-          udp_port: 7882
+          tcp_port: ${LIVEKIT_RTC_TCP_PORT:-7881}
+          udp_port: ${LIVEKIT_RTC_UDP_PORT:-7882}
           use_external_ip: true
         turn:
           enabled: ${LIVEKIT_TURN_ENABLED:-false}
           domain: ${LIVEKIT_TURN_DOMAIN:-}
-          udp_port: 3478
+          udp_port: ${LIVEKIT_TURN_UDP_PORT:-3478}
+          tls_port: ${LIVEKIT_TURN_TLS_PORT:-5349}
+          cert_file: /certs/${LIVEKIT_TURN_CERT_FILE:-fullchain.pem}
+          key_file: /certs/${LIVEKIT_TURN_KEY_FILE:-privkey.pem}
+    volumes:
+      # TURN over TLS: certificate and key for LIVEKIT_TURN_DOMAIN (see README).
+      - ${LIVEKIT_TURN_CERT_DIR:-./certs}:/certs:ro
     ports:
       # Signalling goes through your HTTPS proxy to this port.
-      - "127.0.0.1:7880:7880"
+      - "127.0.0.1:${LIVEKIT_HTTP_PORT:-7880}:7880"
       # Media must be reachable directly from the internet.
-      - "7881:7881/tcp"
-      - "7882:7882/udp"
-      - "3478:3478/udp"
+      - "${LIVEKIT_RTC_TCP_PORT:-7881}:${LIVEKIT_RTC_TCP_PORT:-7881}/tcp"
+      - "${LIVEKIT_RTC_UDP_PORT:-7882}:${LIVEKIT_RTC_UDP_PORT:-7882}/udp"
+      - "${LIVEKIT_TURN_UDP_PORT:-3478}:${LIVEKIT_TURN_UDP_PORT:-3478}/udp"
+      - "${LIVEKIT_TURN_TLS_PORT:-5349}:${LIVEKIT_TURN_TLS_PORT:-5349}/tcp"
