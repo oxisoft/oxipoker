@@ -22,7 +22,17 @@ Tests: `TestWebAppContentSecurityPolicy`, `TestContentSecurityPolicyAllowsLiveKi
 
 When `PUBLIC_URL` is https the server sends `Strict-Transport-Security: max-age=31536000` itself, so it does not depend on the proxy configuration. It leaves out `includeSubDomains`: other names under the same domain may not be served over HTTPS and are not the server's to pin. Test: `TestNoHSTSWithoutHTTPS` plus the check in `TestWebAppContentSecurityPolicy`.
 
+### F4 No limit on WebSocket messages per connection (fixed)
+
+Chat was limited (5 messages per 10 seconds), message size too (4 KB), and one account may hold 10 connections, but other intents (watch, sit, actions) had no rate limit: a scripted client could send thousands per second and keep its table and the view builder busy for everyone at the table.
+
+Fix: `server/internal/realtime/conn.go`. Each connection has a token bucket of 40 messages refilled at 20 per second, far above a person at a table. A connection that runs dry is closed with policy violation "too many messages" instead of getting error replies, which would only add work. Tests: `TestFloodingClientIsClosed` (fails without the limit: the connection stays open or ends for another reason) and `TestSteadyClientBelowTheRateStaysOpen` (80 intents at 10 per second). The full-table leak test lifts the limit for its machine-speed bots.
+
 ## Areas
+
+### WebSocket origin and limits
+
+Checked: `GET /api/v1/ws` needs a signed-in session; with an `Origin` header it must equal `PUBLIC_URL` (or the request host when that is unset), without one it needs a bearer token, so a cookie alone from a foreign page or a plain script cannot connect (`TestWebSocketAuthAndOrigin`). Every keepalive (25 s) checks the session again: sign-out, a disabled account or a forced password change close the connection. Limits: 4 KB per message (`SetReadLimit`), unknown fields rejected, 10 connections per account (`TestConnectionCapPerUser`), a client that does not read is dropped after 64 queued messages ("too slow"), and the message rate of F4.
 
 ### Per-seat view filtering
 
@@ -38,7 +48,7 @@ Checked: `history.Store.Get` joins on the requesting user's own row in `hand_pla
 
 ### Still to review
 
-Authentication (password hashing, passkeys, TOTP, sessions, account limits), invitations, WebSocket origin and size limits, uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
+Authentication (password hashing, passkeys, TOTP, sessions, account limits), invitations, uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
 
 ### HTTP headers
 

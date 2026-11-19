@@ -16,6 +16,7 @@ import (
 
 	"github.com/oxisoft/oxipoker/server/internal/accounts"
 	"github.com/oxisoft/oxipoker/server/internal/engine"
+	"github.com/oxisoft/oxipoker/server/internal/realtime"
 	"github.com/oxisoft/oxipoker/server/internal/table"
 )
 
@@ -85,6 +86,11 @@ func containsCard(js []byte, card string) bool {
 // history response ever gives one user a hole card of another player that
 // was not shown at showdown.
 func TestNoHiddenCardsAcrossAFullTable(t *testing.T) {
+	// The bots answer every view at machine speed, far above the per-connection
+	// message limit meant for people.
+	rate, burst := realtime.IntentRate, realtime.IntentBurst
+	realtime.IntentRate, realtime.IntentBurst = 1e6, 1e6
+	t.Cleanup(func() { realtime.IntentRate, realtime.IntentBurst = rate, burst })
 	var mu sync.Mutex
 	truth := map[int]handTruth{}
 	ts := newGameServer(t, func(o *Options) {

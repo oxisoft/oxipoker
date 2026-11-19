@@ -25,6 +25,16 @@ const (
 	sendQueue       = 64
 )
 
+// IntentRate and IntentBurst cap the messages one connection may send: far
+// above any person at a table, low enough that a scripted client cannot keep
+// a table goroutine or the view builder busy. Over the cap the connection is
+// closed (policy violation): replying with errors would only add work.
+// Variables only so that tests with scripted bots can lift them.
+var (
+	IntentRate  = 20.0 // per second, sustained
+	IntentBurst = 40.0
+)
+
 // User is the signed-in account behind a connection.
 type User struct {
 	ID    string
@@ -202,6 +212,7 @@ var (
 	errRemoved     = errors.New("removed")
 	errIsPlayer    = errors.New("is_player")
 	errMediaOff    = errors.New("media_off")
+	errFlood       = errors.New("too many messages")
 )
 
 func errorCode(err error) string {
@@ -367,11 +378,21 @@ func (c *conn) pingLoop(ctx context.Context) error {
 }
 
 func (c *conn) readLoop(ctx context.Context) error {
+	rate, burst := IntentRate, IntentBurst
+	tokens, last := burst, time.Now()
 	for {
 		typ, b, err := c.ws.Read(ctx)
 		if err != nil {
 			return err
 		}
+		now := time.Now()
+		tokens = min(burst, tokens+now.Sub(last).Seconds()*rate)
+		last = now
+		if tokens < 1 {
+			c.ws.Close(websocket.StatusPolicyViolation, "too many messages")
+			return errFlood
+		}
+		tokens--
 		var in Intent
 		dec := json.NewDecoder(strings.NewReader(string(b)))
 		dec.DisallowUnknownFields()
