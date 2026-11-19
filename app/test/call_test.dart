@@ -72,13 +72,21 @@ FakeHub _hub() => FakeHub()
   ]
   ..views = {'t1': playerView()};
 
-Future<(FakeServer, FakeHub, List<FakeCallRoom>)> _pump(WidgetTester tester, {bool media = true}) async {
+Future<(FakeServer, FakeHub, List<FakeCallRoom>)> _pump(
+  WidgetTester tester, {
+  bool media = true,
+  bool admin = true,
+  String host = 'u1',
+}) async {
   final rooms = <FakeCallRoom>[];
   final hub = _hub();
+  hub.views['t1']!['host'] = host;
+  final server = FakeServer()..media = media;
+  server.users['u1']!['is_admin'] = admin;
   final (f, _) = await pumpGame(
     tester,
     hub: hub,
-    server: FakeServer()..media = media,
+    server: server,
     overrides: [
       callRoomFactoryProvider.overrideWithValue(() {
         final r = FakeCallRoom();
@@ -284,6 +292,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('call-tile-u1')), findsNothing);
     expect(find.byKey(const Key('call-tile-u2')), findsNothing);
+  });
+
+  testWidgets('a player who is neither host nor admin gets no call menu on others', (tester) async {
+    final (_, _, rooms) = await _pump(tester, admin: false, host: 'u2');
+    await tester.tap(find.byKey(const Key('call-join')));
+    await tester.pumpAndSettle();
+    rooms.single.others = [const CallPeer(identity: 'u2', name: 'bob', mic: true, camera: true)];
+    rooms.single.emit(CallEvent.changed);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fake-video-u2')), findsOneWidget);
+    expect(find.byKey(const Key('call-menu-u2')), findsNothing);
+    expect(find.byKey(const Key('call-menu-u1')), findsNothing);
   });
 
   testWidgets('the host mutes and removes people in the call; blocked users are hidden and silenced', (tester) async {
