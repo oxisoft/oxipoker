@@ -44,6 +44,12 @@ class FakeServer {
     'your_seat': 0, 'your_cards': ['As', 'Ks'], 'ended_at': '2026-11-18T14:00:00Z',
   };
   String? signedIn;
+
+  /// Whether the server says it has voice and video.
+  bool media = false;
+
+  /// Users the media-token endpoint refuses (not at the table or removed).
+  final mediaRefused = <String>{};
   final blocked = <String>[];
   final reports = <Map<String, dynamic>>[];
   final deletedBacks = <String>[];
@@ -65,7 +71,17 @@ class FakeServer {
     final me = signedIn == null ? null : users[signedIn];
     switch ('${req.method} $path') {
       case 'GET /health':
-        return _json(200, {'status': 'ok', 'version': 'test', 'media': false});
+        return _json(200, {'status': 'ok', 'version': 'test', 'media': media});
+      case 'POST /tables/t1/media-token':
+        if (!media) return _err(404, 'media_off');
+        if (me == null) return _err(401, 'unauthorized');
+        if (mediaRefused.contains(me['id'])) return _err(403, 'not_at_table');
+        return _json(200, {
+          'url': 'wss://media.example.com',
+          'token': 'lk-${me['id']}',
+          'room': 'table-t1',
+          'expires_at': DateTime.now().add(const Duration(minutes: 10)).toUtc().toIso8601String(),
+        });
       case 'POST /auth/signin':
         final u = users.values.where((u) => u['username'] == body['username']).firstOrNull;
         if (u == null || passwords[u['username']] != body['password']) return _err(401, 'invalid_credentials');

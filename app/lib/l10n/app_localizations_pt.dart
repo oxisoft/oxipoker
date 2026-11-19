@@ -1062,4 +1062,43 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get errNotAtTable => 'Entre na mesa primeiro para usar voz e vídeo.';
+
+  @override
+  String get callJoin => 'Entrar na voz e vídeo';
+
+  @override
+  String get callLeave => 'Sair da chamada';
+
+  @override
+  String get callMicOn => 'Ligar microfone';
+
+  @override
+  String get callMicOff => 'Desligar microfone';
+
+  @override
+  String get callCameraOn => 'Ligar câmera';
+
+  @override
+  String get callCameraOff => 'Desligar câmera';
+
+  @override
+  String get callSpeaker => 'Alto-falante';
+
+  @override
+  String get callSwitchCamera => 'Trocar câmera';
+
+  @override
+  String get callConnecting => 'Conectando a chamada…';
+
+  @override
+  String get callLost =>
+      'A chamada caiu. O jogo continua; entre de novo quando quiser.';
+
+  @override
+  String get callRemoved => 'Você foi removido da chamada.';
+
+  @override
+  String callInCall(int count) {
+    return 'Na chamada: $count';
+  }
 }

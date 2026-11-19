@@ -303,5 +303,17 @@
   "language": "语言",
   "languageDevice": "设备语言",
   "errMediaOff": "此服务器未设置语音和视频。",
-  "errNotAtTable": "请先加入牌桌再使用语音和视频。"
+  "errNotAtTable": "请先加入牌桌再使用语音和视频。",
+  "callJoin": "加入语音和视频",
+  "callLeave": "离开通话",
+  "callMicOn": "打开麦克风",
+  "callMicOff": "关闭麦克风",
+  "callCameraOn": "打开摄像头",
+  "callCameraOff": "关闭摄像头",
+  "callSpeaker": "扬声器",
+  "callSwitchCamera": "切换摄像头",
+  "callConnecting": "正在连接通话…",
+  "callLost": "通话已断开。游戏继续进行，随时可以重新加入。",
+  "callRemoved": "你已被移出通话。",
+  "callInCall": "通话中：{count}"
 }

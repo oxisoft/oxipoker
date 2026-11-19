@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:oxipoker/api/poker.dart';
@@ -149,8 +150,8 @@ Map<String, dynamic> spectatorView() => {
   },
 };
 
-Future<(FakeServer, FakeHub)> pumpGame(WidgetTester tester, {FakeHub? hub}) async {
-  final f = FakeServer()..signedIn = 'u1';
+Future<(FakeServer, FakeHub)> pumpGame(WidgetTester tester, {FakeHub? hub, FakeServer? server, List<Override> overrides = const []}) async {
+  final f = (server ?? FakeServer())..signedIn = 'u1';
   final h = hub ?? FakeHub();
   await tester.binding.setSurfaceSize(const Size(1000, 1400));
   await tester.pumpWidget(
@@ -161,6 +162,7 @@ Future<(FakeServer, FakeHub)> pumpGame(WidgetTester tester, {FakeHub? hub}) asyn
         httpClientProvider.overrideWithValue(f.client),
         socketFactoryProvider.overrideWithValue(h.open),
         seatAvatarsProvider.overrideWithValue(false),
+        ...overrides,
       ],
       child: const OxiPokerApp(),
     ),

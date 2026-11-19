@@ -1055,4 +1055,43 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Najpierw dołącz do stołu, aby używać głosu i wideo.';
+
+  @override
+  String get callJoin => 'Dołącz do głosu i wideo';
+
+  @override
+  String get callLeave => 'Opuść rozmowę';
+
+  @override
+  String get callMicOn => 'Włącz mikrofon';
+
+  @override
+  String get callMicOff => 'Wyłącz mikrofon';
+
+  @override
+  String get callCameraOn => 'Włącz kamerę';
+
+  @override
+  String get callCameraOff => 'Wyłącz kamerę';
+
+  @override
+  String get callSpeaker => 'Głośnik';
+
+  @override
+  String get callSwitchCamera => 'Przełącz kamerę';
+
+  @override
+  String get callConnecting => 'Łączenie rozmowy…';
+
+  @override
+  String get callLost =>
+      'Rozmowa została przerwana. Gra toczy się dalej; dołącz ponownie, kiedy chcesz.';
+
+  @override
+  String get callRemoved => 'Usunięto cię z rozmowy.';
+
+  @override
+  String callInCall(int count) {
+    return 'W rozmowie: $count';
+  }
 }

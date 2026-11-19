@@ -7,8 +7,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../api/poker.dart';
 import '../l10n/app_localizations.dart';
+import '../media/call.dart';
 import '../state/realtime.dart';
 import '../state/session.dart';
+import 'call_bar.dart';
 import 'cards.dart';
 import 'common.dart';
 import 'lobby_screen.dart' show LinkBanner;
@@ -57,17 +59,21 @@ class TableScreen extends ConsumerStatefulWidget {
 
 class _TableScreenState extends ConsumerState<TableScreen> {
   late final RealtimeController _rt = ref.read(realtimeProvider.notifier);
+  late final CallController _call;
 
   @override
   void initState() {
     super.initState();
+    _call = ref.read(callProvider.notifier);
     Future.microtask(() => _rt.watch(widget.tableId));
   }
 
   @override
   void dispose() {
     final rt = _rt, id = widget.tableId;
+    final call = _call;
     Future.microtask(() => rt.unwatch(id));
+    Future.microtask(() => call.leaveTable(id));
     super.dispose();
   }
 
@@ -87,6 +93,8 @@ class _TableScreenState extends ConsumerState<TableScreen> {
       }
     });
     final v = rt.watching == widget.tableId ? rt.view : null;
+    // A closed table ends its call; the server deletes the call room too.
+    if (v?.closed ?? false) Future.microtask(() => _call.leaveTable(widget.tableId));
     final me = v?.me;
     return Scaffold(
       backgroundColor: const Color(0xFF16261D),
@@ -145,6 +153,7 @@ class _TableScreenState extends ConsumerState<TableScreen> {
                 ),
               )
             else ...[
+              CallBar(tableId: widget.tableId),
               if (v.sng != null) SngBar(view: v, onStart: () => _do(_rt.startSng)),
               if (!v.seated && !(v.sng?.finished ?? false))
                 Container(

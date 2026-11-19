@@ -303,5 +303,17 @@
   "language": "Sprache",
   "languageDevice": "Gerätesprache",
   "errMediaOff": "Sprache und Video sind auf diesem Server nicht eingerichtet.",
-  "errNotAtTable": "Setz dich zuerst an den Tisch, um Sprache und Video zu nutzen."
+  "errNotAtTable": "Setz dich zuerst an den Tisch, um Sprache und Video zu nutzen.",
+  "callJoin": "Sprache und Video beitreten",
+  "callLeave": "Anruf verlassen",
+  "callMicOn": "Mikrofon einschalten",
+  "callMicOff": "Mikrofon ausschalten",
+  "callCameraOn": "Kamera einschalten",
+  "callCameraOff": "Kamera ausschalten",
+  "callSpeaker": "Lautsprecher",
+  "callSwitchCamera": "Kamera wechseln",
+  "callConnecting": "Anruf wird verbunden…",
+  "callLost": "Der Anruf ist abgebrochen. Das Spiel läuft weiter; tritt wieder bei, wann du willst.",
+  "callRemoved": "Du wurdest aus dem Anruf entfernt.",
+  "callInCall": "Im Anruf: {count}"
 }

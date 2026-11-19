@@ -1051,4 +1051,43 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Сначала присоединитесь к столу, чтобы пользоваться голосом и видео.';
+
+  @override
+  String get callJoin => 'Подключиться к голосу и видео';
+
+  @override
+  String get callLeave => 'Выйти из звонка';
+
+  @override
+  String get callMicOn => 'Включить микрофон';
+
+  @override
+  String get callMicOff => 'Выключить микрофон';
+
+  @override
+  String get callCameraOn => 'Включить камеру';
+
+  @override
+  String get callCameraOff => 'Выключить камеру';
+
+  @override
+  String get callSpeaker => 'Динамик';
+
+  @override
+  String get callSwitchCamera => 'Сменить камеру';
+
+  @override
+  String get callConnecting => 'Подключение к звонку…';
+
+  @override
+  String get callLost =>
+      'Звонок прервался. Игра продолжается; подключитесь снова, когда захотите.';
+
+  @override
+  String get callRemoved => 'Вас удалили из звонка.';
+
+  @override
+  String callInCall(int count) {
+    return 'В звонке: $count';
+  }
 }

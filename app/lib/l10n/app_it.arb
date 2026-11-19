@@ -303,5 +303,17 @@
   "language": "Lingua",
   "languageDevice": "Lingua del dispositivo",
   "errMediaOff": "Voce e video non sono configurati su questo server.",
-  "errNotAtTable": "Unisciti prima al tavolo per usare voce e video."
+  "errNotAtTable": "Unisciti prima al tavolo per usare voce e video.",
+  "callJoin": "Entra in voce e video",
+  "callLeave": "Esci dalla chiamata",
+  "callMicOn": "Attiva microfono",
+  "callMicOff": "Disattiva microfono",
+  "callCameraOn": "Attiva fotocamera",
+  "callCameraOff": "Disattiva fotocamera",
+  "callSpeaker": "Altoparlante",
+  "callSwitchCamera": "Cambia fotocamera",
+  "callConnecting": "Connessione alla chiamata…",
+  "callLost": "La chiamata è caduta. La partita continua; rientra quando vuoi.",
+  "callRemoved": "Sei stato rimosso dalla chiamata.",
+  "callInCall": "Nella chiamata: {count}"
 }

@@ -1941,6 +1941,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join the table first to use voice and video.'**
   String get errNotAtTable;
+
+  /// No description provided for @callJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join voice and video'**
+  String get callJoin;
+
+  /// No description provided for @callLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the call'**
+  String get callLeave;
+
+  /// No description provided for @callMicOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn microphone on'**
+  String get callMicOn;
+
+  /// No description provided for @callMicOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn microphone off'**
+  String get callMicOff;
+
+  /// No description provided for @callCameraOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn camera on'**
+  String get callCameraOn;
+
+  /// No description provided for @callCameraOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn camera off'**
+  String get callCameraOff;
+
+  /// No description provided for @callSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Speaker'**
+  String get callSpeaker;
+
+  /// No description provided for @callSwitchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get callSwitchCamera;
+
+  /// No description provided for @callConnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting the call…'**
+  String get callConnecting;
+
+  /// No description provided for @callLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The call dropped. The game goes on; join again when you like.'**
+  String get callLost;
+
+  /// No description provided for @callRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'You were taken out of the call.'**
+  String get callRemoved;
+
+  /// No description provided for @callInCall.
+  ///
+  /// In en, this message translates to:
+  /// **'In the call: {count}'**
+  String callInCall(int count);
 }
 
 class _AppLocalizationsDelegate

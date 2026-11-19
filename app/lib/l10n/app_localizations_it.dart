@@ -1060,4 +1060,43 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Unisciti prima al tavolo per usare voce e video.';
+
+  @override
+  String get callJoin => 'Entra in voce e video';
+
+  @override
+  String get callLeave => 'Esci dalla chiamata';
+
+  @override
+  String get callMicOn => 'Attiva microfono';
+
+  @override
+  String get callMicOff => 'Disattiva microfono';
+
+  @override
+  String get callCameraOn => 'Attiva fotocamera';
+
+  @override
+  String get callCameraOff => 'Disattiva fotocamera';
+
+  @override
+  String get callSpeaker => 'Altoparlante';
+
+  @override
+  String get callSwitchCamera => 'Cambia fotocamera';
+
+  @override
+  String get callConnecting => 'Connessione alla chiamata…';
+
+  @override
+  String get callLost =>
+      'La chiamata è caduta. La partita continua; rientra quando vuoi.';
+
+  @override
+  String get callRemoved => 'Sei stato rimosso dalla chiamata.';
+
+  @override
+  String callInCall(int count) {
+    return 'Nella chiamata: $count';
+  }
 }

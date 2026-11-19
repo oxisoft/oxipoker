@@ -258,6 +258,9 @@ class Api {
 
   Future<void> closeTable(String id) => _send('DELETE', '/tables/$id');
 
+  Future<MediaToken> mediaToken(String tableId) async =>
+      MediaToken.fromJson(await _send('POST', '/tables/$tableId/media-token', body: const {}) as Map<String, dynamic>);
+
   Future<List<BlockedUser>> blocks() async => ((await _send('GET', '/me/blocks'))['blocks'] as List? ?? const [])
       .map((e) => BlockedUser.fromJson(e as Map<String, dynamic>))
       .toList();

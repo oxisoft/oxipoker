@@ -303,5 +303,17 @@
   "language": "言語",
   "languageDevice": "デバイスの言語",
   "errMediaOff": "このサーバーでは音声とビデオが設定されていません。",
-  "errNotAtTable": "音声とビデオを使うには、先にテーブルに参加してください。"
+  "errNotAtTable": "音声とビデオを使うには、先にテーブルに参加してください。",
+  "callJoin": "音声とビデオに参加",
+  "callLeave": "通話を退出",
+  "callMicOn": "マイクをオン",
+  "callMicOff": "マイクをオフ",
+  "callCameraOn": "カメラをオン",
+  "callCameraOff": "カメラをオフ",
+  "callSpeaker": "スピーカー",
+  "callSwitchCamera": "カメラを切り替え",
+  "callConnecting": "通話に接続中…",
+  "callLost": "通話が切断されました。ゲームは続きます。いつでも再参加できます。",
+  "callRemoved": "通話から外されました。",
+  "callInCall": "通話中: {count}"
 }

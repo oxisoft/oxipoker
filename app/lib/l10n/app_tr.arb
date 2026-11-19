@@ -303,5 +303,17 @@
   "language": "Dil",
   "languageDevice": "Cihaz dili",
   "errMediaOff": "Bu sunucuda ses ve görüntü ayarlanmamış.",
-  "errNotAtTable": "Ses ve görüntü için önce masaya katılın."
+  "errNotAtTable": "Ses ve görüntü için önce masaya katılın.",
+  "callJoin": "Sesli ve görüntülü katıl",
+  "callLeave": "Aramadan ayrıl",
+  "callMicOn": "Mikrofonu aç",
+  "callMicOff": "Mikrofonu kapat",
+  "callCameraOn": "Kamerayı aç",
+  "callCameraOff": "Kamerayı kapat",
+  "callSpeaker": "Hoparlör",
+  "callSwitchCamera": "Kamerayı değiştir",
+  "callConnecting": "Aramaya bağlanılıyor…",
+  "callLost": "Arama koptu. Oyun devam ediyor; istediğinde yeniden katıl.",
+  "callRemoved": "Aramadan çıkarıldın.",
+  "callInCall": "Aramada: {count}"
 }

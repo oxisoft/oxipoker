@@ -1020,4 +1020,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get errNotAtTable => '请先加入牌桌再使用语音和视频。';
+
+  @override
+  String get callJoin => '加入语音和视频';
+
+  @override
+  String get callLeave => '离开通话';
+
+  @override
+  String get callMicOn => '打开麦克风';
+
+  @override
+  String get callMicOff => '关闭麦克风';
+
+  @override
+  String get callCameraOn => '打开摄像头';
+
+  @override
+  String get callCameraOff => '关闭摄像头';
+
+  @override
+  String get callSpeaker => '扬声器';
+
+  @override
+  String get callSwitchCamera => '切换摄像头';
+
+  @override
+  String get callConnecting => '正在连接通话…';
+
+  @override
+  String get callLost => '通话已断开。游戏继续进行，随时可以重新加入。';
+
+  @override
+  String get callRemoved => '你已被移出通话。';
+
+  @override
+  String callInCall(int count) {
+    return '通话中：$count';
+  }
 }

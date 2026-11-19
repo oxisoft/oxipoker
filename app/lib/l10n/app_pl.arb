@@ -303,5 +303,17 @@
   "language": "Język",
   "languageDevice": "Język urządzenia",
   "errMediaOff": "Głos i wideo nie są skonfigurowane na tym serwerze.",
-  "errNotAtTable": "Najpierw dołącz do stołu, aby używać głosu i wideo."
+  "errNotAtTable": "Najpierw dołącz do stołu, aby używać głosu i wideo.",
+  "callJoin": "Dołącz do głosu i wideo",
+  "callLeave": "Opuść rozmowę",
+  "callMicOn": "Włącz mikrofon",
+  "callMicOff": "Wyłącz mikrofon",
+  "callCameraOn": "Włącz kamerę",
+  "callCameraOff": "Wyłącz kamerę",
+  "callSpeaker": "Głośnik",
+  "callSwitchCamera": "Przełącz kamerę",
+  "callConnecting": "Łączenie rozmowy…",
+  "callLost": "Rozmowa została przerwana. Gra toczy się dalej; dołącz ponownie, kiedy chcesz.",
+  "callRemoved": "Usunięto cię z rozmowy.",
+  "callInCall": "W rozmowie: {count}"
 }

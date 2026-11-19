@@ -303,5 +303,17 @@
   "language": "Idioma",
   "languageDevice": "Idioma do dispositivo",
   "errMediaOff": "Voz e vídeo não estão configurados neste servidor.",
-  "errNotAtTable": "Entre na mesa primeiro para usar voz e vídeo."
+  "errNotAtTable": "Entre na mesa primeiro para usar voz e vídeo.",
+  "callJoin": "Entrar na voz e vídeo",
+  "callLeave": "Sair da chamada",
+  "callMicOn": "Ligar microfone",
+  "callMicOff": "Desligar microfone",
+  "callCameraOn": "Ligar câmera",
+  "callCameraOff": "Desligar câmera",
+  "callSpeaker": "Alto-falante",
+  "callSwitchCamera": "Trocar câmera",
+  "callConnecting": "Conectando a chamada…",
+  "callLost": "A chamada caiu. O jogo continua; entre de novo quando quiser.",
+  "callRemoved": "Você foi removido da chamada.",
+  "callInCall": "Na chamada: {count}"
 }

@@ -14,6 +14,23 @@ class ServerInfo {
       ServerInfo(version: j['version'] as String? ?? '?', media: j['media'] as bool? ?? false);
 }
 
+/// A short-lived LiveKit token for one table's call (POST /tables/{id}/media-token).
+class MediaToken {
+  const MediaToken({required this.url, required this.token, required this.room, required this.expiresAt});
+
+  final String url;
+  final String token;
+  final String room;
+  final DateTime expiresAt;
+
+  factory MediaToken.fromJson(Map<String, dynamic> j) => MediaToken(
+    url: j['url'] as String,
+    token: j['token'] as String,
+    room: j['room'] as String? ?? '',
+    expiresAt: _time(j['expires_at']) ?? DateTime.now().add(const Duration(minutes: 5)),
+  );
+}
+
 class User {
   const User({
     required this.id,

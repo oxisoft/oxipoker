@@ -1053,4 +1053,43 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Спершу приєднайтеся до столу, щоб користуватися голосом і відео.';
+
+  @override
+  String get callJoin => 'Приєднатися до голосу й відео';
+
+  @override
+  String get callLeave => 'Вийти з дзвінка';
+
+  @override
+  String get callMicOn => 'Увімкнути мікрофон';
+
+  @override
+  String get callMicOff => 'Вимкнути мікрофон';
+
+  @override
+  String get callCameraOn => 'Увімкнути камеру';
+
+  @override
+  String get callCameraOff => 'Вимкнути камеру';
+
+  @override
+  String get callSpeaker => 'Динамік';
+
+  @override
+  String get callSwitchCamera => 'Змінити камеру';
+
+  @override
+  String get callConnecting => 'Підключення до дзвінка…';
+
+  @override
+  String get callLost =>
+      'Дзвінок обірвався. Гра триває; приєднуйтеся знову, коли захочете.';
+
+  @override
+  String get callRemoved => 'Вас вилучили з дзвінка.';
+
+  @override
+  String callInCall(int count) {
+    return 'У дзвінку: $count';
+  }
 }

@@ -1049,4 +1049,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errNotAtTable => 'Join the table first to use voice and video.';
+
+  @override
+  String get callJoin => 'Join voice and video';
+
+  @override
+  String get callLeave => 'Leave the call';
+
+  @override
+  String get callMicOn => 'Turn microphone on';
+
+  @override
+  String get callMicOff => 'Turn microphone off';
+
+  @override
+  String get callCameraOn => 'Turn camera on';
+
+  @override
+  String get callCameraOff => 'Turn camera off';
+
+  @override
+  String get callSpeaker => 'Speaker';
+
+  @override
+  String get callSwitchCamera => 'Switch camera';
+
+  @override
+  String get callConnecting => 'Connecting the call…';
+
+  @override
+  String get callLost =>
+      'The call dropped. The game goes on; join again when you like.';
+
+  @override
+  String get callRemoved => 'You were taken out of the call.';
+
+  @override
+  String callInCall(int count) {
+    return 'In the call: $count';
+  }
 }

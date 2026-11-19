@@ -303,5 +303,17 @@
   "language": "Langue",
   "languageDevice": "Langue de l'appareil",
   "errMediaOff": "La voix et la vidéo ne sont pas configurées sur ce serveur.",
-  "errNotAtTable": "Rejoignez d'abord la table pour utiliser la voix et la vidéo."
+  "errNotAtTable": "Rejoignez d'abord la table pour utiliser la voix et la vidéo.",
+  "callJoin": "Rejoindre la voix et la vidéo",
+  "callLeave": "Quitter l'appel",
+  "callMicOn": "Activer le micro",
+  "callMicOff": "Couper le micro",
+  "callCameraOn": "Activer la caméra",
+  "callCameraOff": "Couper la caméra",
+  "callSpeaker": "Haut-parleur",
+  "callSwitchCamera": "Changer de caméra",
+  "callConnecting": "Connexion à l'appel…",
+  "callLost": "L'appel a été coupé. La partie continue ; rejoignez-le quand vous voulez.",
+  "callRemoved": "Vous avez été retiré de l'appel.",
+  "callInCall": "Dans l'appel : {count}"
 }

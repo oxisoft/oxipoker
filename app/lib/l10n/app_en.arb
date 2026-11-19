@@ -353,5 +353,18 @@
   "language": "Language",
   "languageDevice": "Device language",
   "errMediaOff": "Voice and video are not set up on this server.",
-  "errNotAtTable": "Join the table first to use voice and video."
+  "errNotAtTable": "Join the table first to use voice and video.",
+  "callJoin": "Join voice and video",
+  "callLeave": "Leave the call",
+  "callMicOn": "Turn microphone on",
+  "callMicOff": "Turn microphone off",
+  "callCameraOn": "Turn camera on",
+  "callCameraOff": "Turn camera off",
+  "callSpeaker": "Speaker",
+  "callSwitchCamera": "Switch camera",
+  "callConnecting": "Connecting the call…",
+  "callLost": "The call dropped. The game goes on; join again when you like.",
+  "callRemoved": "You were taken out of the call.",
+  "callInCall": "In the call: {count}",
+  "@callInCall": {"placeholders": {"count": {"type": "int"}}}
 }

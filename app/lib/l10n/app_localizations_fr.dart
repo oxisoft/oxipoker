@@ -1063,4 +1063,43 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Rejoignez d\'abord la table pour utiliser la voix et la vidéo.';
+
+  @override
+  String get callJoin => 'Rejoindre la voix et la vidéo';
+
+  @override
+  String get callLeave => 'Quitter l\'appel';
+
+  @override
+  String get callMicOn => 'Activer le micro';
+
+  @override
+  String get callMicOff => 'Couper le micro';
+
+  @override
+  String get callCameraOn => 'Activer la caméra';
+
+  @override
+  String get callCameraOff => 'Couper la caméra';
+
+  @override
+  String get callSpeaker => 'Haut-parleur';
+
+  @override
+  String get callSwitchCamera => 'Changer de caméra';
+
+  @override
+  String get callConnecting => 'Connexion à l\'appel…';
+
+  @override
+  String get callLost =>
+      'L\'appel a été coupé. La partie continue ; rejoignez-le quand vous voulez.';
+
+  @override
+  String get callRemoved => 'Vous avez été retiré de l\'appel.';
+
+  @override
+  String callInCall(int count) {
+    return 'Dans l\'appel : $count';
+  }
 }

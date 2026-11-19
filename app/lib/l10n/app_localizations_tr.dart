@@ -1053,4 +1053,43 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get errNotAtTable => 'Ses ve görüntü için önce masaya katılın.';
+
+  @override
+  String get callJoin => 'Sesli ve görüntülü katıl';
+
+  @override
+  String get callLeave => 'Aramadan ayrıl';
+
+  @override
+  String get callMicOn => 'Mikrofonu aç';
+
+  @override
+  String get callMicOff => 'Mikrofonu kapat';
+
+  @override
+  String get callCameraOn => 'Kamerayı aç';
+
+  @override
+  String get callCameraOff => 'Kamerayı kapat';
+
+  @override
+  String get callSpeaker => 'Hoparlör';
+
+  @override
+  String get callSwitchCamera => 'Kamerayı değiştir';
+
+  @override
+  String get callConnecting => 'Aramaya bağlanılıyor…';
+
+  @override
+  String get callLost =>
+      'Arama koptu. Oyun devam ediyor; istediğinde yeniden katıl.';
+
+  @override
+  String get callRemoved => 'Aramadan çıkarıldın.';
+
+  @override
+  String callInCall(int count) {
+    return 'Aramada: $count';
+  }
 }

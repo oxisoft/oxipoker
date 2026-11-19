@@ -1023,4 +1023,42 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get errNotAtTable => '音声とビデオを使うには、先にテーブルに参加してください。';
+
+  @override
+  String get callJoin => '音声とビデオに参加';
+
+  @override
+  String get callLeave => '通話を退出';
+
+  @override
+  String get callMicOn => 'マイクをオン';
+
+  @override
+  String get callMicOff => 'マイクをオフ';
+
+  @override
+  String get callCameraOn => 'カメラをオン';
+
+  @override
+  String get callCameraOff => 'カメラをオフ';
+
+  @override
+  String get callSpeaker => 'スピーカー';
+
+  @override
+  String get callSwitchCamera => 'カメラを切り替え';
+
+  @override
+  String get callConnecting => '通話に接続中…';
+
+  @override
+  String get callLost => '通話が切断されました。ゲームは続きます。いつでも再参加できます。';
+
+  @override
+  String get callRemoved => '通話から外されました。';
+
+  @override
+  String callInCall(int count) {
+    return '通話中: $count';
+  }
 }

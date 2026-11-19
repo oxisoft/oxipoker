@@ -1067,4 +1067,43 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get errNotAtTable =>
       'Setz dich zuerst an den Tisch, um Sprache und Video zu nutzen.';
+
+  @override
+  String get callJoin => 'Sprache und Video beitreten';
+
+  @override
+  String get callLeave => 'Anruf verlassen';
+
+  @override
+  String get callMicOn => 'Mikrofon einschalten';
+
+  @override
+  String get callMicOff => 'Mikrofon ausschalten';
+
+  @override
+  String get callCameraOn => 'Kamera einschalten';
+
+  @override
+  String get callCameraOff => 'Kamera ausschalten';
+
+  @override
+  String get callSpeaker => 'Lautsprecher';
+
+  @override
+  String get callSwitchCamera => 'Kamera wechseln';
+
+  @override
+  String get callConnecting => 'Anruf wird verbunden…';
+
+  @override
+  String get callLost =>
+      'Der Anruf ist abgebrochen. Das Spiel läuft weiter; tritt wieder bei, wann du willst.';
+
+  @override
+  String get callRemoved => 'Du wurdest aus dem Anruf entfernt.';
+
+  @override
+  String callInCall(int count) {
+    return 'Im Anruf: $count';
+  }
 }
