@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -493,6 +494,84 @@ void main() {
     expect(find.byKey(const Key('stats-card')), findsOneWidget);
     expect(tester.widget<Text>(find.byKey(const Key('stat-played'))).data, '12');
     expect(tester.widget<Text>(find.byKey(const Key('stat-won'))).data, '5');
+  });
+
+  testWidgets('block, report and host moderation from the chat; block list and admin reports', (tester) async {
+    final hub = FakeHub()
+      ..lobby = [
+        {'id': 't1', 'host': 'u1', 'settings': settings, 'taken': 2, 'players': ['bob', 'carol'], 'hand_no': 4},
+      ]
+      ..views = {'t1': spectatorView()};
+    final (f, _) = await pumpGame(tester, hub: hub);
+    await openTable(tester, hub);
+    final seatedUser = (spectatorView()['seats'] as List).whereType<Map>().first['user'] as String;
+    void say(String user, String name, String text) => hub.sockets.last.push(
+      {'type': 'chat', 'table': 't1', 'user': user, 'name': name, 'text': text, 'at': '2026-11-18T14:00:00Z'},
+    );
+    say(seatedUser, 'Seated', 'rude words');
+    say('u9', 'Dave', 'hello');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('open-chat')));
+    await tester.pumpAndSettle();
+
+    // A seated player: block, report, mute; no remove.
+    await tester.tap(find.text('rude words'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chat-mute')), findsOneWidget);
+    expect(find.byKey(const Key('chat-remove')), findsNothing);
+    await tester.tap(find.byKey(const Key('chat-mute')));
+    await tester.pumpAndSettle();
+    expect(hub.ofType('mute').last['user'], seatedUser);
+
+    await tester.tap(find.text('rude words'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chat-report')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Behaviour'));
+    await tester.enterText(find.byKey(const Key('report-note')), 'insults');
+    await tester.tap(find.byKey(const Key('report-send')));
+    await tester.pumpAndSettle();
+    expect(f.reports.single['user'], seatedUser);
+    expect(f.reports.single['reason'], 'behaviour');
+    expect(f.reports.single['table'], 't1');
+    expect(f.reports.single['note'], 'insults');
+
+    await tester.tap(find.text('rude words'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chat-block')));
+    await tester.pumpAndSettle();
+    expect(f.blocked, [seatedUser]);
+    expect(find.text('rude words'), findsNothing);
+
+    // A spectator can be removed.
+    await tester.tap(find.text('hello'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chat-remove')));
+    await tester.pumpAndSettle();
+    expect(hub.ofType('remove').last['user'], 'u9');
+
+    // The admin console lists the report with its chat; resolve empties it.
+    final ctx = tester.element(find.byType(Scaffold).first);
+    GoRouter.of(ctx).go('/admin');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('tab-reports')));
+    await tester.pumpAndSettle();
+    expect(find.text('alice reported bob'), findsOneWidget);
+    await tester.tap(find.text('alice reported bob'));
+    await tester.pumpAndSettle();
+    expect(find.text('bob: rude words'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('resolve-1')));
+    await tester.pumpAndSettle();
+    expect(find.text('No reports.'), findsOneWidget);
+
+    // Account screen: the block list, unblock.
+    GoRouter.of(ctx).go('/account');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.byKey(Key('unblock-$seatedUser')), 300, scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.byKey(Key('unblock-$seatedUser')));
+    await tester.pumpAndSettle();
+    expect(f.blocked, isEmpty);
+    expect(find.byKey(const Key('no-blocks')), findsOneWidget);
   });
 
   test('chips groups thousands', () {

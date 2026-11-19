@@ -13,13 +13,14 @@ enum Link { offline, connecting, online }
 
 /// The one realtime connection of this app: lobby, watched table, chat.
 class RealtimeState {
-  const RealtimeState({this.link = Link.offline, this.tables, this.watching, this.view, this.chat = const [], this.lastError});
+  const RealtimeState({this.link = Link.offline, this.tables, this.watching, this.view, this.chat = const [], this.muted = const {}, this.lastError});
 
   final Link link;
   final List<TableEntry>? tables; // null until the first lobby message
   final String? watching;
   final TableView? view; // view of [watching], null until it arrives
   final List<ChatMessage> chat; // of the watched table, kept in memory only
+  final Set<String> muted; // users the host muted at the watched table
   final String? lastError;
 
   RealtimeState copyWith({
@@ -28,6 +29,7 @@ class RealtimeState {
     String? watching,
     TableView? view,
     List<ChatMessage>? chat,
+    Set<String>? muted,
     String? lastError,
     bool clearWatch = false,
     bool clearError = false,
@@ -37,6 +39,7 @@ class RealtimeState {
     watching: clearWatch ? null : watching ?? this.watching,
     view: clearWatch ? null : view ?? this.view,
     chat: clearWatch ? const [] : chat ?? this.chat,
+    muted: clearWatch ? const {} : muted ?? this.muted,
     lastError: clearError ? null : lastError ?? this.lastError,
   );
 }
@@ -174,6 +177,12 @@ class RealtimeController extends Notifier<RealtimeState> {
           final c = [...state.chat, ChatMessage.fromJson(m)];
           state = state.copyWith(chat: c.length > maxChat ? c.sublist(c.length - maxChat) : c);
         }
+      case 'moderation':
+        if (m['table'] == state.watching) {
+          state = state.copyWith(muted: {...(m['muted'] as List? ?? const []).cast<String>()});
+        }
+      case 'removed':
+        if (m['table'] == state.watching) state = state.copyWith(clearWatch: true, lastError: 'removed');
       case 'restarting':
         // The server stores its tables and restarts: reconnect quickly, the
         // table is watched again on its own once the server is back.
@@ -239,6 +248,11 @@ class RealtimeController extends Notifier<RealtimeState> {
   Future<String?> startSng() => send({'type': 'start'});
   Future<String?> act(String action, [int? to]) => send({'type': 'act', 'action': action, 'to': ?to});
   Future<String?> chat(String text) => send({'type': 'chat', 'text': text});
+  Future<String?> mute(String user, bool on) => send({'type': on ? 'mute' : 'unmute', 'user': user});
+  Future<String?> removeSpectator(String user) => send({'type': 'remove', 'user': user});
+
+  /// Drops a blocked user's lines already shown; the server sends no new ones.
+  void hideChatOf(String user) => state = state.copyWith(chat: state.chat.where((c) => c.user != user).toList());
 }
 
 final realtimeProvider = NotifierProvider<RealtimeController, RealtimeState>(RealtimeController.new);

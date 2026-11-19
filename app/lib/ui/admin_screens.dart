@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../api/models.dart';
 import '../state/session.dart';
 import 'common.dart';
+import 'moderation.dart';
 
 /// Admin console: users, invitations, server settings, audit log.
 class AdminScreen extends StatelessWidget {
@@ -15,7 +16,7 @@ class AdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l;
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.go('/')),
@@ -25,9 +26,10 @@ class AdminScreen extends StatelessWidget {
             Tab(key: const Key('tab-invitations'), text: l.invitations),
             Tab(key: const Key('tab-settings'), text: l.settings),
             Tab(key: const Key('tab-audit'), text: l.auditLog),
+            Tab(key: const Key('tab-reports'), text: l.reports),
           ]),
         ),
-        body: const TabBarView(children: [UsersTab(), InvitationsTab(), SettingsTab(), AuditTab()]),
+        body: const TabBarView(children: [UsersTab(), InvitationsTab(), SettingsTab(), AuditTab(), ReportsTab()]),
       ),
     );
   }

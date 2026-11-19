@@ -44,6 +44,8 @@ class FakeServer {
     'your_seat': 0, 'your_cards': ['As', 'Ks'], 'ended_at': '2026-11-18T14:00:00Z',
   };
   String? signedIn;
+  final blocked = <String>[];
+  final reports = <Map<String, dynamic>>[];
   final deletedBacks = <String>[];
 
   http.Response _json(int status, Object? body) =>
@@ -169,6 +171,26 @@ class FakeServer {
         return _json(200, {'hands': hands});
       case 'GET /me/hands/1':
         return _json(200, replay);
+      case 'GET /me/blocks':
+        return _json(200, {
+          'blocks': [
+            for (final id in blocked) {'id': id, 'username': users[id]?['username'] ?? id, 'display_name': ''},
+          ],
+        });
+      case 'POST /reports':
+        reports.add({...body, 'id': reports.length + 1});
+        return _json(201, {'id': reports.length});
+      case 'GET /admin/reports':
+        return _json(200, {
+          'reports': [
+            for (final r in reports)
+              {
+                'id': r['id'], 'reporter': 'alice', 'reported': 'bob', 'reported_id': r['user'], 'table_name': 'Friday',
+                'reason': r['reason'], 'note': r['note'], 'created_at': '2026-11-18T14:00:00Z',
+                'chat': [{'user': 'u2', 'name': 'bob', 'text': 'rude words', 'at': '2026-11-18T14:00:00Z'}],
+              },
+          ],
+        });
       case 'GET /me/stats':
         return _json(200, {'hands_played': 12, 'hands_won': 5, 'biggest_pot': 1450});
       case 'POST /admin/invitations':
@@ -177,6 +199,18 @@ class FakeServer {
           'token': 'newtok',
           'url': 'https://poker.example.com/invite#newtok',
         });
+    }
+    if (req.method == 'PUT' && path.startsWith('/me/blocks/')) {
+      blocked.add(path.split('/').last);
+      return _json(204, null);
+    }
+    if (req.method == 'DELETE' && path.startsWith('/me/blocks/')) {
+      blocked.remove(path.split('/').last);
+      return _json(204, null);
+    }
+    if (req.method == 'POST' && path.startsWith('/admin/reports/')) {
+      reports.removeWhere((r) => '${r['id']}' == path.split('/')[3]);
+      return _json(204, null);
     }
     return _err(404, 'not_found');
   });

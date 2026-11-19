@@ -258,6 +258,24 @@ class Api {
 
   Future<void> closeTable(String id) => _send('DELETE', '/tables/$id');
 
+  Future<List<BlockedUser>> blocks() async => ((await _send('GET', '/me/blocks'))['blocks'] as List? ?? const [])
+      .map((e) => BlockedUser.fromJson(e as Map<String, dynamic>))
+      .toList();
+
+  Future<void> block(String userId) => _send('PUT', '/me/blocks/$userId');
+
+  Future<void> unblock(String userId) => _send('DELETE', '/me/blocks/$userId');
+
+  Future<void> report(String userId, {required String reason, String note = '', String? table}) =>
+      _send('POST', '/reports', body: {'user': userId, 'reason': reason, 'note': note, 'table': ?table});
+
+  Future<List<ReportInfo>> adminReports({bool all = false}) async =>
+      ((await _send('GET', '/admin/reports', query: all ? {'all': '1'} : null))['reports'] as List? ?? const [])
+          .map((e) => ReportInfo.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+  Future<void> resolveReport(int id) => _send('POST', '/admin/reports/$id/resolve', body: const {});
+
   Future<List<HandSummary>> myHands({int? before, int limit = 50}) async =>
       ((await _send('GET', '/me/hands', query: {if (before != null) 'before': '$before', 'limit': '$limit'}))['hands']
                   as List? ??

@@ -1563,6 +1563,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'There are too many uploaded card backs. Delete one first.'**
   String get errTooManyCardBacks;
+
+  /// No description provided for @chatUserMenuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a chat line to block or report its author.'**
+  String get chatUserMenuHint;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get blockUser;
+
+  /// No description provided for @reportUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get reportUser;
+
+  /// No description provided for @muteInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute in this table\'s chat'**
+  String get muteInChat;
+
+  /// No description provided for @unmuteInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmute in this table\'s chat'**
+  String get unmuteInChat;
+
+  /// No description provided for @removeSpectator.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from the table'**
+  String get removeSpectator;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is blocked. You no longer see their chat.'**
+  String userBlocked(String name);
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report {name}'**
+  String reportTitle(String name);
+
+  /// No description provided for @reasonChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get reasonChat;
+
+  /// No description provided for @reasonBehaviour.
+  ///
+  /// In en, this message translates to:
+  /// **'Behaviour'**
+  String get reasonBehaviour;
+
+  /// No description provided for @reasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get reasonOther;
+
+  /// No description provided for @reportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened? (optional)'**
+  String get reportNote;
+
+  /// No description provided for @reportChatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The last chat lines of this table go with the report, so the admin sees what was said.'**
+  String get reportChatHint;
+
+  /// No description provided for @sendReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Send report'**
+  String get sendReport;
+
+  /// No description provided for @reportSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent to the server admin.'**
+  String get reportSent;
+
+  /// No description provided for @blockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked users'**
+  String get blockedUsers;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not blocked anyone. Tap a chat line at a table to block its author.'**
+  String get noBlockedUsers;
+
+  /// No description provided for @unblock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblock;
+
+  /// No description provided for @reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get reports;
+
+  /// No description provided for @showResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Show resolved reports'**
+  String get showResolved;
+
+  /// No description provided for @noReports.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports.'**
+  String get noReports;
+
+  /// No description provided for @reportLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{reporter} reported {reported}'**
+  String reportLine(String reporter, String reported);
+
+  /// No description provided for @resolvedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'resolved by {name}'**
+  String resolvedBy(String name);
+
+  /// No description provided for @reportNoChat.
+  ///
+  /// In en, this message translates to:
+  /// **'No chat lines with this report.'**
+  String get reportNoChat;
+
+  /// No description provided for @resolve.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark resolved'**
+  String get resolve;
+
+  /// No description provided for @wsMuted.
+  ///
+  /// In en, this message translates to:
+  /// **'The host muted you in this table\'s chat.'**
+  String get wsMuted;
+
+  /// No description provided for @wsRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'The host removed you from this table.'**
+  String get wsRemoved;
+
+  /// No description provided for @wsIsPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Players cannot be removed; only spectators.'**
+  String get wsIsPlayer;
 }
 
 class _AppLocalizationsDelegate

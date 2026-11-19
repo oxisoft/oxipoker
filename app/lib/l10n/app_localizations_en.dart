@@ -855,4 +855,99 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errTooManyCardBacks =>
       'There are too many uploaded card backs. Delete one first.';
+
+  @override
+  String get chatUserMenuHint =>
+      'Tap a chat line to block or report its author.';
+
+  @override
+  String get blockUser => 'Block';
+
+  @override
+  String get reportUser => 'Report';
+
+  @override
+  String get muteInChat => 'Mute in this table\'s chat';
+
+  @override
+  String get unmuteInChat => 'Unmute in this table\'s chat';
+
+  @override
+  String get removeSpectator => 'Remove from the table';
+
+  @override
+  String userBlocked(String name) {
+    return '$name is blocked. You no longer see their chat.';
+  }
+
+  @override
+  String reportTitle(String name) {
+    return 'Report $name';
+  }
+
+  @override
+  String get reasonChat => 'Chat';
+
+  @override
+  String get reasonBehaviour => 'Behaviour';
+
+  @override
+  String get reasonOther => 'Other';
+
+  @override
+  String get reportNote => 'What happened? (optional)';
+
+  @override
+  String get reportChatHint =>
+      'The last chat lines of this table go with the report, so the admin sees what was said.';
+
+  @override
+  String get sendReport => 'Send report';
+
+  @override
+  String get reportSent => 'Report sent to the server admin.';
+
+  @override
+  String get blockedUsers => 'Blocked users';
+
+  @override
+  String get noBlockedUsers =>
+      'You have not blocked anyone. Tap a chat line at a table to block its author.';
+
+  @override
+  String get unblock => 'Unblock';
+
+  @override
+  String get reports => 'Reports';
+
+  @override
+  String get showResolved => 'Show resolved reports';
+
+  @override
+  String get noReports => 'No reports.';
+
+  @override
+  String reportLine(String reporter, String reported) {
+    return '$reporter reported $reported';
+  }
+
+  @override
+  String resolvedBy(String name) {
+    return 'resolved by $name';
+  }
+
+  @override
+  String get reportNoChat => 'No chat lines with this report.';
+
+  @override
+  String get resolve => 'Mark resolved';
+
+  @override
+  String get wsMuted => 'The host muted you in this table\'s chat.';
+
+  @override
+  String get wsRemoved => 'The host removed you from this table.';
+
+  @override
+  String get wsIsPlayer => 'Players cannot be removed; only spectators.';
 }

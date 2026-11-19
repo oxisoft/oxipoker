@@ -7,6 +7,7 @@ import '../passkey/passkey.dart';
 import '../state/session.dart';
 import 'common.dart';
 import 'history_screens.dart';
+import 'moderation.dart';
 
 class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
@@ -165,6 +166,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _saveName, child: Text(l.save))),
             ]),
             section(l.appearance, [const AppearancePicker()]),
+            section(l.blockedUsers, [const BlockList()]),
             section(l.changePassword, [
               TextField(controller: _current, obscureText: true, decoration: InputDecoration(labelText: l.currentPassword)),
               TextField(controller: _next, obscureText: true, decoration: InputDecoration(labelText: l.newPassword)),

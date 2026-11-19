@@ -502,3 +502,61 @@ class PlayerStats {
     sngBest: _int(j['sng_best_place']),
   );
 }
+
+/// A user on the own block list.
+class BlockedUser {
+  const BlockedUser({required this.id, required this.username, required this.displayName});
+
+  final String id;
+  final String username;
+  final String displayName;
+
+  factory BlockedUser.fromJson(Map<String, dynamic> j) => BlockedUser(
+    id: j['id'] as String? ?? '',
+    username: j['username'] as String? ?? '',
+    displayName: j['display_name'] as String? ?? '',
+  );
+}
+
+/// A report as the admin console shows it.
+class ReportInfo {
+  const ReportInfo({
+    required this.id,
+    required this.reporter,
+    required this.reported,
+    this.reportedId = '',
+    this.tableName = '',
+    required this.reason,
+    this.note = '',
+    this.chat = const [],
+    this.createdAt,
+    this.resolvedAt,
+    this.resolvedBy = '',
+  });
+
+  final int id;
+  final String reporter;
+  final String reported;
+  final String reportedId;
+  final String tableName;
+  final String reason;
+  final String note;
+  final List<ChatMessage> chat;
+  final DateTime? createdAt;
+  final DateTime? resolvedAt;
+  final String resolvedBy;
+
+  factory ReportInfo.fromJson(Map<String, dynamic> j) => ReportInfo(
+    id: (j['id'] as num?)?.toInt() ?? 0,
+    reporter: j['reporter'] as String? ?? '',
+    reported: j['reported'] as String? ?? '',
+    reportedId: j['reported_id'] as String? ?? '',
+    tableName: j['table_name'] as String? ?? '',
+    reason: j['reason'] as String? ?? 'other',
+    note: j['note'] as String? ?? '',
+    chat: (j['chat'] as List? ?? const []).map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)).toList(),
+    createdAt: _time(j['created_at']),
+    resolvedAt: _time(j['resolved_at']),
+    resolvedBy: j['resolved_by'] as String? ?? '',
+  );
+}

@@ -12,6 +12,7 @@ import '../state/session.dart';
 import 'cards.dart';
 import 'common.dart';
 import 'lobby_screen.dart' show LinkBanner;
+import 'moderation.dart';
 
 const _gold = Color(0xFFFFC400);
 
@@ -28,6 +29,9 @@ String intentError(AppLocalizations l, String code) => switch (code) {
   'host_or_admin_only' => l.wsHostOnly,
   'offline' || 'timeout' => l.reconnecting,
   'server_restarting' => l.serverRestarting,
+  'muted' => l.wsMuted,
+  'removed' => l.wsRemoved,
+  'is_player' => l.wsIsPlayer,
   _ => l.errGeneric(code),
 };
 
@@ -867,7 +871,13 @@ class _ChatDrawerState extends ConsumerState<ChatDrawer> {
                 itemCount: chat.length,
                 itemBuilder: (_, i) {
                   final m = chat[chat.length - 1 - i];
-                  return ListTile(dense: true, title: Text(m.text), subtitle: Text(m.name));
+                  return ListTile(
+                    key: Key('chat-line-$i'),
+                    dense: true,
+                    title: Text(m.text),
+                    subtitle: Text(m.name),
+                    onTap: () => showChatUserMenu(context, ref, m),
+                  );
                 },
               ),
             ),
