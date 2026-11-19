@@ -44,6 +44,20 @@ All data (database, uploads, keys) lives in `./data`. Back up that folder and yo
 
 Images: [`oxisoft/oxipoker`](https://hub.docker.com/r/oxisoft/oxipoker) on Docker Hub, `linux/amd64` and `linux/arm64`.
 
+## Get the apps
+
+- **Browser:** open your server's address; the web app is built in.
+- **Android:** install [F-Droid](https://f-droid.org), then add the OxiSoft repository: on your phone open [fdroid.oxisoft.io](https://fdroid.oxisoft.io) and tap the repository link, or add `https://fdroid.oxisoft.io/fdroid/repo` under Settings, Repositories. Search for Oxi Poker and install it; updates arrive through F-Droid. The APK is also attached to every [GitHub release](https://github.com/oxisoft/oxipoker/releases).
+- **Windows, macOS, Linux:** download from [GitHub Releases](https://github.com/oxisoft/oxipoker/releases) and check the file against `SHA256SUMS` in the same release.
+
+The Android app is signed with Oxi Poker's own key, not through Google Play. Its certificate SHA-256 fingerprint is:
+
+```
+79:F2:92:04:83:FB:1F:7F:B7:66:36:D9:FF:76:AB:FF:7E:CC:B6:13:6E:B5:62:42:00:61:12:FF:23:9F:33:CD
+```
+
+Check a downloaded APK with `apksigner verify --print-certs oxipoker-<version>.apk`. Every Oxi Poker release is signed with this key; an APK with any other fingerprint did not come from us.
+
 ## Build from source
 
 Requirements: Go 1.27, Flutter 3.50, Docker.
