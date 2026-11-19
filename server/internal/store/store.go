@@ -73,6 +73,27 @@ func (s *Store) DB() *sql.DB { return s.db }
 // Close closes the database.
 func (s *Store) Close() error { return s.db.Close() }
 
+// Backup writes a consistent copy of the live database to dst with VACUUM
+// INTO. It is safe while the server runs: readers and writers keep going and
+// the copy holds every committed transaction up to the moment it starts. The
+// parent directory is created; an existing dst is refused, so a backup never
+// overwrites another one.
+func (s *Store) Backup(ctx context.Context, dst string) error {
+	if dst == "" {
+		return fmt.Errorf("store: backup: empty destination")
+	}
+	if _, err := os.Stat(dst); err == nil {
+		return fmt.Errorf("store: backup: %s already exists", dst)
+	}
+	if err := os.MkdirAll(filepath.Dir(dst), 0o700); err != nil {
+		return fmt.Errorf("store: backup dir: %w", err)
+	}
+	if _, err := s.db.ExecContext(ctx, `VACUUM INTO ?`, dst); err != nil {
+		return fmt.Errorf("store: backup: %w", err)
+	}
+	return os.Chmod(dst, 0o600)
+}
+
 // Ping reports whether the database answers.
 func (s *Store) Ping(ctx context.Context) error { return s.db.PingContext(ctx) }
 

@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"time"
@@ -32,6 +33,7 @@ import (
 func main() {
 	healthcheck := flag.Bool("healthcheck", false, "probe the local server and exit 0 when healthy (used by the Docker HEALTHCHECK)")
 	showVersion := flag.Bool("version", false, "print the version and exit")
+	backup := flag.String("backup", "", "write a consistent copy of the database to this file while the server keeps running, then exit")
 	flag.Parse()
 
 	port := env("PORT", "8080")
@@ -46,6 +48,8 @@ func main() {
 		return
 	case *healthcheck:
 		os.Exit(probe(port))
+	case *backup != "":
+		os.Exit(runBackup(env("DATA_DIR", "data"), *backup))
 	}
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -207,4 +211,28 @@ func env(key, def string) string {
 		return v
 	}
 	return def
+}
+
+// runBackup copies the database of dataDir to dst and prints where it went.
+// It opens the same database file as the running server; SQLite's locking
+// keeps both processes consistent.
+func runBackup(dataDir, dst string) int {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+	if _, err := os.Stat(filepath.Join(dataDir, store.FileName)); err != nil {
+		fmt.Fprintf(os.Stderr, "backup: no database in %s: %v\n", dataDir, err)
+		return 1
+	}
+	st, err := store.Open(ctx, dataDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "backup: %v\n", err)
+		return 1
+	}
+	defer st.Close()
+	if err := st.Backup(ctx, dst); err != nil {
+		fmt.Fprintf(os.Stderr, "backup: %v\n", err)
+		return 1
+	}
+	fmt.Println(dst)
+	return 0
 }

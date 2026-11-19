@@ -149,3 +149,67 @@ func TestConcurrentWrites(t *testing.T) {
 		t.Fatalf("writes = %d", len(got))
 	}
 }
+
+func TestBackupWhileWritingRestores(t *testing.T) {
+	dir := t.TempDir()
+	s := open(t, dir)
+	ctx := context.Background()
+	if _, err := s.DB().ExecContext(ctx, `CREATE TABLE probe (n INTEGER)`); err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 100; i++ {
+		if _, err := s.DB().ExecContext(ctx, `INSERT INTO probe VALUES (?)`, i); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// A writer keeps going during the backup, as players do on a live server.
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for i := 100; ; i++ {
+			select {
+			case <-stop:
+				return
+			default:
+			}
+			s.DB().ExecContext(ctx, `INSERT INTO probe VALUES (?)`, i)
+		}
+	}()
+	dst := filepath.Join(t.TempDir(), "backups", "copy.db")
+	err := s.Backup(ctx, dst)
+	close(stop)
+	<-done
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := os.Stat(dst); err != nil || fi.Mode().Perm() != 0o600 {
+		t.Fatalf("backup file: %v %v", fi, err)
+	}
+	if err := s.Backup(ctx, dst); err == nil {
+		t.Fatal("second backup to the same file was not refused")
+	}
+
+	// Restore: the copy becomes the database of a fresh data dir.
+	restored := t.TempDir()
+	b, err := os.ReadFile(dst)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(restored, FileName), b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	r := open(t, restored)
+	var n int
+	if err := r.DB().QueryRowContext(ctx, `SELECT COUNT(*) FROM probe`).Scan(&n); err != nil || n < 100 {
+		t.Fatalf("restored rows = %d, %v", n, err)
+	}
+	var ok string
+	if err := r.DB().QueryRowContext(ctx, `PRAGMA integrity_check`).Scan(&ok); err != nil || ok != "ok" {
+		t.Fatalf("integrity_check = %q, %v", ok, err)
+	}
+	want, _ := s.SchemaVersion(ctx)
+	if got, err := r.SchemaVersion(ctx); err != nil || got != want {
+		t.Fatalf("restored schema %d, want %d (%v)", got, want, err)
+	}
+}
