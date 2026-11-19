@@ -60,7 +60,7 @@ func (g *gameAPI) mediaWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 	ev, err := g.media.VerifyWebhook(r.Header.Get("Authorization"), body, time.Now())
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "bad_signature")
+		writeError(w, http.StatusUnauthorized, "unauthenticated")
 		return
 	}
 	if ev.Event == "participant_joined" {
