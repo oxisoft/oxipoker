@@ -33,12 +33,14 @@ type Config struct {
 // ErrConfig reports incomplete or invalid LiveKit settings.
 var ErrConfig = errors.New("media: LIVEKIT_URL, LIVEKIT_API_KEY and LIVEKIT_API_SECRET must be set together, URL as ws(s):// or http(s)://")
 
-// Check validates c. All empty = media off (nil error, Enabled false).
+// Check validates c. An empty URL = media off (nil error, Enabled false):
+// LIVEKIT_URL is the switch, so going back to the minimal option only needs
+// it emptied, while the key pair may stay in .env for the next time.
 func (c Config) Check() error {
-	if c.URL == "" && c.Key == "" && c.Secret == "" {
+	if c.URL == "" {
 		return nil
 	}
-	if c.URL == "" || c.Key == "" || c.Secret == "" {
+	if c.Key == "" || c.Secret == "" {
 		return ErrConfig
 	}
 	u, err := url.Parse(c.URL)

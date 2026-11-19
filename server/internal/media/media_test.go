@@ -15,10 +15,13 @@ func TestConfigCheck(t *testing.T) {
 	if !cfg.Enabled() {
 		t.Fatal("full config must be on")
 	}
+	if err := (Config{Key: "k", Secret: "s"}).Check(); err != nil || (Config{Key: "k", Secret: "s"}).Enabled() {
+		t.Fatalf("keys without LIVEKIT_URL must be valid and off (back to minimal): %v", err)
+	}
 	for _, c := range []Config{
 		{URL: cfg.URL},
 		{URL: cfg.URL, Key: "k"},
-		{Key: "k", Secret: "s"},
+		{URL: cfg.URL, Secret: "s"},
 		{URL: "ftp://x", Key: "k", Secret: "s"},
 		{URL: "livekit:7880", Key: "k", Secret: "s"},
 	} {
