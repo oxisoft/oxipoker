@@ -10,13 +10,17 @@ The server used a generic middleware that took the client address from `True-Cli
 
 Fix: `server/internal/httpapi/realip.go`. Forwarding headers count only when the request comes from a loopback, private or link-local address (the reverse proxy), and only `X-Forwarded-For`, read from the right. Tests: `TestRealIPTrustsOnlyTheProxyHop` (direct clients, Caddy, nginx with a forged left entry, two proxies, garbage, IPv6) and `TestSigninLimitIgnoresForgedAddresses` (fails with the old middleware). The install guide says how the address is found.
 
-### F2 No Content Security Policy on the web app (open)
+### F2 No Content Security Policy on the web app (fixed)
 
-The web app gets `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options`, but no `Content-Security-Policy`. Avatars and card backs already have `default-src 'none'`. To do: a policy for the Flutter web build (`script-src 'self' 'wasm-unsafe-eval'`, `connect-src 'self'` plus the LiveKit URL when media is on, `img-src 'self' data: blob:`, `worker-src 'self' blob:`), checked in a real browser with voice and video.
+The web app got `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options`, but no `Content-Security-Policy`, so an injected script would have run with the player's session.
 
-### F3 No HSTS (open)
+Fix: `server/internal/httpapi/headers.go`. Every response carries `default-src 'self'; script-src 'self' 'wasm-unsafe-eval'` (CanvasKit compiles WebAssembly; JavaScript eval stays off), `style-src 'self' 'unsafe-inline'` (the Flutter engine writes styles at run time; styles cannot run code), `img-src 'self' data: blob:`, `connect-src` limited to this server and, only when voice and video are on, the LiveKit address, plus `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` and `frame-ancestors 'none'`. Avatars and card backs keep their own `default-src 'none'`. The web build bundles CanvasKit and its fonts (`--no-web-resources-cdn`, Noto fonts in the app), so the policy needs no third party: a browser running Oxi Poker talks only to your server and your LiveKit. Characters outside the bundled fonts (for example emoji in a player name) show as boxes instead of fetching a font from a CDN. Also sent: `Cross-Origin-Opener-Policy: same-origin` and a `Permissions-Policy` that allows camera and microphone for this site only.
 
-When `PUBLIC_URL` is https the server can send `Strict-Transport-Security` itself, so it does not depend on the proxy configuration.
+Tests: `TestWebAppContentSecurityPolicy`, `TestContentSecurityPolicyAllowsLiveKitOnlyWhenMediaIsOn`. Checked in Chromium with the real web build and media on: sign-in, lobby, table over WebSocket and joining voice and video all work with no policy violation, while a fetch to another site is refused.
+
+### F3 No HSTS (fixed)
+
+When `PUBLIC_URL` is https the server sends `Strict-Transport-Security: max-age=31536000` itself, so it does not depend on the proxy configuration. It leaves out `includeSubDomains`: other names under the same domain may not be served over HTTPS and are not the server's to pin. Test: `TestNoHSTSWithoutHTTPS` plus the check in `TestWebAppContentSecurityPolicy`.
 
 ## Areas
 
@@ -35,3 +39,7 @@ Checked: `history.Store.Get` joins on the requesting user's own row in `hand_pla
 ### Still to review
 
 Authentication (password hashing, passkeys, TOTP, sessions, account limits), invitations, WebSocket origin and size limits, uploads, media tokens, admin actions and audit log, container (non-root user 1000, read-only filesystem).
+
+### HTTP headers
+
+Done: see F2 and F3.

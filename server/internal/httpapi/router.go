@@ -64,7 +64,7 @@ func NewRouter(opt Options) http.Handler {
 	r := chi.NewRouter()
 	r.Use(realIP)
 	r.Use(middleware.Recoverer)
-	r.Use(securityHeaders)
+	r.Use(securityHeaders(opt))
 
 	r.Route("/api/v1", func(api chi.Router) {
 		// No timeout on the whole tree: the WebSocket outlives any request.
@@ -113,16 +113,6 @@ func NewRouter(opt Options) http.Handler {
 	// Never r.NotFound for the web app: chi would propagate it into /api/v1.
 	r.Handle("/*", webapp.Handler())
 	return r
-}
-
-func securityHeaders(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h := w.Header()
-		h.Set("X-Content-Type-Options", "nosniff")
-		h.Set("Referrer-Policy", "no-referrer")
-		h.Set("X-Frame-Options", "DENY")
-		next.ServeHTTP(w, r)
-	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
