@@ -1028,6 +1028,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get callJoin => '音声とビデオに参加';
 
   @override
+  String get callMuteMic => 'マイクをオフにする';
+
+  @override
+  String get callStopCamera => 'カメラをオフにする';
+
+  @override
+  String get callRemoveUser => '通話から外す';
+
+  @override
   String get callLeave => '通話を退出';
 
   @override

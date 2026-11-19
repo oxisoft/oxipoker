@@ -1060,6 +1060,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get callJoin => 'Dołącz do głosu i wideo';
 
   @override
+  String get callMuteMic => 'Wyłącz mikrofon tej osoby';
+
+  @override
+  String get callStopCamera => 'Wyłącz kamerę tej osoby';
+
+  @override
+  String get callRemoveUser => 'Usuń z rozmowy';
+
+  @override
   String get callLeave => 'Opuść rozmowę';
 
   @override

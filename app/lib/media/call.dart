@@ -53,6 +53,10 @@ abstract class CallRoom {
   /// that camera is off or its video has not arrived yet.
   Widget? video(String identity);
 
+  /// Users we blocked: their tracks are not received and they are left out
+  /// of [peers]. Called again whenever the set changes.
+  void hide(Set<String> users);
+
   /// Everyone else in the call.
   List<CallPeer> get peers;
   Stream<CallEvent> get events;
@@ -137,6 +141,7 @@ class CallController extends Notifier<CallState> {
   StreamSubscription<CallEvent>? _sub;
   Timer? _refresh;
   int _gen = 0;
+  Set<String> _hidden = {};
 
   @override
   CallState build() {
@@ -155,11 +160,19 @@ class CallController extends Notifier<CallState> {
     final gen = ++_gen;
     state = CallState(table: table, status: CallStatus.connecting, speaker: state.speaker);
     try {
+      try {
+        _hidden = {for (final b in await _api().blocks()) b.id};
+      } catch (_) {
+        // The block list is a courtesy here; the server keeps blocked users'
+        // chat away anyway. Keep the set we already know.
+      }
+      if (gen != _gen) return;
       final t = await _api().mediaToken(table);
       if (gen != _gen) return;
       final room = ref.read(callRoomFactoryProvider)();
       _room = room;
       _sub = room.events.listen((e) => _onEvent(gen, e));
+      room.hide(_hidden);
       await room.connect(t.url, t.token);
       if (gen != _gen) return;
       _schedule(gen, table, t.expiresAt);
@@ -168,7 +181,7 @@ class CallController extends Notifier<CallState> {
         mic: room.micOn,
         camera: room.cameraOn,
         speaking: room.speaking,
-        peers: room.peers,
+        peers: _peers(room),
       );
     } catch (e) {
       if (gen != _gen || !ref.mounted) return;
@@ -203,7 +216,27 @@ class CallController extends Notifier<CallState> {
   Future<void> switchCamera() async => _room?.switchCamera();
 
   /// The camera picture of [identity] in the connected call, else null.
-  Widget? video(String identity) => state.connected ? _room?.video(identity) : null;
+  Widget? video(String identity) =>
+      state.connected && !_hidden.contains(identity) ? _room?.video(identity) : null;
+
+  /// A user we just blocked: no sound or picture of them from now on.
+  void block(String user) => _setHidden({..._hidden, user});
+
+  /// A user we unblocked: heard and seen again.
+  void unblock(String user) => _setHidden({..._hidden}..remove(user));
+
+  void _setHidden(Set<String> users) {
+    _hidden = users;
+    final r = _room;
+    if (r == null) return;
+    r.hide(users);
+    if (state.connected) state = state.copyWith(peers: _peers(r));
+  }
+
+  List<CallPeer> _peers(CallRoom r) => [
+    for (final p in r.peers)
+      if (!_hidden.contains(p.identity)) p,
+  ];
 
   Future<void> _toggle(Future<void> Function(CallRoom) f) async {
     final r = _room;
@@ -220,7 +253,7 @@ class CallController extends Notifier<CallState> {
     if (gen != _gen || r == null) return;
     switch (e) {
       case CallEvent.changed:
-        state = state.copyWith(mic: r.micOn, camera: r.cameraOn, speaking: r.speaking, peers: r.peers);
+        state = state.copyWith(mic: r.micOn, camera: r.cameraOn, speaking: r.speaking, peers: _peers(r));
       case CallEvent.removed:
         _end(removed: true);
       case CallEvent.lost:

@@ -1025,6 +1025,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get callJoin => '加入语音和视频';
 
   @override
+  String get callMuteMic => '关闭其麦克风';
+
+  @override
+  String get callStopCamera => '关闭其摄像头';
+
+  @override
+  String get callRemoveUser => '移出通话';
+
+  @override
   String get callLeave => '离开通话';
 
   @override

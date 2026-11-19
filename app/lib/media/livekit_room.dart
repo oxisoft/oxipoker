@@ -14,6 +14,7 @@ class LiveKitCallRoom implements CallRoom {
   lk.EventsListener<lk.RoomEvent>? _listener;
   var _position = lk.CameraPosition.front;
   var _leaving = false;
+  Set<String> _hidden = const {};
 
   /// The LiveKit room, for the video tiles.
   lk.Room get room => _room;
@@ -34,6 +35,9 @@ class LiveKitCallRoom implements CallRoom {
                 : CallEvent.lost,
           );
         } else {
+          if (e is lk.TrackSubscribedEvent && _hidden.contains(e.participant.identity)) {
+            unawaited(e.publication.unsubscribe());
+          }
           _events.add(CallEvent.changed);
         }
       });
@@ -93,6 +97,21 @@ class LiveKitCallRoom implements CallRoom {
     final track = pub?.track;
     if (pub == null || pub.muted || track is! lk.VideoTrack) return null;
     return lk.VideoTrackRenderer(track, fit: lk.VideoViewFit.cover, key: ValueKey(pub.sid));
+  }
+
+  @override
+  void hide(Set<String> users) {
+    _hidden = users;
+    for (final p in _room.remoteParticipants.values) {
+      final hidden = users.contains(p.identity);
+      for (final pub in p.trackPublications.values) {
+        if (hidden && pub.subscribed) {
+          unawaited(pub.unsubscribe());
+        } else if (!hidden && !pub.subscribed) {
+          unawaited(pub.subscribe());
+        }
+      }
+    }
   }
 
   @override

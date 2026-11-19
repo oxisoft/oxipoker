@@ -1948,6 +1948,24 @@ abstract class AppLocalizations {
   /// **'Join voice and video'**
   String get callJoin;
 
+  /// No description provided for @callMuteMic.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch off their microphone'**
+  String get callMuteMic;
+
+  /// No description provided for @callStopCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch off their camera'**
+  String get callStopCamera;
+
+  /// No description provided for @callRemoveUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from the call'**
+  String get callRemoveUser;
+
   /// No description provided for @callLeave.
   ///
   /// In en, this message translates to:

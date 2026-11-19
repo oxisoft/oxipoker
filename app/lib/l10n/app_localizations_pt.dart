@@ -1067,6 +1067,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get callJoin => 'Entrar na voz e vídeo';
 
   @override
+  String get callMuteMic => 'Desligar o microfone';
+
+  @override
+  String get callStopCamera => 'Desligar a câmera';
+
+  @override
+  String get callRemoveUser => 'Tirar da chamada';
+
+  @override
   String get callLeave => 'Sair da chamada';
 
   @override

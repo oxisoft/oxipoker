@@ -1056,6 +1056,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get callJoin => 'Подключиться к голосу и видео';
 
   @override
+  String get callMuteMic => 'Выключить микрофон';
+
+  @override
+  String get callStopCamera => 'Выключить камеру';
+
+  @override
+  String get callRemoveUser => 'Убрать из звонка';
+
+  @override
   String get callLeave => 'Выйти из звонка';
 
   @override

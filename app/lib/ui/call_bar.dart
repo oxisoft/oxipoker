@@ -6,8 +6,10 @@ import '../api/api.dart';
 import '../api/poker.dart';
 import '../l10n/app_localizations.dart';
 import '../media/call.dart';
+import '../state/realtime.dart';
 import '../state/session.dart';
 import 'common.dart';
+import 'moderation.dart' show showCallUserMenu;
 import 'table_screen.dart' show UserAvatar;
 
 /// Phones get the speaker and camera switch buttons; desktop and web do not.
@@ -116,9 +118,10 @@ const _speakingColor = Color(0xFF3DDC84);
 /// else [child] (the avatar); a ring while they speak, a crossed microphone
 /// while muted. Outside a call it is just [child].
 class SeatMedia extends ConsumerWidget {
-  const SeatMedia({super.key, required this.user, required this.child, this.size = 36});
+  const SeatMedia({super.key, required this.user, required this.name, required this.child, this.size = 36});
 
   final String user;
+  final String name;
   final Widget child;
 
   /// Height of the camera tile; it is a third wider than high.
@@ -131,7 +134,7 @@ class SeatMedia extends ConsumerWidget {
     final p = callPresence(c, me, user);
     if (p == null) return child;
     final video = p.camera ? ref.read(callProvider.notifier).video(user) : null;
-    return Stack(
+    final tile = Stack(
       key: Key('call-tile-$user'),
       clipBehavior: Clip.none,
       children: [
@@ -166,6 +169,15 @@ class SeatMedia extends ConsumerWidget {
             ),
           ),
       ],
+    );
+    final view = ref.watch(realtimeProvider.select((s) => s.view));
+    final admin = ref.watch(sessionProvider.select((s) => s.user?.isAdmin ?? false));
+    if (user == me || view == null || !(view.host == me || admin)) return tile;
+    return GestureDetector(
+      key: Key('call-menu-$user'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showCallUserMenu(context, ref, user: user, name: name),
+      child: tile,
     );
   }
 }
@@ -205,7 +217,7 @@ class SpectatorStrip extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SeatMedia(user: w.id, child: UserAvatar(user: w.id, name: w.name)),
+                  SeatMedia(user: w.id, name: w.name, child: UserAvatar(user: w.id, name: w.name)),
                   const SizedBox(height: 2),
                   SizedBox(
                     width: 56,

@@ -251,6 +251,12 @@ class RealtimeController extends Notifier<RealtimeState> {
   Future<String?> mute(String user, bool on) => send({'type': on ? 'mute' : 'unmute', 'user': user});
   Future<String?> removeSpectator(String user) => send({'type': 'remove', 'user': user});
 
+  /// Host or admin: switch off someone's `microphone` or `camera` in the call.
+  Future<String?> callMute(String user, String source) => send({'type': 'call_mute', 'user': user, 'source': source});
+
+  /// Host or admin: send someone out of the call until the table closes.
+  Future<String?> callRemove(String user) => send({'type': 'call_remove', 'user': user});
+
   /// Drops a blocked user's lines already shown; the server sends no new ones.
   void hideChatOf(String user) => state = state.copyWith(chat: state.chat.where((c) => c.user != user).toList());
 }

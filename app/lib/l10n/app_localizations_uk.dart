@@ -1058,6 +1058,15 @@ class AppLocalizationsUk extends AppLocalizations {
   String get callJoin => 'Приєднатися до голосу й відео';
 
   @override
+  String get callMuteMic => 'Вимкнути мікрофон';
+
+  @override
+  String get callStopCamera => 'Вимкнути камеру';
+
+  @override
+  String get callRemoveUser => 'Прибрати з дзвінка';
+
+  @override
   String get callLeave => 'Вийти з дзвінка';
 
   @override

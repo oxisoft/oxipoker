@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:oxipoker/media/call.dart';
@@ -46,6 +47,12 @@ class FakeCallRoom implements CallRoom {
     final on = identity == 'u1' ? camera : others.any((p) => p.identity == identity && p.camera);
     return on ? ColoredBox(key: Key('fake-video-$identity'), color: Colors.blue) : null;
   }
+
+  final hidden = <String>{};
+  @override
+  void hide(Set<String> users) => hidden
+    ..clear()
+    ..addAll(users);
 
   @override
   List<CallPeer> get peers => others;
@@ -230,5 +237,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('call-tile-u1')), findsNothing);
     expect(find.byKey(const Key('call-tile-u2')), findsNothing);
+  });
+
+  testWidgets('the host mutes and removes people in the call; blocked users are hidden and silenced', (tester) async {
+    final (f, hub, rooms) = await _pump(tester);
+    f.blocked.add('u3');
+    await tester.tap(find.byKey(const Key('call-join')));
+    await tester.pumpAndSettle();
+    final room = rooms.single;
+    // The block list is applied before connecting.
+    expect(room.hidden, {'u3'});
+    room.others = [
+      const CallPeer(identity: 'u2', name: 'bob', mic: true, camera: true),
+      const CallPeer(identity: 'u3', name: 'carol', mic: true, camera: true),
+    ];
+    room.emit(CallEvent.changed);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('fake-video-u2')), findsOneWidget);
+    expect(find.byKey(const Key('fake-video-u3')), findsNothing);
+    expect(find.byKey(const Key('call-tile-u3')), findsNothing);
+    expect(find.text('In the call: 2'), findsOneWidget);
+
+    // No menu on our own tile.
+    expect(find.byKey(const Key('call-menu-u1')), findsNothing);
+    await tester.tap(find.byKey(const Key('call-menu-u2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('call-mute-mic')));
+    await tester.pumpAndSettle();
+    expect(hub.ofType('call_mute').last, containsPair('source', 'microphone'));
+    expect(hub.ofType('call_mute').last['user'], 'u2');
+    await tester.tap(find.byKey(const Key('call-menu-u2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('call-mute-camera')));
+    await tester.pumpAndSettle();
+    expect(hub.ofType('call_mute').last, containsPair('source', 'camera'));
+    await tester.tap(find.byKey(const Key('call-menu-u2')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('call-remove')));
+    await tester.pumpAndSettle();
+    expect(hub.ofType('call_remove').single['user'], 'u2');
+
+    // Blocking bob from the chat silences him in the call at once.
+    final ctrl = ProviderScope.containerOf(tester.element(find.byKey(const Key('call-bar')))).read(callProvider.notifier);
+    ctrl.block('u2');
+    await tester.pumpAndSettle();
+    expect(room.hidden, {'u2', 'u3'});
+    expect(find.byKey(const Key('call-tile-u2')), findsNothing);
+    expect(find.text('In the call: 1'), findsOneWidget);
+    ctrl.unblock('u3');
+    await tester.pumpAndSettle();
+    expect(room.hidden, {'u2'});
+    expect(find.byKey(const Key('fake-video-u3')), findsOneWidget);
   });
 }

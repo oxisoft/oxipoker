@@ -582,7 +582,7 @@ class SeatBox extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SeatMedia(user: p.user, child: UserAvatar(user: p.user, name: p.name)),
+                  SeatMedia(user: p.user, name: p.name, child: UserAvatar(user: p.user, name: p.name)),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Column(

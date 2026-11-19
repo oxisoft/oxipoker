@@ -1058,6 +1058,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get callJoin => 'Sesli ve görüntülü katıl';
 
   @override
+  String get callMuteMic => 'Mikrofonunu kapat';
+
+  @override
+  String get callStopCamera => 'Kamerasını kapat';
+
+  @override
+  String get callRemoveUser => 'Görüşmeden çıkar';
+
+  @override
   String get callLeave => 'Aramadan ayrıl';
 
   @override

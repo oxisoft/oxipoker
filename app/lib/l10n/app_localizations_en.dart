@@ -1054,6 +1054,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callJoin => 'Join voice and video';
 
   @override
+  String get callMuteMic => 'Switch off their microphone';
+
+  @override
+  String get callStopCamera => 'Switch off their camera';
+
+  @override
+  String get callRemoveUser => 'Remove from the call';
+
+  @override
   String get callLeave => 'Leave the call';
 
   @override

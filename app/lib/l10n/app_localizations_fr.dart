@@ -1068,6 +1068,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get callJoin => 'Rejoindre la voix et la vidéo';
 
   @override
+  String get callMuteMic => 'Couper son micro';
+
+  @override
+  String get callStopCamera => 'Couper sa caméra';
+
+  @override
+  String get callRemoveUser => 'Retirer de l\'appel';
+
+  @override
   String get callLeave => 'Quitter l\'appel';
 
   @override

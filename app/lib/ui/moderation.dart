@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../api/poker.dart';
 import '../l10n/app_localizations.dart';
+import '../media/call.dart';
 import '../state/realtime.dart';
 import '../state/session.dart';
 import 'common.dart';
@@ -63,6 +64,7 @@ Future<void> showChatUserMenu(BuildContext context, WidgetRef ref, ChatMessage m
       });
       if (ok == null || !context.mounted) return;
       rtc.hideChatOf(m.user);
+      ref.read(callProvider.notifier).block(m.user);
       toast(context, l.userBlocked(m.name));
     case 'report':
       await showReportDialog(context, ref, userId: m.user, name: m.name, tableId: view?.id);
@@ -71,6 +73,53 @@ Future<void> showChatUserMenu(BuildContext context, WidgetRef ref, ChatMessage m
       if (!context.mounted) return;
       if (err != null) toast(context, intentError(l, err));
   }
+}
+
+/// The host's and admins' menu on someone in the call: switch off their
+/// microphone or camera, or send them out of the call. Everyone else only
+/// controls their own media.
+Future<void> showCallUserMenu(BuildContext context, WidgetRef ref, {required String user, required String name}) async {
+  final l = context.l;
+  final me = ref.read(sessionProvider).user;
+  final view = ref.read(realtimeProvider).view;
+  if (me == null || user == me.id || view == null || !(view.host == me.id || me.isAdmin)) return;
+  CallPeer? peer;
+  for (final p in ref.read(callProvider).peers) {
+    if (p.identity == user) peer = p;
+  }
+  if (peer == null) return;
+  final choice = await showModalBottomSheet<String>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(title: Text(name)),
+        if (peer!.mic)
+          ListTile(
+            key: const Key('call-mute-mic'),
+            leading: const Icon(Icons.mic_off),
+            title: Text(l.callMuteMic),
+            onTap: () => Navigator.pop(ctx, 'microphone'),
+          ),
+        if (peer.camera)
+          ListTile(
+            key: const Key('call-mute-camera'),
+            leading: const Icon(Icons.videocam_off),
+            title: Text(l.callStopCamera),
+            onTap: () => Navigator.pop(ctx, 'camera'),
+          ),
+        ListTile(
+          key: const Key('call-remove'),
+          leading: const Icon(Icons.call_end),
+          title: Text(l.callRemoveUser),
+          onTap: () => Navigator.pop(ctx, 'remove'),
+        ),
+      ]),
+    ),
+  );
+  if (choice == null || !context.mounted) return;
+  final rtc = ref.read(realtimeProvider.notifier);
+  final err = choice == 'remove' ? await rtc.callRemove(user) : await rtc.callMute(user, choice);
+  if (err != null && context.mounted) toast(context, intentError(l, err));
 }
 
 /// Report a user: reason, optional note. The server attaches the table's
@@ -137,6 +186,7 @@ class _BlockListState extends ConsumerState<BlockList> {
   Future<void> _unblock(BlockedUser b) async {
     final ok = await guard(context, ref, () async {
       await ref.read(sessionProvider.notifier).api().unblock(b.id);
+      ref.read(callProvider.notifier).unblock(b.id);
       return true;
     });
     if (ok == null || !mounted) return;
