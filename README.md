@@ -66,6 +66,10 @@ docker build --build-context webapp=app/build/web -t oxipoker:dev .
 
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first: pull requests need a one-time signature of the [Contributor License Agreement](CLA.md). Security issues go to security@oxisoft.io, see [SECURITY.md](SECURITY.md).
 
+### Translations
+
+The app speaks 12 languages. Everything except English started as a machine translation, so a native speaker who fixes a few lines makes a real difference. Each language is one file in `app/lib/l10n/`; [CONTRIBUTING.md](CONTRIBUTING.md#translations) shows how to fix a line or add a language with a pull request, no Flutter setup needed.
+
 ## License
 
 [GNU Affero General Public License v3.0](LICENSE). If you run a modified version of Oxi Poker for other people, you must offer them the source code of your version.
