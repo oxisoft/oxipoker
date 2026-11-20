@@ -48,6 +48,7 @@ The first release. Everything below was built in six milestones (specs in [docs/
 
 - Android APK signed with Oxi Poker's own key, published on [fdroid.oxisoft.io](https://fdroid.oxisoft.io); Windows zip, macOS dmg and Linux tarball on GitHub Releases with `SHA256SUMS`.
 - About screen with app and server version, and a warning when they differ.
+- Own app icon (a poker chip in the app's colours, Android adaptive icon included) and the name "Oxi Poker" on every platform: browser tab, home screen, launcher, window title. One SVG master in `app/assets/brand`, all sizes rendered by `app/tool/brand_icons.py`.
 - [Install guide](docs/INSTALL.md): HTTPS with Caddy or nginx, first admin, invitations, upgrades, online backup (`oxipoker -backup`), restore, moving to a new box. Tested on a fresh machine by CI.
 - Connection check in the admin console for voice and video: signalling, token round trip and TURN, each failure explained.
 - [Security review](docs/SECURITY-REVIEW.md) with nine findings, each fixed with a test: trusted client address, Content Security Policy, HSTS, WebSocket message limits, bounded password hashing, sign-in limits under parallel requests, image decode budget, call access after removal, hardened container.

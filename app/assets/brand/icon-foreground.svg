@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<g transform="translate(133.12 133.12) scale(0.74)">
+<circle cx="512" cy="512" r="400" fill="#2F6BFF"/>
+<circle cx="512" cy="512" r="360" fill="none" stroke="#DDE1EC" stroke-width="80" stroke-dasharray="110 172.74" stroke-dashoffset="55"/>
+<circle cx="512" cy="512" r="292" fill="#0D0F18" stroke="#06070C" stroke-width="14"/>
+<path transform="translate(312 304) scale(4)" fill="#FF2BD6" d="M50 5 C50 5 10 40 10 62 C10 78 26 86 40 78 C44 76 47 72 48 70 C47 80 42 90 34 95 L66 95 C58 90 53 80 52 70 C53 72 56 76 60 78 C74 86 90 78 90 62 C90 40 50 5 50 5 Z"/>
+</g>
+</svg>
