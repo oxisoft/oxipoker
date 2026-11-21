@@ -7,7 +7,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.10.0
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/go-webauthn/webauthn v0.18.2
-	github.com/ncruces/go-sqlite3 v0.37.0
+	github.com/ncruces/go-sqlite3 v0.38.0
 	github.com/pquerna/otp v1.5.0
 	golang.org/x/crypto v0.59.0
 	golang.org/x/image v0.48.0
